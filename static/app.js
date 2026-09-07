@@ -31,6 +31,8 @@ const logbookFlightList = document.getElementById("logbook-flight-list");
 const liveMapBtn = document.getElementById("live-map-btn");
 const opsSortieTimer = document.getElementById("ops-sortie-timer");
 const opsSortieTimeValue = document.getElementById("ops-sortie-time-value");
+const opsThreatAlert = document.getElementById("ops-threat-alert");
+const opsThreatText = document.getElementById("ops-threat-text");
 const opsRadarSvg = document.getElementById("ops-radar");
 const opsRadarEmpty = document.getElementById("ops-radar-empty");
 const opsBullseyeCall = document.getElementById("ops-bullseye-call");
@@ -1113,11 +1115,27 @@ function summarizeContacts(detected) {
   return Object.entries(counts).sort((a, b) => b[1] - a[1]).map(([label, n]) => `${n} ${label}`).join(", ");
 }
 
+// Every detected SAM's real distance from you, nearest first - NOT a
+// fabricated engagement-range ring. DCS's API has no per-SAM-type
+// engagement envelope to read, and this app never asserts a number it
+// can't back with real data (see the map/Debrief work) - real distance is
+// what's actually knowable, so that's what this shows. No range beyond
+// detected[] itself either - DCS already decided what counts as detected
+// (Controller:isTargetDetected()), same as everywhere else this map data
+// is used.
+function findSamThreats(own, detected) {
+  return (detected || [])
+    .filter((u) => u.category === "ground_unit" && u.categoryDetail === "sam" && u.lat != null)
+    .map((u) => ({ type: u.type || "SAM", distanceNm: bearingDistanceBetween(own.lat, own.lon, u.lat, u.lon).distanceNm }))
+    .sort((a, b) => a.distanceNm - b.distanceNm);
+}
+
 function updateOpsSituationalAwareness(snapshot) {
   const data = snapshot && snapshot.available ? (snapshot.data || {}) : null;
   const own = data && data.own && data.own.lat != null ? data.own : null;
 
   if (!own) {
+    opsThreatAlert.hidden = true;
     opsRadarEmpty.hidden = false;
     opsRadarSvg.innerHTML = "";
     opsBullseyeCall.textContent = "—";
@@ -1127,6 +1145,14 @@ function updateOpsSituationalAwareness(snapshot) {
   }
   opsRadarEmpty.hidden = true;
   renderOpsRadar(own, data);
+
+  const threats = findSamThreats(own, data.detected);
+  opsThreatAlert.hidden = threats.length === 0;
+  if (threats.length) {
+    opsThreatText.textContent = threats
+      .map((t) => `${t.type} — ${t.distanceNm < 10 ? t.distanceNm.toFixed(1) : Math.round(t.distanceNm)} NM`)
+      .join(", ");
+  }
 
   if (data.bullseye && data.bullseye.lat != null) {
     const { bearingDeg, distanceNm } = bearingDistanceBetween(data.bullseye.lat, data.bullseye.lon, own.lat, own.lon);

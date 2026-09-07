@@ -345,6 +345,24 @@ header {
 }
 .ops-sitaware .logbook-btn { margin-top: 10px; width: 100%; text-align: center; }
 
+/* Same alarm treatment as .status-block.alarm - a detected SAM is exactly
+   the kind of thing that deserves the pulsing-red annunciator look, not
+   just another quiet readout row. */
+.ops-threat-alert {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--hazard-red);
+  color: var(--hazard-red);
+  background: rgba(255, 59, 48, 0.08);
+  font-size: 0.78rem;
+  font-weight: bold;
+  padding: 6px 10px;
+  margin-bottom: 10px;
+  animation: mfd-alarm-blink 1.4s ease-in-out infinite;
+}
+.ops-threat-alert[hidden] { display: none; }
+
 .ops-radar-wrap {
   position: relative;
   align-self: center;

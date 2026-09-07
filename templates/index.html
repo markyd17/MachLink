@@ -86,6 +86,17 @@
              preview now that the full map is real terrain. -->
         <section class="sub-panel ops-sitaware">
           <h2 class="panel-title">Situational Awareness</h2>
+          <!-- Distance-only, deliberately not a fabricated engagement-range
+               ring - DCS's API doesn't expose a real per-SAM-type
+               engagement envelope, and this app never asserts a number it
+               can't back with real data (see the rest of the map/Debrief
+               work). Every detected SAM, nearest first, with its actual
+               computed distance - you make the call on how close is too
+               close. -->
+          <div class="ops-threat-alert" id="ops-threat-alert" hidden>
+            <span>&#9888;</span>
+            <span id="ops-threat-text"></span>
+          </div>
           <div class="ops-radar-wrap">
             <svg id="ops-radar" viewBox="0 0 160 160"></svg>
             <div class="ops-radar-empty" id="ops-radar-empty">NO DATA</div>
