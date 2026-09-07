@@ -32,6 +32,8 @@ const mapLeafletDiv = document.getElementById("map-leaflet");
 const mapEmptyState = document.getElementById("map-empty-state");
 const mapRecenterBtn = document.getElementById("map-recenter");
 const mapRangeLabel = document.getElementById("map-range-label");
+const mapKeyToggle = document.getElementById("map-key-toggle");
+const mapLegend = document.getElementById("map-legend");
 const kneeboardTab = document.getElementById("kneeboard-tab");
 const kneeboardDrawer = document.getElementById("kneeboard-drawer");
 const kneeboardClose = document.getElementById("kneeboard-close");
@@ -651,17 +653,32 @@ function updateRangeRingsAndLabel(lat, lon) {
   });
 }
 
-// category_label() strings from dcs_mission_hook.lua's unit_json().
-function shapeForCategory(category) {
-  if (category === "airplane" || category === "helicopter") return "triangle";
-  if (category === "ground_unit") return "square";
+// category_label()/categoryDetail strings from dcs_mission_hook.lua's
+// unit_json() - categoryDetail (sam/vehicle/soft_target) is the same
+// DCS-attribute-based breakdown the Logbook's kill stats already use
+// (kill_category_detail()), reused here so ground contacts get distinct
+// vehicle/SAM/soldier icons instead of one generic square for every
+// ground_unit. Falls back to "square" (generic vehicle-ish default) when
+// DCS's attribute tags don't match anything known - see MAP_KEY below for
+// what each shape means.
+function shapeForUnit(u) {
+  const category = u.category;
+  if (category === "airplane") return "triangle";
+  if (category === "helicopter") return "cross";
   if (category === "ship") return "diamond";
+  if (category === "ground_unit") {
+    if (u.categoryDetail === "sam") return "hexagon";
+    if (u.categoryDetail === "soft_target") return "circle"; // soldier/infantry
+    return "square"; // vehicle, or no attribute match
+  }
   return "circle";
 }
 
 // Small CSS-shaped div icon - color follows DCS's own coalition
 // convention (blue for your side, red for the opposing one) rather than
 // MachLink's own brand colors, so it reads the way a DCS pilot expects.
+// Shape meanings are listed in MAP_KEY below and rendered in the map's
+// on-screen legend, so a new shape added here needs an entry there too.
 function makeMapIcon(shape, color, headingDeg) {
   let html;
   if (shape === "triangle") {
@@ -669,14 +686,59 @@ function makeMapIcon(shape, color, headingDeg) {
     // DCS's heading convention (0=north, clockwise) - CSS rotate() is
     // also clockwise-positive, so no sign flip needed.
     html = `<div style="width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:12px solid ${color};transform:rotate(${headingDeg || 0}deg);filter:drop-shadow(0 0 2px rgba(0,0,0,0.8));"></div>`;
+  } else if (shape === "cross") {
+    // Helicopter: two crossed bars evoking a rotor disc seen from above -
+    // distinct from the fixed-wing triangle at a glance. Rotates with
+    // heading like the triangle does, though the shape is symmetric
+    // enough that it barely shows.
+    html = `<div style="position:relative;width:12px;height:12px;transform:rotate(${headingDeg || 0}deg);filter:drop-shadow(0 0 2px rgba(0,0,0,0.8));">
+      <div style="position:absolute;top:5px;left:0;width:12px;height:2px;background:${color};"></div>
+      <div style="position:absolute;left:5px;top:0;width:2px;height:12px;background:${color};"></div>
+    </div>`;
   } else if (shape === "square") {
     html = `<div style="width:9px;height:9px;background:${color};border:1px solid rgba(0,0,0,0.6);"></div>`;
+  } else if (shape === "hexagon") {
+    // SAM - a hexagon reads as "site/installation" and won't be confused
+    // with the plain vehicle square or the soldier circle.
+    html = `<div style="width:11px;height:11px;background:${color};border:1px solid rgba(0,0,0,0.6);clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);"></div>`;
   } else if (shape === "diamond") {
     html = `<div style="width:9px;height:9px;background:${color};border:1px solid rgba(0,0,0,0.6);transform:rotate(45deg);"></div>`;
   } else {
     html = `<div style="width:9px;height:9px;border-radius:50%;background:${color};border:1px solid rgba(0,0,0,0.6);"></div>`;
   }
   return L.divIcon({ html, className: "ml-map-marker", iconSize: [16, 16], iconAnchor: [8, 8] });
+}
+
+// Drives both the always-in-sync on-screen legend (buildMapLegend()) and
+// nothing else - shapeForUnit()/makeMapIcon() above are the actual source
+// of truth for what gets drawn; this list just has to keep describing them.
+const MAP_KEY = [
+  { shape: "triangle", label: "FIXED-WING" },
+  { shape: "cross", label: "HELICOPTER" },
+  { shape: "square", label: "VEHICLE" },
+  { shape: "hexagon", label: "SAM" },
+  { shape: "circle", label: "SOLDIER" },
+  { shape: "diamond", label: "SHIP" },
+];
+const MAP_KEY_NEUTRAL_COLOR = "#B8C2CC"; // same gray as the range-ring labels - shape is what the key explains, not coalition color
+
+function buildMapLegend() {
+  if (!mapLegend || mapLegend.dataset.built) return;
+  mapLegend.dataset.built = "1";
+  const shapeRows = MAP_KEY.map(({ shape, label }) => {
+    const icon = makeMapIcon(shape, MAP_KEY_NEUTRAL_COLOR, 0);
+    return `<div class="map-legend-row"><span class="map-legend-swatch">${icon.options.html}</span><span>${label}</span></div>`;
+  }).join("");
+  mapLegend.innerHTML = `
+    <span id="map-legend-title">KEY</span>
+    ${shapeRows}
+    <div class="map-legend-row map-legend-color-row">
+      <span class="map-legend-swatch"><span class="map-legend-color-dot" style="background:#1E88E5;"></span></span><span>FRIENDLY</span>
+    </div>
+    <div class="map-legend-row map-legend-color-row">
+      <span class="map-legend-swatch"><span class="map-legend-color-dot" style="background:#E53935;"></span></span><span>DETECTED</span>
+    </div>
+  `;
 }
 
 // Esri's World Topo Map, not plain OSM tiles - real terrain relief/
@@ -737,11 +799,13 @@ function updateMapMarkers(snapshot) {
   }
   mapEmptyState.hidden = true;
 
+  // shapeForUnit() so flying a helicopter draws the rotor-cross icon
+  // instead of always the fixed-wing triangle.
   if (!ownMarker) {
-    ownMarker = L.marker([own.lat, own.lon], { icon: makeMapIcon("triangle", "#1E88E5", own.heading), zIndexOffset: 1000 }).addTo(leafletMap);
+    ownMarker = L.marker([own.lat, own.lon], { icon: makeMapIcon(shapeForUnit(own), "#1E88E5", own.heading), zIndexOffset: 1000 }).addTo(leafletMap);
   } else {
     ownMarker.setLatLng([own.lat, own.lon]);
-    ownMarker.setIcon(makeMapIcon("triangle", "#1E88E5", own.heading));
+    ownMarker.setIcon(makeMapIcon(shapeForUnit(own), "#1E88E5", own.heading));
   }
 
   if (!hasCenteredOnce) {
@@ -754,7 +818,7 @@ function updateMapMarkers(snapshot) {
 
     (data.friendlies || []).forEach((u) => {
       if (u.lat == null || u.lon == null) return;
-      addDynamicMarker([u.lat, u.lon], makeMapIcon(shapeForCategory(u.category), "#1E88E5", u.heading),
+      addDynamicMarker([u.lat, u.lon], makeMapIcon(shapeForUnit(u), "#1E88E5", u.heading),
         `${escapeHtml(u.name || "Friendly")}<br>${escapeHtml(u.type || "")}`);
     });
 
@@ -763,7 +827,7 @@ function updateMapMarkers(snapshot) {
     // hook). Never a raw dump of every enemy unit in the mission.
     (data.detected || []).forEach((u) => {
       if (u.lat == null || u.lon == null) return;
-      addDynamicMarker([u.lat, u.lon], makeMapIcon(shapeForCategory(u.category), "#E53935", u.heading),
+      addDynamicMarker([u.lat, u.lon], makeMapIcon(shapeForUnit(u), "#E53935", u.heading),
         escapeHtml(u.type || "Contact"));
     });
 
@@ -802,6 +866,7 @@ async function pollMapData() {
 function openMap() {
   mapOverlay.hidden = false;
   ensureLeafletMap();
+  buildMapLegend();
   // The map was sized 0x0 while its container was hidden - Leaflet needs
   // to be told to re-measure now that it's actually visible.
   setTimeout(() => leafletMap.invalidateSize(), 0);
@@ -826,6 +891,10 @@ mapOverlay.addEventListener("click", (e) => {
 mapRecenterBtn.addEventListener("click", () => {
   hasCenteredOnce = false;
   pollMapData();
+});
+mapKeyToggle.addEventListener("click", () => {
+  mapLegend.hidden = !mapLegend.hidden;
+  mapKeyToggle.classList.toggle("active", !mapLegend.hidden);
 });
 document.addEventListener("keydown", (e) => {
   if (mapOverlay.hidden) return;

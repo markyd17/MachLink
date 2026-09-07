@@ -188,6 +188,7 @@
                handles zoom - RECENTER just snaps back to your own
                position after you've panned away, since the map no longer
                auto-follows every tick (that would fight manual panning). -->
+          <button type="button" id="map-key-toggle" class="active">KEY</button>
           <button type="button" id="map-recenter">RECENTER</button>
           <button type="button" id="map-close" aria-label="Close">&times;</button>
         </div>
@@ -195,6 +196,10 @@
       <div id="map-body">
         <div id="map-empty-state" hidden></div>
         <div id="map-leaflet"></div>
+        <!-- Populated once by buildMapLegend() in app.js, reusing the exact
+             same makeMapIcon() HTML the live markers are drawn with, so
+             the key can never drift out of sync with what's on the map. -->
+        <div id="map-legend"></div>
       </div>
     </div>
   </div>

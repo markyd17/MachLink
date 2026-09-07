@@ -104,10 +104,13 @@ local function is_player_unit(unit)
 	return safe_call(unit, "getPlayerName") ~= nil
 end
 
--- Best-effort finer classification for the Logbook's "kills by type"
--- breakdown, layered on top of category_label()'s coarse Unit.Category
--- bucket. Uses DCS's own attribute tag system - the same one the Mission
--- Editor's own unit filters use (hasAttribute()) - which two real unit
+-- Best-effort finer classification, layered on top of category_label()'s
+-- coarse Unit.Category bucket. Originally built for the Logbook's "kills
+-- by type" breakdown; also fed into unit_json() below so the live map can
+-- draw vehicle/SAM/soldier as distinct ground icons instead of one
+-- generic square for every ground_unit. Uses DCS's own attribute tag
+-- system - the same one the Mission Editor's own unit filters use
+-- (hasAttribute()) - which two real unit
 -- database entries confirmed uses exactly these strings (Vehicles/SAM/
 -- 9P31 STRELA-1.lua: "SR SAM"/"IR Guided SAM"; Vehicles/IFV/BTR-60.lua:
 -- "APC"). NOT exhaustively verified against every unit type yet - expect
@@ -382,6 +385,10 @@ local function unit_json(unit, extraFields)
 	fields[#fields + 1] = {"name", safe_call(unit, "getName")}
 	fields[#fields + 1] = {"type", safe_call(unit, "getTypeName")}
 	fields[#fields + 1] = {"category", category_label(unit)}
+	-- "sam" / "vehicle" / "soft_target" (soldier), or nil for anything
+	-- that isn't a ground unit / doesn't match a known attribute - see
+	-- kill_category_detail() above.
+	fields[#fields + 1] = {"categoryDetail", kill_category_detail(unit)}
 	if extraFields then
 		for _, f in ipairs(extraFields) do
 			fields[#fields + 1] = f

@@ -1160,7 +1160,7 @@ header {
   font-size: 0.8rem;
   white-space: nowrap;
 }
-#map-recenter, #map-close {
+#map-recenter, #map-key-toggle, #map-close {
   background: none;
   border: 1px solid var(--border);
   color: var(--text-dim);
@@ -1172,7 +1172,8 @@ header {
   font-family: var(--font-mono);
 }
 #map-close { border: none; font-size: 26px; padding: 0 4px; }
-#map-recenter:hover { border-color: var(--tactical-cyan); color: var(--tactical-cyan); }
+#map-recenter:hover, #map-key-toggle:hover { border-color: var(--tactical-cyan); color: var(--tactical-cyan); }
+#map-key-toggle.active { border-color: var(--tactical-cyan); color: var(--tactical-cyan); }
 #map-close:hover { color: var(--hazard-red); }
 #map-body {
   padding: 16px 20px 20px;
@@ -1208,6 +1209,66 @@ header {
   background: var(--panel-bg);
 }
 #map-empty-state[hidden] { display: none; }
+/* Legend/key overlaid in the map's own corner rather than a separate
+   panel - built once by buildMapLegend() in app.js from the same
+   makeMapIcon() shapes the live markers use, so it can't drift out of
+   sync with what's actually drawn. pointer-events:none so it never blocks
+   dragging/clicking the map underneath it - only the KEY header button
+   (outside this box) toggles it. */
+#map-legend {
+  position: absolute;
+  left: 24px;
+  bottom: 24px;
+  /* #map-overlay (z-index 116, position:fixed) is the nearest ancestor
+     that actually establishes a stacking context - #map-panel/#map-body/
+     the Leaflet container itself all sit at position:relative with no
+     z-index of their own, so they don't start a new one. That means this
+     box's z-index is compared directly against Leaflet's OWN pane
+     z-indexes (tile pane 200, marker pane 600, popup pane 700) and its
+     zoom/attribution controls (1000) in that same shared context, not
+     just against other things inside #map-body. Below ~1000 here, the
+     map tiles paint over this box every frame regardless of `hidden` -
+     it looked like the KEY toggle did nothing because the legend was
+     always covered, on or off. */
+  z-index: 1100;
+  background: rgba(11, 15, 18, 0.85);
+  border: 1px solid var(--border);
+  padding: 8px 10px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-dim);
+  pointer-events: none;
+}
+#map-legend[hidden] { display: none; }
+#map-legend-title {
+  display: block;
+  color: var(--tactical-cyan);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  margin-bottom: 6px;
+}
+.map-legend-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.map-legend-row:last-child { margin-bottom: 0; }
+.map-legend-color-row { margin-top: 6px; }
+.map-legend-swatch {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.map-legend-color-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  display: inline-block;
+}
 .debrief-cause {
   margin-top: 8px;
   color: var(--text-dim);
