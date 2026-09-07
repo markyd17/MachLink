@@ -21,6 +21,19 @@ _DCS_SAVED_GAMES_VARIANTS = ("DCS", "DCS.openbeta", "DCS.openbeta_server", "DCS.
 
 MAP_DATA_FILENAME = "MachLinkMapData.json"
 
+# Keep in sync with MAP_HOOK_VERSION in integrations/dcs_mission_hook.lua -
+# bumped there whenever the snapshot's JSON shape changes in a way the
+# frontend depends on. That .lua file is a MANUAL, one-time copy per the
+# README (Saved Games\DCS\Scripts\MachLinkMissionHook.lua) - pulling a repo
+# update alone does nothing in-game until that copy is redone, so a
+# deployed hook can silently lag behind this app for a long time. Rather
+# than let fields it predates (categoryDetail, myCoalition, ...) just
+# quietly go missing with no explanation, MapDataStore.get() below flags
+# "hook_outdated" whenever the snapshot's own hookVersion is missing or
+# behind this constant, for the frontend to surface as an actionable
+# warning instead of a silent gap.
+EXPECTED_MAP_HOOK_VERSION = 1
+
 
 def _candidate_paths():
     home = Path.home()
@@ -55,6 +68,7 @@ class MapDataStore:
         with self.lock:
             if self._data is None:
                 return {"available": False}
+            hook_version = self._data.get("hookVersion")
             return {
                 "available": True,
                 "updated_at": self._updated_at,
@@ -64,6 +78,10 @@ class MapDataStore:
                 # the map out instead of showing a frozen last-known state
                 # as if it were live.
                 "stale": (time.time() - self._updated_at) > 5.0,
+                # True for a snapshot with no hookVersion at all (any hook
+                # older than this check existing) or one reporting a lower
+                # number than EXPECTED_MAP_HOOK_VERSION - see that constant.
+                "hook_outdated": hook_version is None or hook_version < EXPECTED_MAP_HOOK_VERSION,
                 "data": self._data,
             }
 

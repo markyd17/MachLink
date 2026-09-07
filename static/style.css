@@ -1364,6 +1364,18 @@ header {
   background: var(--panel-bg);
 }
 #map-empty-state[hidden] { display: none; }
+/* Same stacking-context gotcha as #map-legend below (see its comment) -
+   needs the same high z-index to actually sit above Leaflet's own panes/
+   controls instead of getting painted over by the tile layer. */
+#map-hook-outdated-warning {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  top: 16px;
+  z-index: 1100;
+  background: var(--bg);
+}
+#map-hook-outdated-warning[hidden] { display: none; }
 /* Legend/key overlaid in the map's own corner rather than a separate
    panel - built once by buildMapLegend() in app.js from the same
    makeMapIcon() shapes the live markers use, so it can't drift out of

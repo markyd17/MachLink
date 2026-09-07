@@ -29,6 +29,7 @@ const logbookOverlay = document.getElementById("logbook-overlay");
 const logbookClose = document.getElementById("logbook-close");
 const logbookFlightList = document.getElementById("logbook-flight-list");
 const liveMapBtn = document.getElementById("live-map-btn");
+const opsHookOutdatedWarning = document.getElementById("ops-hook-outdated-warning");
 const opsSortieTimer = document.getElementById("ops-sortie-timer");
 const opsSortieTimeValue = document.getElementById("ops-sortie-time-value");
 const opsThreatAlert = document.getElementById("ops-threat-alert");
@@ -43,6 +44,7 @@ const mapOverlay = document.getElementById("map-overlay");
 const mapClose = document.getElementById("map-close");
 const mapLeafletDiv = document.getElementById("map-leaflet");
 const mapEmptyState = document.getElementById("map-empty-state");
+const mapHookOutdatedWarning = document.getElementById("map-hook-outdated-warning");
 const mapRecenterBtn = document.getElementById("map-recenter");
 const mapRangeLabel = document.getElementById("map-range-label");
 const mapKeyToggle = document.getElementById("map-key-toggle");
@@ -922,10 +924,15 @@ function addDynamicMarker(latlng, icon, popupHtml) {
 
 function updateMapMarkers(snapshot) {
   if (!snapshot || !snapshot.available) {
+    mapHookOutdatedWarning.hidden = true;
     mapEmptyState.hidden = false;
     mapEmptyState.textContent = "NO LIVE MAP DATA — make sure DCS is running, Phase 2's mission hook is installed, and you're in control of a unit.";
     return;
   }
+  // See the same check in updateOpsSituationalAwareness - a deployed
+  // mission hook predating categoryDetail/myCoalition affects the full
+  // map's icons/airbase colors too.
+  mapHookOutdatedWarning.hidden = !snapshot.hook_outdated;
   const data = snapshot.data || {};
   const own = data.own;
   if (!own || own.lat == null || own.lon == null) {
@@ -1131,7 +1138,15 @@ function findSamThreats(own, detected) {
 }
 
 function updateOpsSituationalAwareness(snapshot) {
-  const data = snapshot && snapshot.available ? (snapshot.data || {}) : null;
+  const available = snapshot && snapshot.available;
+  // See MapDataStore.get() in dcs_map_data.py / MAP_HOOK_VERSION in
+  // dcs_mission_hook.lua - the deployed mission hook predates a field
+  // something here depends on (categoryDetail, myCoalition, ...), most
+  // likely because it's a manual copy that hasn't been redone since a
+  // MachLink update. Meaningful any time a snapshot exists at all, not
+  // just once your own position is known.
+  opsHookOutdatedWarning.hidden = !(available && snapshot.hook_outdated);
+  const data = available ? (snapshot.data || {}) : null;
   const own = data && data.own && data.own.lat != null ? data.own : null;
 
   if (!own) {

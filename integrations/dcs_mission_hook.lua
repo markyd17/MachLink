@@ -50,6 +50,18 @@ local MachLinkMission = {}
 MachLinkMission.eventsPath = lfs.writedir() .. [[Scripts\MachLinkCombatEvents.jsonl]]
 MachLinkMission.lastHit = {}  -- unitId -> {shooterName, shooterRelation, shooterCategory, weaponType}
 
+-- Bump whenever write_map_snapshot()'s JSON shape changes in a way the
+-- frontend depends on (a new field, a renamed one, etc.). This file is a
+-- MANUAL, one-time copy per the README (Saved Games\DCS\Scripts\
+-- MachLinkMissionHook.lua) - DCS never re-syncs it with this repo on its
+-- own, so a repo update alone does nothing in-game until that copy is
+-- redone. Without this stamp, an out-of-date deployed copy just silently
+-- omits whatever fields it predates (categoryDetail, myCoalition, ...)
+-- with no indication why - dcs_map_data.py compares this against
+-- EXPECTED_MAP_HOOK_VERSION and flags "hook_outdated" for the frontend to
+-- warn about instead. Keep the two in sync.
+local MAP_HOOK_VERSION = 1
+
 local function safe_call(obj, method, ...)
 	if not obj then return nil end
 	local ok, result = pcall(obj[method], obj, ...)
@@ -546,6 +558,7 @@ local function write_map_snapshot()
 	local detectedItems = gather_detected(friendlyUnits, myCoalition)
 
 	local fields = {
+		{"hookVersion", MAP_HOOK_VERSION},
 		{"own", unit_json(playerUnit)},
 		{"friendlies", build_json_array(friendlyItems)},
 		{"airbases", build_json_array(gather_airbases())},

@@ -48,6 +48,18 @@
          live in-flight tracking (Live Map), together: "what's happening
          this sortie." Default landing section. -->
     <section class="primary-section" id="section-ops">
+      <!-- The mission hook (Saved Games\DCS\Scripts\MachLinkMissionHook.lua)
+           is a MANUAL, one-time copy per the README - pulling a MachLink
+           update alone does not update what DCS itself runs. Shown when
+           /api/map_data reports hook_outdated (see MapDataStore.get() in
+           dcs_map_data.py / MAP_HOOK_VERSION in dcs_mission_hook.lua) so a
+           stale deployed hook is an actionable message instead of features
+           just silently missing data. -->
+      <div class="placeholder-warning" id="ops-hook-outdated-warning" hidden>
+        ⚠ Mission hook out of date — SAM threat alerts and nearest-divert lookups need fields an older deployed copy doesn't send.
+        Re-copy <code class="mono">integrations/dcs_mission_hook.lua</code> to <code class="mono">Saved Games\DCS\Scripts\MachLinkMissionHook.lua</code>, then reload the mission.
+      </div>
+
       <!-- Live sortie timer - hidden until dcs_flight_tracker.py reports an
            actual in-progress (airborne) flight; see pollDebriefStatus()/
            tickSortieTimer() in app.js. -->
@@ -279,6 +291,12 @@
       </div>
       <div id="map-body">
         <div id="map-empty-state" hidden></div>
+        <!-- Same hook_outdated flag Ops's warning uses (see the comment
+             there) - the full map is affected too (airbase coloring needs
+             myCoalition, unit icons need categoryDetail). -->
+        <div id="map-hook-outdated-warning" class="placeholder-warning" hidden>
+          ⚠ Mission hook out of date — some icons/colors may be wrong. Re-copy <code class="mono">dcs_mission_hook.lua</code> to <code class="mono">Saved Games\DCS\Scripts\MachLinkMissionHook.lua</code>.
+        </div>
         <div id="map-leaflet"></div>
         <!-- Populated once by buildMapLegend() in app.js, reusing the exact
              same makeMapIcon() HTML the live markers are drawn with, so
