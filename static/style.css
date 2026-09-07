@@ -341,9 +341,7 @@ header {
 }
 .ops-sitaware {
   gap: 4px;
-  overflow-y: auto;
 }
-.ops-sitaware .logbook-btn { margin-top: 10px; width: 100%; text-align: center; }
 
 /* Same alarm treatment as .status-block.alarm - a detected SAM is exactly
    the kind of thing that deserves the pulsing-red annunciator look, not
@@ -363,54 +361,97 @@ header {
 }
 .ops-threat-alert[hidden] { display: none; }
 
-.ops-radar-wrap {
+/* The real map's home within this card - fills whatever's left below the
+   readout rows above, instead of the small fixed-size radar-scope preview
+   this replaced. position:relative so the EXPAND button and #map-viewport
+   itself (with its own empty-state/warning/legend overlays) can be
+   positioned against it regardless of which of its two homes it's
+   currently in (see #map-body below for the other one). */
+.ops-map-home {
   position: relative;
-  align-self: center;
-  width: 160px;
-  height: 160px;
-  margin-bottom: 10px;
+  flex: 1;
+  min-height: 240px;
+  margin-top: 6px;
+  border: 1px solid var(--border);
+  overflow: hidden;
 }
-#ops-radar { width: 100%; height: 100%; }
-.ops-radar-empty {
+#map-viewport { position: relative; width: 100%; height: 100%; }
+.ops-map-home-placeholder {
   position: absolute;
   inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--text-dim);
-  font-size: 0.68rem;
-  letter-spacing: 0.08em;
+  font-size: 0.8rem;
   text-align: center;
-  padding: 10px;
+  padding: 20px;
 }
-.ops-radar-empty[hidden] { display: none; }
+.ops-map-home-placeholder[hidden] { display: none; }
+/* Same stacking-context reasoning as #map-legend/#map-hook-outdated-warning
+   below (see their comments) - #map-viewport's nearest real ancestor
+   stacking context while it's living here is the document root itself
+   (nothing between this button and it sets position+z-index), which is
+   also where Leaflet's own panes/controls (up to z-index 1000) resolve -
+   needs to clear that, same 1100 used everywhere else on this map. */
+.ops-map-expand-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 1100;
+  background: var(--bg);
+  border: 1px solid var(--tactical-cyan);
+  color: var(--tactical-cyan);
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  font-weight: bold;
+  letter-spacing: 0.05em;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+.ops-map-expand-btn:hover { background: rgba(0, 229, 255, 0.12); }
+.ops-map-expand-btn[hidden] { display: none; }
 
 /* Live combat-event ticker - a fixed height with its own scroll rather
    than growing with the grid above, so a busy sortie's event list can't
-   push the rest of Ops off-balance. */
+   push the rest of Ops off-balance. A wrapping row of compact cards
+   rather than one full-width line per event - a one-line entry ("SHOT:
+   AIM-120C") in a single full-width row left most of the panel's width
+   sitting empty; cards actually fill it, several per line. */
 .ops-events-panel {
-  flex: 0 0 150px;
+  flex: 0 0 180px;
   margin-top: 12px;
 }
 #ops-events-list {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 8px;
   font-family: var(--font-mono);
   font-size: 0.8rem;
 }
 .ops-events-empty { color: var(--text-dim); }
-.ops-event-row {
+.ops-event-card {
+  flex: 1 1 220px;
+  max-width: 320px;
   display: flex;
-  gap: 10px;
-  padding: 4px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  flex-direction: column;
+  gap: 3px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--border);
+  background: rgba(0, 0, 0, 0.15);
 }
-.ops-event-row:last-child { border-bottom: none; }
-.ops-event-time { color: var(--text-dim); flex: 0 0 auto; }
-.ops-event-kill { color: var(--mfd-green); }
-.ops-event-hit, .ops-event-loss { color: var(--hazard-red); }
-.ops-event-shot { color: var(--tactical-cyan); }
+.ops-event-time { color: var(--text-dim); font-size: 0.72rem; }
+.ops-event-card.ops-event-kill { border-left-color: var(--mfd-green); }
+.ops-event-card.ops-event-kill .ops-event-text { color: var(--mfd-green); }
+.ops-event-card.ops-event-hit, .ops-event-card.ops-event-loss { border-left-color: var(--hazard-red); }
+.ops-event-card.ops-event-hit .ops-event-text, .ops-event-card.ops-event-loss .ops-event-text { color: var(--hazard-red); }
+.ops-event-card.ops-event-shot { border-left-color: var(--tactical-cyan); }
+.ops-event-card.ops-event-shot .ops-event-text { color: var(--tactical-cyan); }
 
 /* Hangar's single content column - was #pilot-summary-body's overlay
    padding, now the section's own scroll container since it's persistent
@@ -1274,7 +1315,14 @@ header {
   background: var(--panel-bg);
   border: 1px solid var(--tactical-cyan);
   width: min(720px, 92vw);
-  max-height: 90vh;
+  /* height, not max-height - unlike the other overlays (debrief/logbook),
+     which shrink-to-fit variable text content, a map always wants to fill
+     whatever room it's given. A definite height here (rather than "auto,
+     capped") is also what lets #map-body use flex:1 and #map-viewport/
+     #map-leaflet resolve height:100% against something real, instead of
+     collapsing to 0 the way percentage heights do inside an auto-sized
+     ancestor. */
+  height: 90vh;
   display: flex;
   flex-direction: column;
   box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
@@ -1333,10 +1381,16 @@ header {
 #map-body {
   padding: 16px 20px 20px;
   position: relative;
+  flex: 1;
+  min-height: 0;
 }
+/* #map-viewport (the moved-between-homes wrapper - see the HTML comment on
+   it) already provides its own 100%/100% box; #map-leaflet just fills
+   that, same rule whichever of its two homes (here, or Ops's
+   #ops-map-home) it's currently sitting in. */
 #map-leaflet {
   width: 100%;
-  height: min(500px, calc(90vh - 130px));
+  height: 100%;
   background: #0B0F12;
   border: 1px solid var(--border);
 }
@@ -1353,7 +1407,11 @@ header {
 .leaflet-container { font-family: var(--font-mono); }
 #map-empty-state {
   position: absolute;
-  inset: 16px 20px 20px;
+  /* Relative to #map-viewport now (see its comment), which already sits
+     inside whichever padded/bordered home is currently holding it -
+     inset:0 fills that exactly, instead of adding a second layer of
+     padding on top. */
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1369,9 +1427,9 @@ header {
    controls instead of getting painted over by the tile layer. */
 #map-hook-outdated-warning {
   position: absolute;
-  left: 16px;
-  right: 16px;
-  top: 16px;
+  left: 8px;
+  right: 8px;
+  top: 8px;
   z-index: 1100;
   background: var(--bg);
 }

@@ -34,14 +34,16 @@ const opsSortieTimer = document.getElementById("ops-sortie-timer");
 const opsSortieTimeValue = document.getElementById("ops-sortie-time-value");
 const opsThreatAlert = document.getElementById("ops-threat-alert");
 const opsThreatText = document.getElementById("ops-threat-text");
-const opsRadarSvg = document.getElementById("ops-radar");
-const opsRadarEmpty = document.getElementById("ops-radar-empty");
 const opsBullseyeCall = document.getElementById("ops-bullseye-call");
 const opsNearestAirbase = document.getElementById("ops-nearest-airbase");
 const opsContactSummary = document.getElementById("ops-contact-summary");
 const opsEventsList = document.getElementById("ops-events-list");
+const opsMapHome = document.getElementById("ops-map-home");
+const opsMapHomePlaceholder = document.getElementById("ops-map-home-placeholder");
+const mapViewport = document.getElementById("map-viewport");
 const mapOverlay = document.getElementById("map-overlay");
 const mapClose = document.getElementById("map-close");
+const mapBody = document.getElementById("map-body");
 const mapLeafletDiv = document.getElementById("map-leaflet");
 const mapEmptyState = document.getElementById("map-empty-state");
 const mapHookOutdatedWarning = document.getElementById("map-hook-outdated-warning");
@@ -88,6 +90,10 @@ function switchPrimarySection(id) {
     btn.classList.toggle("active", btn.dataset.section === id);
   });
   if (id === "hangar") loadPilotSummary();
+  // The embedded map was sized 0x0 while its #ops-map-home ancestor was
+  // hidden (display:none doesn't just hide, Leaflet's cached container
+  // size goes stale) - same re-measure openMap() does for the overlay.
+  if (id === "ops" && leafletMap) setTimeout(() => leafletMap.invalidateSize(), 0);
 }
 primaryNavBtns.forEach((btn) => {
   btn.addEventListener("click", () => switchPrimarySection(btn.dataset.section));
@@ -397,9 +403,15 @@ function renderLiveEvents(events) {
     opsEventsList.innerHTML = `<div class="ops-events-empty">No events yet this sortie.</div>`;
     return;
   }
+  // A wrapping row of compact cards (see .ops-event-card) rather than one
+  // full-width line per event - a short entry like "SHOT: AIM-120C" left
+  // most of the panel's width empty as a single-column list.
   opsEventsList.innerHTML = events.slice().reverse().map((e) => {
     const { time, cls, text } = formatLiveEvent(e);
-    return `<div class="ops-event-row"><span class="ops-event-time mono">${time}</span><span class="${cls}">${escapeHtml(text)}</span></div>`;
+    return `<div class="ops-event-card ${cls}">
+      <span class="ops-event-time mono">${time}</span>
+      <span class="ops-event-text">${escapeHtml(text)}</span>
+    </div>`;
   }).join("");
 }
 
@@ -1009,17 +1021,28 @@ async function pollMapData() {
   } catch (e) {
     snapshot = null;
   }
-  // updateMapMarkers touches leafletMap/dynamicLayer/etc. directly, which
-  // only exist once the full map's been opened at least once - stays
-  // gated on that. updateOpsSituationalAwareness has no such dependency.
+  // leafletMap exists from page load now (see ensureLeafletMap() call at
+  // the bottom of this file) - the guard here is just defensive in case
+  // this ever runs before that.
   if (leafletMap) updateMapMarkers(snapshot);
   updateOpsSituationalAwareness(snapshot);
 }
 
+// #map-viewport lives in Ops's #ops-map-home by default (visible there
+// without any click needed) and moves into the overlay's #map-body and
+// back, rather than each keeping its own separate Leaflet instance/
+// markers/rings to stay in sync - one map, two homes.
 function openMap() {
+  mapBody.appendChild(mapViewport);
+  opsMapHomePlaceholder.hidden = false;
+  liveMapBtn.hidden = true;
   mapOverlay.hidden = false;
   ensureLeafletMap();
   buildMapLegend();
+  // The KEY legend takes real corner space Ops's small embedded view can't
+  // spare - stays hidden there regardless of the toggle's own remembered
+  // state, which only applies once actually expanded here.
+  mapLegend.hidden = !mapKeyToggle.classList.contains("active");
   // The map was sized 0x0 while its container was hidden - Leaflet needs
   // to be told to re-measure now that it's actually visible.
   setTimeout(() => leafletMap.invalidateSize(), 0);
@@ -1028,67 +1051,21 @@ function openMap() {
 
 function closeMap() {
   mapOverlay.hidden = true;
+  opsMapHome.appendChild(mapViewport);
+  opsMapHomePlaceholder.hidden = true;
+  liveMapBtn.hidden = false;
+  mapLegend.hidden = true;
+  if (leafletMap) setTimeout(() => leafletMap.invalidateSize(), 0);
 }
 
 // ----------------------------------------------------------------------
-// OPS SITUATIONAL AWARENESS - a compact, always-current summary of the
-// exact same snapshot the full Live Map draws, for a glance without
-// opening the overlay: a bullseye call for your own position, the
-// nearest friendly divert airbase, a contact-type breakdown, and a
-// relative-position radar-scope preview. Every number here comes straight
-// from data.own/data.airbases/data.detected/data.bullseye - nothing
-// computed here is a guess, just bearing/distance math on real positions.
+// OPS SITUATIONAL AWARENESS - a bullseye call for your own position, the
+// nearest friendly divert airbase, and a contact-type breakdown, next to
+// the real map itself (#map-viewport lives in #ops-map-home by default -
+// see openMap()/closeMap()). Every number here comes straight from
+// data.own/data.airbases/data.detected/data.bullseye - nothing computed
+// here is a guess, just bearing/distance math on real positions.
 // ----------------------------------------------------------------------
-const OPS_RADAR_RANGE_NM = 40; // fixed preview range - OPEN LIVE MAP is the place for anything farther out or a real geo background
-const OPS_RADAR_SIZE = 160;
-const OPS_RADAR_CENTER = OPS_RADAR_SIZE / 2;
-const OPS_RADAR_MAX_R = OPS_RADAR_CENTER - 12;
-
-// bearing/distance from own position -> (lat, lon), converted to an (x, y)
-// point on the radar's fixed-range, north-up SVG. Returns null if outside
-// OPS_RADAR_RANGE_NM - contacts beyond the preview's range are omitted
-// entirely rather than clamped to the edge, so the scope never implies a
-// distant contact is closer than it actually is.
-function opsRadarPoint(ownLat, ownLon, lat, lon) {
-  const { bearingDeg, distanceNm } = bearingDistanceBetween(ownLat, ownLon, lat, lon);
-  if (distanceNm > OPS_RADAR_RANGE_NM) return null;
-  const r = (distanceNm / OPS_RADAR_RANGE_NM) * OPS_RADAR_MAX_R;
-  const rad = bearingDeg * Math.PI / 180;
-  return [OPS_RADAR_CENTER + r * Math.sin(rad), OPS_RADAR_CENTER - r * Math.cos(rad)];
-}
-
-function renderOpsRadar(own, data) {
-  const parts = [];
-  [1 / 3, 2 / 3, 1].forEach((f) => {
-    parts.push(`<circle cx="${OPS_RADAR_CENTER}" cy="${OPS_RADAR_CENTER}" r="${(OPS_RADAR_MAX_R * f).toFixed(1)}" fill="none" stroke="#1F2933" stroke-width="1"/>`);
-  });
-
-  const plot = (lat, lon, color, shape) => {
-    if (lat == null || lon == null) return;
-    const point = opsRadarPoint(own.lat, own.lon, lat, lon);
-    if (!point) return;
-    const [x, y] = point;
-    if (shape === "square") {
-      parts.push(`<rect x="${(x - 3).toFixed(1)}" y="${(y - 3).toFixed(1)}" width="6" height="6" fill="${color}"/>`);
-    } else if (shape === "ring") {
-      parts.push(`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="5" fill="none" stroke="${color}" stroke-width="2"/>`);
-    } else {
-      parts.push(`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3" fill="${color}"/>`);
-    }
-  };
-
-  (data.friendlies || []).forEach((u) => plot(u.lat, u.lon, "#1E88E5", "dot"));
-  (data.detected || []).forEach((u) => plot(u.lat, u.lon, "#E53935", "dot"));
-  (data.airbases || []).forEach((ab) => plot(ab.lat, ab.lon, airbaseColor(ab.coalition, data.myCoalition), "square"));
-  if (data.bullseye) plot(data.bullseye.lat, data.bullseye.lon, "#FF9900", "ring");
-
-  // Own aircraft last, on top of everything else, at dead center - a
-  // triangle rotated to heading, same "0=north, clockwise" convention as
-  // the full map's own-aircraft icon.
-  parts.push(`<g transform="rotate(${own.heading || 0} ${OPS_RADAR_CENTER} ${OPS_RADAR_CENTER})"><polygon points="${OPS_RADAR_CENTER},${OPS_RADAR_CENTER - 7} ${OPS_RADAR_CENTER - 5},${OPS_RADAR_CENTER + 6} ${OPS_RADAR_CENTER + 5},${OPS_RADAR_CENTER + 6}" fill="#1E88E5"/></g>`);
-
-  opsRadarSvg.innerHTML = parts.join("");
-}
 
 // Nearest airbase belonging to the player's OWN coalition (data.myCoalition -
 // see write_map_snapshot() in dcs_mission_hook.lua) - null if that field
@@ -1151,15 +1128,11 @@ function updateOpsSituationalAwareness(snapshot) {
 
   if (!own) {
     opsThreatAlert.hidden = true;
-    opsRadarEmpty.hidden = false;
-    opsRadarSvg.innerHTML = "";
     opsBullseyeCall.textContent = "—";
     opsNearestAirbase.textContent = "—";
     opsContactSummary.textContent = "—";
     return;
   }
-  opsRadarEmpty.hidden = true;
-  renderOpsRadar(own, data);
 
   const threats = findSamThreats(own, data.detected);
   opsThreatAlert.hidden = threats.length === 0;
@@ -1176,10 +1149,21 @@ function updateOpsSituationalAwareness(snapshot) {
     opsBullseyeCall.textContent = "NO BULLSEYE";
   }
 
+  // Three distinct "nothing to show" reasons, not one generic blank -
+  // each points at a different actual cause instead of leaving you to
+  // guess whether it's the hook, the mission, or a real absence of data.
   const nearest = findNearestFriendlyAirbase(own, data.airbases, data.myCoalition);
-  opsNearestAirbase.textContent = nearest
-    ? `${nearest.name} ${formatBearingRange(nearest.bearingDeg, nearest.distanceNm)}`
-    : (data.myCoalition == null ? "UNAVAILABLE" : "NONE FOUND");
+  let nearestText = "—";
+  if (nearest) {
+    nearestText = `${nearest.name} ${formatBearingRange(nearest.bearingDeg, nearest.distanceNm)}`;
+  } else if (data.myCoalition == null) {
+    nearestText = "UNAVAILABLE"; // see the hook_outdated warning above
+  } else if (!(data.airbases || []).length) {
+    nearestText = "NO AIRBASE DATA"; // world.getAirbases() returned nothing at all
+  } else {
+    nearestText = "NONE OWNED BY YOUR SIDE"; // airbases exist, just not yours in this mission
+  }
+  opsNearestAirbase.textContent = nearestText;
 
   opsContactSummary.textContent = summarizeContacts(data.detected) || "NONE DETECTED";
 }
@@ -1838,6 +1822,11 @@ function escapeHtml(str) {
 
 pollStatus();
 setInterval(pollStatus, 3000);
+
+// The map lives in Ops's #ops-map-home by default (see openMap()/
+// closeMap()) - build it up front instead of waiting for a click, since
+// Ops is the default landing tab and the map should just be there.
+ensureLeafletMap();
 
 // Always-on, regardless of which primary tab is active or whether the
 // full map overlay is open - see the comment on pollMapData() itself.

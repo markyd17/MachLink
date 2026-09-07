@@ -87,15 +87,14 @@
           </section>
         </div>
 
-        <!-- Situational awareness - a compact, always-updating summary of
-             the exact same snapshot the full Live Map draws (see
-             pollMapData/updateOpsSituationalAwareness in app.js), for a
-             glance without opening the full overlay. The radar-scope
-             preview (relative bearing/range, north-up, fixed 40NM range)
-             is deliberately NOT a real geo map - that's what OPEN LIVE MAP
-             is for; this is the quick-glance abstraction the very first
-             from-scratch map prototype used, kept here as a lightweight
-             preview now that the full map is real terrain. -->
+        <!-- Situational awareness - the exact same real Leaflet map the
+             full overlay uses (see #map-viewport below), reparented in
+             here as its home so it's visible by default without an extra
+             click, plus the readouts a visual map can't give you as clean
+             text (an exact bullseye call, nearest-divert bearing/range, a
+             contact-type count). EXPAND moves #map-viewport into the full-
+             screen overlay for panning/zooming/popups without this card's
+             space constraints - see openMap()/closeMap() in app.js. -->
         <section class="sub-panel ops-sitaware">
           <h2 class="panel-title">Situational Awareness</h2>
           <!-- Distance-only, deliberately not a fabricated engagement-range
@@ -109,10 +108,6 @@
             <span>&#9888;</span>
             <span id="ops-threat-text"></span>
           </div>
-          <div class="ops-radar-wrap">
-            <svg id="ops-radar" viewBox="0 0 160 160"></svg>
-            <div class="ops-radar-empty" id="ops-radar-empty">NO DATA</div>
-          </div>
           <div class="ops-readout-row">
             <span class="ops-readout-label">BULLSEYE</span>
             <span class="ops-readout-value mono" id="ops-bullseye-call">&mdash;</span>
@@ -125,9 +120,39 @@
             <span class="ops-readout-label">CONTACTS</span>
             <span class="ops-readout-value mono" id="ops-contact-summary">&mdash;</span>
           </div>
-          <!-- Always enabled - openMap() shows its own "no data yet"
-               placeholder rather than gating the button itself. -->
-          <button type="button" id="live-map-btn" class="logbook-btn">OPEN LIVE MAP</button>
+          <!-- #map-viewport (the real map) lives here by default - JS
+               moves it into #map-body instead when EXPAND/CLOSE is
+               clicked. Always enabled - openMap() shows its own "no data
+               yet" placeholder rather than gating the button itself. -->
+          <div class="ops-map-home" id="ops-map-home">
+            <button type="button" id="live-map-btn" class="ops-map-expand-btn">&#10530; EXPAND</button>
+            <!-- Shown only while #map-viewport is out being displayed
+                 full-screen instead - see openMap()/closeMap() in app.js. -->
+            <div class="ops-map-home-placeholder" id="ops-map-home-placeholder" hidden>Map expanded — see full-screen view</div>
+            <!-- Moves between here (its home) and #map-body - see
+                 openMap()/closeMap() in app.js. Everything drawn on it
+                 comes straight from /api/map_data (dcs_mission_hook.lua's
+                 own snapshot) - own position, friendlies, airbases,
+                 bullseye, and only whatever DCS itself has confirmed
+                 detected. Nothing here is computed or guessed client-side;
+                 if DCS doesn't report a contact, it doesn't appear. -->
+            <div id="map-viewport">
+              <div id="map-empty-state" hidden></div>
+              <!-- hook_outdated flag also drives Ops's own warning above
+                   the sortie timer - this one covers icons/colors on the
+                   map itself (airbase coloring needs myCoalition, unit
+                   icons need categoryDetail). -->
+              <div id="map-hook-outdated-warning" class="placeholder-warning" hidden>
+                ⚠ Mission hook out of date — some icons/colors may be wrong. Re-copy <code class="mono">dcs_mission_hook.lua</code> to <code class="mono">Saved Games\DCS\Scripts\MachLinkMissionHook.lua</code>.
+              </div>
+              <div id="map-leaflet"></div>
+              <!-- Populated once by buildMapLegend() in app.js, reusing the
+                   exact same makeMapIcon() HTML the live markers are drawn
+                   with, so the key can never drift out of sync with what's
+                   on the map. -->
+              <div id="map-legend"></div>
+            </div>
+          </div>
         </section>
       </div>
 
@@ -289,19 +314,12 @@
           <button type="button" id="map-close" aria-label="Close">&times;</button>
         </div>
       </div>
-      <div id="map-body">
-        <div id="map-empty-state" hidden></div>
-        <!-- Same hook_outdated flag Ops's warning uses (see the comment
-             there) - the full map is affected too (airbase coloring needs
-             myCoalition, unit icons need categoryDetail). -->
-        <div id="map-hook-outdated-warning" class="placeholder-warning" hidden>
-          ⚠ Mission hook out of date — some icons/colors may be wrong. Re-copy <code class="mono">dcs_mission_hook.lua</code> to <code class="mono">Saved Games\DCS\Scripts\MachLinkMissionHook.lua</code>.
-        </div>
-        <div id="map-leaflet"></div>
-        <!-- Populated once by buildMapLegend() in app.js, reusing the exact
-             same makeMapIcon() HTML the live markers are drawn with, so
-             the key can never drift out of sync with what's on the map. -->
-        <div id="map-legend"></div>
+      <!-- Empty on load - #map-viewport (below, currently living inside
+           Ops's situational awareness card by default) gets moved in here
+           by openMap() and back out by closeMap(), rather than this
+           overlay and the Ops card each keeping their own separate
+           Leaflet instance/markers/rings to stay in sync. -->
+      <div id="map-body"></div>
       </div>
     </div>
   </div>
