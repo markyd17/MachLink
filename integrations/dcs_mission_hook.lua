@@ -90,6 +90,15 @@ function eventHandler:onEvent(event)
 			self:onLoss(event, "dead")
 		elseif event.id == world.event.S_EVENT_CRASH then
 			self:onLoss(event, "crash")
+		elseif event.id == world.event.S_EVENT_EJECTION then
+			-- Fires while the pilot is still aboard (about to eject), so
+			-- is_player_unit() below is reliable here - unlike the
+			-- eventual DEAD/CRASH of the abandoned airframe afterward,
+			-- which may or may not still report a player name once
+			-- empty (untested - this is why ejection gets captured as
+			-- its own definitive end-of-flight signal rather than
+			-- relying on that later event).
+			self:onLoss(event, "ejected")
 		elseif event.id == world.event.S_EVENT_BIRTH then
 			self:onBirth(event)
 		end

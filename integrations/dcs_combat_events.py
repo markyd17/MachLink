@@ -39,7 +39,7 @@ def start_combat_event_listener(flight_tracker, port=39235):
                 _debug_log(f"RECV {payload}")
                 if kind == "birth":
                     flight_tracker.on_birth(payload.get("unitName"))
-                elif kind in ("dead", "crash"):
+                elif kind in ("dead", "crash", "ejected"):
                     flight_tracker.on_combat_loss(
                         kind,
                         shooter_name=payload.get("shooterName"),

@@ -275,23 +275,34 @@ function outcomeBadge(d) {
   if (d.loss_kind === "dead") {
     return { cls: "debrief-outcome-crash", text: "⚠ SHOT DOWN" };
   }
+  if (d.loss_kind === "ejected") {
+    return { cls: "debrief-outcome-crash", text: "⚠ EJECTED" };
+  }
   return { cls: "debrief-outcome-crash", text: "⚠ CRASH" };
 }
 
 // A plain-language line describing what actually happened, from the
-// Phase 2 combat-event fields (dcs_flight_tracker.py's on_combat_loss) -
-// null when there's nothing more specific to say than the badge already
+// Phase 2 combat-event fields (dcs_flight_tracker.py's on_combat_loss).
+// Shooter info can accompany ANY of dead/crash/ejected - e.g. hit by
+// ground fire, flew on for a while, then crashed from the damage rather
+// than being destroyed outright by the hit itself - so this always checks
+// for it rather than assuming only a "dead" event carries a cause. Null
+// only when there's nothing more specific to say than the badge already
 // shows (a clean landing, or a Phase 1 timeout guess with no cause data).
 function causeOfLossText(d) {
   if (!d.crashed || d.loss_kind === "timeout") return null;
+  const who = [d.shooter_relation, SHOOTER_CATEGORY_LABELS[d.shooter_category]].filter(Boolean).join(" ");
+  const source = who ? `${who}${d.shooter_name ? ` (${d.shooter_name})` : ""}${d.weapon_type ? ` — ${d.weapon_type}` : ""}` : null;
+
   if (d.loss_kind === "dead") {
-    const who = [d.shooter_relation, SHOOTER_CATEGORY_LABELS[d.shooter_category]].filter(Boolean).join(" ");
-    let text = `Shot down by ${who || "an unknown source"}`;
-    if (d.shooter_name) text += ` (${d.shooter_name})`;
-    if (d.weapon_type) text += ` — ${d.weapon_type}`;
-    return text;
+    return `Shot down by ${source || "an unknown source"}`;
   }
-  if (d.loss_kind === "crash") return "Crashed into terrain or water";
+  if (d.loss_kind === "ejected") {
+    return source ? `Hit by ${source}, pilot ejected` : "Pilot ejected";
+  }
+  if (d.loss_kind === "crash") {
+    return source ? `Damaged by ${source}, then crashed` : "Crashed into terrain or water";
+  }
   return null;
 }
 

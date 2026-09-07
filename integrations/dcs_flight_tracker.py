@@ -300,11 +300,17 @@ class FlightTracker:
     def on_combat_loss(self, kind, shooter_name=None, shooter_relation=None,
                         shooter_category=None, weapon_type=None):
         """Called from the Phase 2 combat-event hook when the player's own
-        unit was destroyed (kind="dead", by a weapon) or crashed
-        (kind="crash", terrain/water, no weapon) - an authoritative,
-        immediate signal that check_timeout() previously had to wait up to
-        CRASH_TIMEOUT_SECONDS of telemetry silence to infer. Still subject
-        to the same 5-minute minimum."""
+        unit was destroyed (kind="dead", by a weapon), crashed
+        (kind="crash", terrain/water, no weapon), or the pilot ejected
+        (kind="ejected" - captured at the moment of ejection itself, while
+        the aircraft is still confirmed player-controlled, rather than
+        waiting on whatever the now-empty airframe does afterward) - an
+        authoritative, immediate signal that check_timeout() previously had
+        to wait up to CRASH_TIMEOUT_SECONDS of telemetry silence to infer.
+        Still subject to the same 5-minute minimum. shooter_* fields may be
+        present on any of these three kinds - e.g. hit by ground fire,
+        limped along for a while, then crashed from the damage - not just
+        "dead"."""
         with self.lock:
             if self.start_time is None:
                 return  # nothing being tracked - ignore
