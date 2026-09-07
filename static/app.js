@@ -259,6 +259,7 @@ async function pollStatus() {
       pollDcsBriefing();
       loadKneeboard();
       pollDebriefStatus();
+      pollLiveEvents();
     } else {
       kneeboardTab.hidden = true;
       kneeboardDrawer.hidden = true;
@@ -360,6 +361,52 @@ function describeActor({ relation, category, name, weapon } = {}) {
   const who = [relation, SHOOTER_CATEGORY_LABELS[category]].filter(Boolean).join(" ");
   if (!who) return null;
   return `${who}${name ? ` (${name})` : ""}${weapon ? ` — ${weapon}` : ""}`;
+}
+
+// Ops's live event ticker (/api/live_events, LiveEventStore in
+// dcs_combat_events.py) - the exact same {relation, category, name,
+// weapon} shape the Debrief's kill/hit lists use, reusing describeActor()
+// above rather than a second formatting scheme for the same data.
+function formatLiveEvent(e) {
+  const time = new Date(e.ts * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  if (e.kind === "sortie_start") return { time, cls: "", text: "Sortie started" };
+  if (e.kind === "shot") return { time, cls: "ops-event-shot", text: `SHOT: ${e.weapon || "weapon"}` };
+  if (e.kind === "gun_start") return { time, cls: "ops-event-shot", text: "GUNS" };
+  if (e.kind === "kill") {
+    const desc = describeActor(e) || "target";
+    return { time, cls: "ops-event-kill", text: `KILL: ${desc}` };
+  }
+  if (e.kind === "hit") {
+    const desc = describeActor(e) || "unknown source";
+    return { time, cls: "ops-event-hit", text: `HIT TAKEN from ${desc}` };
+  }
+  if (e.kind === "loss") {
+    const desc = describeActor(e);
+    const verb = e.loss_kind === "dead" ? "SHOT DOWN" : e.loss_kind === "ejected" ? "EJECTED" : "CRASHED";
+    return { time, cls: "ops-event-loss", text: desc ? `${verb} by ${desc}` : verb };
+  }
+  return { time, cls: "", text: e.kind || "Event" };
+}
+
+function renderLiveEvents(events) {
+  if (!events.length) {
+    opsEventsList.innerHTML = `<div class="ops-events-empty">No events yet this sortie.</div>`;
+    return;
+  }
+  opsEventsList.innerHTML = events.slice().reverse().map((e) => {
+    const { time, cls, text } = formatLiveEvent(e);
+    return `<div class="ops-event-row"><span class="ops-event-time mono">${time}</span><span class="${cls}">${escapeHtml(text)}</span></div>`;
+  }).join("");
+}
+
+async function pollLiveEvents() {
+  try {
+    const res = await fetch("/api/live_events");
+    const data = await res.json();
+    renderLiveEvents(data.events || []);
+  } catch (e) {
+    // Transient - leave whatever the ticker last showed.
+  }
 }
 
 // A plain-language line describing what actually happened, from the
