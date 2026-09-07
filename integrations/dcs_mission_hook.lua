@@ -35,10 +35,13 @@
 --   "ejected" - the pilot ejected
 --   "kill"   - the player destroyed another unit (the inverse of "dead" -
 --              S_EVENT_KILL, not the same event that produces "dead")
---   "shot"   - the player released a weapon (not yet empirically confirmed
---              how DCS buckets cannon/gun fire into this event - one per
---              burst? per round? - so weapons_expended tallies on the
---              Python side may need a sanity check against a real gun run)
+--   "shot"   - the player released a guided/unguided ordnance (missile,
+--              bomb, rocket) - confirmed via a real flight that gun/cannon
+--              fire does NOT generate this event at all
+--   "gun_start" - the player pulled the trigger on a gun/cannon
+--              (S_EVENT_SHOOTING_START) - the only signal available for
+--              gun usage, since "shot" doesn't cover it. One event per
+--              burst/trigger-pull, not per round.
 --
 -- Every DCS API call is wrapped in pcall - a single bad/missing field must
 -- never take down the whole event handler for the rest of the mission.
@@ -126,6 +129,12 @@ function eventHandler:onEvent(event)
 			self:onKill(event)
 		elseif event.id == world.event.S_EVENT_SHOT then
 			self:onShot(event)
+		elseif event.id == world.event.S_EVENT_SHOOTING_START then
+			-- Confirmed via a real flight that S_EVENT_SHOT does NOT fire
+			-- for gun/cannon fire (a gun kill produced zero "shot" events)
+			-- - this is the only signal for gun usage. One event per
+			-- trigger pull/burst, not per round.
+			self:onGunStart(event)
 		end
 	end)
 	-- swallow errors silently - never let a malformed event break the
@@ -202,6 +211,24 @@ function eventHandler:onShot(event)
 	end
 	ml_send({
 		{"type", "shot"},
+		{"weaponType", weaponType},
+	})
+end
+
+function eventHandler:onGunStart(event)
+	if not event.initiator or not is_player_unit(event.initiator) then
+		return  -- only the player's own gun usage matters for the Debrief
+	end
+	-- Gun fire doesn't produce a trackable weapon object the way ordnance
+	-- does (see onShot) - DCS instead documents a plain weapon_name string
+	-- field here; try both that and a weapon object just in case, same
+	-- defensive pattern as onKill's uncertain weapon field.
+	local weaponType = event.weapon_name
+	if not weaponType and event.weapon then
+		weaponType = safe_call(event.weapon, "getTypeName")
+	end
+	ml_send({
+		{"type", "gun_start"},
 		{"weaponType", weaponType},
 	})
 end

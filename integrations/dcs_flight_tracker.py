@@ -45,6 +45,11 @@ STOPPED_VELOCITY_MPS = 0.5
 STOPPED_HOLD_SECONDS = 5.0
 DEBRIEF_MIN_FLIGHT_SECONDS = 5 * 60
 CRASH_TIMEOUT_SECONDS = 10.0
+# A takeoff transition this soon after a landing transition is a bounce
+# (main gear touched, briefly airborne again), not a real go-around or
+# deliberate touch-and-go - confirmed against a real flight's log: landing
+# -> takeoff -> landing all within 4 seconds.
+BOUNCE_WINDOW_SECONDS = 15.0
 
 # Landing-rate (vertical speed at touchdown) grading bands, in feet/minute.
 # Standard flight-sim convention (butter/good/firm/hard/very hard) - NOT
@@ -145,6 +150,8 @@ class FlightTracker:
         # (see update()'s LANDING branch); stays None for a mid-air loss,
         # since there was no landing to grade.
         self.landing_rate_fpm = None
+        self.bounced = False
+        self._last_landing_time = None
 
     def update(self, aircraft, agl, vel, mission_name=None, vy=None):
         """Called on every export tick carrying flight-state telemetry."""
@@ -190,11 +197,18 @@ class FlightTracker:
                 self.takeoffs += 1
                 self.is_airborne = True
                 self._stopped_since = None
+                if self._last_landing_time is not None and (now - self._last_landing_time) <= BOUNCE_WINDOW_SECONDS:
+                    self.bounced = True
+                    _debug_log(
+                        f"BOUNCE detected - airborne again "
+                        f"{now - self._last_landing_time:.1f}s after landing"
+                    )
                 _debug_log(f"TAKEOFF #{self.takeoffs} (agl={agl:.1f} vel={vel:.1f})")
             elif not airborne and self.is_airborne:
                 self.landings += 1
                 self.is_airborne = False
                 self._stopped_since = None
+                self._last_landing_time = now
                 # Vertical speed on this same tick, as a stand-in for "at
                 # touchdown" - telemetry only arrives every ~2s (see
                 # dcs_export_hook.lua), so this is the closest sample to
@@ -262,6 +276,7 @@ class FlightTracker:
             "distance_flown_nm": round(self.distance_meters * METERS_TO_NM, 1),
             "landing_rate_fpm": round(self.landing_rate_fpm, 0) if self.landing_rate_fpm is not None else None,
             "landing_grade": grade_landing_rate(self.landing_rate_fpm) if self.landing_rate_fpm is not None else None,
+            "bounced": self.bounced,
         }
         _debug_log(f"DEBRIEF READY {record}")
         _append_flight_log(record)
@@ -450,16 +465,32 @@ class FlightTracker:
 
     def on_shot(self, weapon_type=None):
         """Called from the Phase 2 combat-event hook (S_EVENT_SHOT) each
-        time the player releases a weapon. Tallied by type rather than
-        kept as a growing list - NOT yet empirically confirmed how DCS
-        buckets cannon/gun fire into this event (one event per burst? per
-        round?), so if a strafing run produces an implausibly huge tally,
-        that's the first thing to check."""
+        time the player releases a guided/unguided ordnance (missile,
+        bomb, rocket). Confirmed via a real flight that gun/cannon fire
+        does NOT generate this event at all (a gun kill produced zero
+        "shot" events and no weapon on the kill event either) - see
+        on_gun_start for how gun usage is tracked instead."""
         with self.lock:
             if self.start_time is None:
                 return
             key = weapon_type or "Unknown"
             self.weapons_expended[key] = self.weapons_expended.get(key, 0) + 1
+
+    def on_gun_start(self, weapon_type=None):
+        """Called from the Phase 2 combat-event hook (S_EVENT_SHOOTING_START)
+        each time the player pulls the trigger on a gun/cannon -
+        S_EVENT_SHOT doesn't cover this (see on_shot), so this is the only
+        signal available for tracking gun usage. Tallies bursts (trigger
+        pulls), not rounds - a precise round count isn't available without
+        deeper track-file parsing, which wasn't the ask here. Feeds into
+        the same weapons_expended tally as on_shot, so a gun burst just
+        shows up as another line in the same list."""
+        with self.lock:
+            if self.start_time is None:
+                return
+            key = weapon_type or "Gun/Cannon"
+            self.weapons_expended[key] = self.weapons_expended.get(key, 0) + 1
+            _debug_log(f"GUN BURST weapon={weapon_type!r}")
 
     def acknowledge_debrief(self):
         """Called once the user has opened the debrief - dims the

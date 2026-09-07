@@ -334,11 +334,16 @@ function renderDebrief(d) {
 
   // Landing rate only exists for a real landing transition (see
   // dcs_flight_tracker.py's update()) - null for a mid-air loss, so it
-  // gets its own wide cell only when there's something to show.
+  // gets its own wide cell only when there's something to show. The rate
+  // itself is always taken from the LAST landing transition, so a bounce
+  // (brief re-airborne moment right after touchdown, not a real go-around
+  // - see BOUNCE_WINDOW_SECONDS) doesn't throw the score off; it's called
+  // out here as a note instead, since a bounced landing is worth knowing
+  // about even when the final touchdown graded well.
   const landingRateHtml = d.landing_rate_fpm != null
     ? `<div class="data-cell span-2">
          <div class="data-label">Landing Rate</div>
-         <div class="data-value">${d.landing_rate_fpm} ft/min — ${escapeHtml(d.landing_grade ?? "?")}</div>
+         <div class="data-value">${d.landing_rate_fpm} ft/min — ${escapeHtml(d.landing_grade ?? "?")}${d.bounced ? " (bounced)" : ""}</div>
        </div>`
     : "";
 

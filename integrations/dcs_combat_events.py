@@ -88,6 +88,8 @@ def _dispatch(payload, flight_tracker):
         )
     elif kind == "shot":
         flight_tracker.on_shot(weapon_type=payload.get("weaponType"))
+    elif kind == "gun_start":
+        flight_tracker.on_gun_start(weapon_type=payload.get("weaponType"))
 
 
 def start_combat_event_listener(flight_tracker, explicit_path=None, poll_interval_seconds=0.5):
