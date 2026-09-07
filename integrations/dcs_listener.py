@@ -45,7 +45,8 @@ def start_dcs_listener(state, flight_tracker=None, port=39234):
                         mission_name = (state.dcs_mission_briefing or {}).get("sortie")
                     _debug_log(
                         f"RECV aircraft={payload.get('aircraft')!r} "
-                        f"agl={payload.get('agl')!r} vel={payload.get('vel')!r}"
+                        f"agl={payload.get('agl')!r} vel={payload.get('vel')!r} "
+                        f"vy={payload.get('vy')!r}"
                     )
                     if flight_tracker is not None:
                         flight_tracker.update(
@@ -53,6 +54,7 @@ def start_dcs_listener(state, flight_tracker=None, port=39234):
                             payload.get("agl"),
                             payload.get("vel"),
                             mission_name=mission_name,
+                            vy=payload.get("vy"),
                         )
             except Exception:
                 # Never let a malformed packet kill the listener thread -

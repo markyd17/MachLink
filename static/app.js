@@ -281,6 +281,15 @@ function outcomeBadge(d) {
   return { cls: "debrief-outcome-crash", text: "⚠ CRASH" };
 }
 
+// Builds "enemy ground unit (SA-9) — 9M31" from a {relation, category,
+// name, weapon} shape - shared by the loss cause line, kill list, and
+// hits-taken list so all three describe an actor/weapon the same way.
+function describeActor({ relation, category, name, weapon } = {}) {
+  const who = [relation, SHOOTER_CATEGORY_LABELS[category]].filter(Boolean).join(" ");
+  if (!who) return null;
+  return `${who}${name ? ` (${name})` : ""}${weapon ? ` — ${weapon}` : ""}`;
+}
+
 // A plain-language line describing what actually happened, from the
 // Phase 2 combat-event fields (dcs_flight_tracker.py's on_combat_loss).
 // Shooter info can accompany ANY of dead/crash/ejected - e.g. hit by
@@ -291,8 +300,10 @@ function outcomeBadge(d) {
 // shows (a clean landing, or a Phase 1 timeout guess with no cause data).
 function causeOfLossText(d) {
   if (!d.crashed || d.loss_kind === "timeout") return null;
-  const who = [d.shooter_relation, SHOOTER_CATEGORY_LABELS[d.shooter_category]].filter(Boolean).join(" ");
-  const source = who ? `${who}${d.shooter_name ? ` (${d.shooter_name})` : ""}${d.weapon_type ? ` — ${d.weapon_type}` : ""}` : null;
+  const source = describeActor({
+    relation: d.shooter_relation, category: d.shooter_category,
+    name: d.shooter_name, weapon: d.weapon_type,
+  });
 
   if (d.loss_kind === "dead") {
     return `Shot down by ${source || "an unknown source"}`;
@@ -306,6 +317,12 @@ function causeOfLossText(d) {
   return null;
 }
 
+function weaponTallyText(weaponsExpended) {
+  const entries = Object.entries(weaponsExpended || {});
+  if (!entries.length) return null;
+  return entries.map(([weapon, count]) => `${count}x ${weapon}`).join(", ");
+}
+
 function renderDebrief(d) {
   const title = [d.aircraft, d.mission_name].filter(Boolean).join(" — ");
   const badge = outcomeBadge(d);
@@ -314,6 +331,54 @@ function renderDebrief(d) {
   const causeHtml = causeText
     ? `<div class="debrief-cause mono">${escapeHtml(causeText)}</div>`
     : "";
+
+  // Landing rate only exists for a real landing transition (see
+  // dcs_flight_tracker.py's update()) - null for a mid-air loss, so it
+  // gets its own wide cell only when there's something to show.
+  const landingRateHtml = d.landing_rate_fpm != null
+    ? `<div class="data-cell span-2">
+         <div class="data-label">Landing Rate</div>
+         <div class="data-value">${d.landing_rate_fpm} ft/min — ${escapeHtml(d.landing_grade ?? "?")}</div>
+       </div>`
+    : "";
+
+  const killsList = d.kills || [];
+  const killsHtml = killsList.length
+    ? `<h4 class="checklist-title">KILLS (${killsList.length})</h4>
+       <div class="debrief-list">
+         ${killsList.map(k => {
+           const isFriendly = k.target_relation === "friendly";
+           const desc = describeActor({
+             relation: k.target_relation, category: k.target_category,
+             name: k.target_name, weapon: k.weapon_type,
+           }) || "Unknown target";
+           return `<div class="debrief-list-item${isFriendly ? " debrief-list-item-warn" : ""}">
+             ${isFriendly ? "⚠ FRIENDLY FIRE — " : ""}${escapeHtml(desc)}
+           </div>`;
+         }).join("")}
+       </div>`
+    : "";
+
+  const weaponsText = weaponTallyText(d.weapons_expended);
+  const weaponsHtml = weaponsText
+    ? `<h4 class="checklist-title">WEAPONS EXPENDED</h4>
+       <div class="debrief-cause mono">${escapeHtml(weaponsText)}</div>`
+    : "";
+
+  const hitsList = d.hits_taken || [];
+  const hitsHtml = hitsList.length
+    ? `<h4 class="checklist-title">HITS TAKEN (${hitsList.length})</h4>
+       <div class="debrief-list">
+         ${hitsList.map(h => {
+           const desc = describeActor({
+             relation: h.shooter_relation, category: h.shooter_category,
+             name: h.shooter_name, weapon: h.weapon_type,
+           }) || "Unknown source";
+           return `<div class="debrief-list-item">${escapeHtml(desc)}</div>`;
+         }).join("")}
+       </div>`
+    : "";
+
   debriefBody.innerHTML = `
     <h3 class="checklist-title">${escapeHtml(title || "Flight")}</h3>
     <div class="checklist-subnote mono">${escapeHtml(formatClockTime(d.start_time))} – ${escapeHtml(formatClockTime(d.end_time))}</div>
@@ -336,7 +401,23 @@ function renderDebrief(d) {
         <div class="data-label">Landings</div>
         <div class="data-value">${d.landings ?? "?"}</div>
       </div>
-    </div>`;
+      <div class="data-cell">
+        <div class="data-label">Max Speed</div>
+        <div class="data-value">${d.max_speed_kts ?? "?"} kts</div>
+      </div>
+      <div class="data-cell">
+        <div class="data-label">Max Altitude (AGL)</div>
+        <div class="data-value">${d.max_altitude_agl_ft ?? "?"} ft</div>
+      </div>
+      <div class="data-cell">
+        <div class="data-label">Distance Flown</div>
+        <div class="data-value">${d.distance_flown_nm ?? "?"} nm</div>
+      </div>
+      ${landingRateHtml}
+    </div>
+    ${killsHtml}
+    ${weaponsHtml}
+    ${hitsHtml}`;
 }
 
 debriefClose.addEventListener("click", () => {

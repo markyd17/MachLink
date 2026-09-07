@@ -947,6 +947,7 @@ header {
   overflow-y: auto;
 }
 #debrief-body .checklist-title:first-child { margin-top: 0; }
+#debrief-body h4.checklist-title { margin-top: 16px; }
 .debrief-outcome {
   display: inline-block;
   margin-top: 10px;
@@ -964,6 +965,23 @@ header {
   margin-top: 8px;
   color: var(--text-dim);
   font-size: 0.85rem;
+}
+.debrief-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.debrief-list-item {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  background: rgba(0, 0, 0, 0.15);
+  padding: 6px 10px;
+}
+.debrief-list-item-warn {
+  color: var(--hazard-red);
+  border-color: var(--hazard-red);
 }
 
 /* ----------------------------------------------------------

@@ -26,11 +26,19 @@
 --              means a genuinely new life, unlike Export.lua's aircraft-
 --              name comparison which can't tell a fast respawn from a
 --              continued flight)
---   "hit"    - a player's unit took a hit; recorded internally (not sent)
---              so a subsequent death/crash can report who/what did it
+--   "hit"    - a player's unit took a hit - sent immediately (damage-taken
+--              history, even for a hit that doesn't end the flight) AND
+--              cached, so a subsequent dead/crash/ejected can report
+--              who/what actually ended it
 --   "dead"   - a player's unit was destroyed by a weapon
 --   "crash"  - a player's unit crashed (terrain/water impact, no weapon)
 --   "ejected" - the pilot ejected
+--   "kill"   - the player destroyed another unit (the inverse of "dead" -
+--              S_EVENT_KILL, not the same event that produces "dead")
+--   "shot"   - the player released a weapon (not yet empirically confirmed
+--              how DCS buckets cannon/gun fire into this event - one per
+--              burst? per round? - so weapons_expended tallies on the
+--              Python side may need a sanity check against a real gun run)
 --
 -- Every DCS API call is wrapped in pcall - a single bad/missing field must
 -- never take down the whole event handler for the rest of the mission.
@@ -114,6 +122,10 @@ function eventHandler:onEvent(event)
 			self:onLoss(event, "ejected")
 		elseif event.id == world.event.S_EVENT_BIRTH then
 			self:onBirth(event)
+		elseif event.id == world.event.S_EVENT_KILL then
+			self:onKill(event)
+		elseif event.id == world.event.S_EVENT_SHOT then
+			self:onShot(event)
 		end
 	end)
 	-- swallow errors silently - never let a malformed event break the
@@ -125,7 +137,6 @@ function eventHandler:onHit(event)
 		return  -- only track hits against the player's own unit(s)
 	end
 	local targetId = safe_call(event.target, "getID")
-	if not targetId then return end
 
 	local info = {}
 	if event.initiator then
@@ -140,7 +151,59 @@ function eventHandler:onHit(event)
 	if event.weapon then
 		info.weaponType = safe_call(event.weapon, "getTypeName")
 	end
-	MachLinkMission.lastHit[targetId] = info
+
+	-- Cached for a later dead/crash/ejected to attribute to...
+	if targetId then
+		MachLinkMission.lastHit[targetId] = info
+	end
+	-- ...and sent immediately too, so a hit that doesn't end the flight
+	-- still counts as damage taken in the debrief.
+	ml_send({
+		{"type", "hit"},
+		{"shooterName", info.shooterName},
+		{"shooterRelation", info.shooterRelation},
+		{"shooterCategory", info.shooterCategory},
+		{"weaponType", info.weaponType},
+	})
+end
+
+function eventHandler:onKill(event)
+	if not event.initiator or not is_player_unit(event.initiator) then
+		return  -- only the player's own kills matter for the Debrief
+	end
+	local fields = {
+		{"type", "kill"},
+		{"targetName", safe_call(event.target, "getName")},
+		{"targetCategory", category_label(event.target)},
+	}
+	local myCoalition = safe_call(event.initiator, "getCoalition")
+	local targetCoalition = safe_call(event.target, "getCoalition")
+	if myCoalition ~= nil and targetCoalition ~= nil then
+		fields[#fields + 1] = {"targetRelation", (myCoalition == targetCoalition) and "friendly" or "enemy"}
+	end
+	-- S_EVENT_KILL's weapon field shape isn't confirmed - try both a
+	-- weapon object (getTypeName()) and a plain string field, so
+	-- whichever one DCS actually provides still comes through.
+	if event.weapon then
+		fields[#fields + 1] = {"weaponType", safe_call(event.weapon, "getTypeName")}
+	elseif event.weapon_name then
+		fields[#fields + 1] = {"weaponType", event.weapon_name}
+	end
+	ml_send(fields)
+end
+
+function eventHandler:onShot(event)
+	if not event.initiator or not is_player_unit(event.initiator) then
+		return  -- only the player's own shots matter for the Debrief
+	end
+	local weaponType = nil
+	if event.weapon then
+		weaponType = safe_call(event.weapon, "getTypeName")
+	end
+	ml_send({
+		{"type", "shot"},
+		{"weaponType", weaponType},
+	})
 end
 
 function eventHandler:onLoss(event, kind)

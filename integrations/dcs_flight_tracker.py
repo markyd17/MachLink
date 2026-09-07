@@ -46,6 +46,31 @@ STOPPED_HOLD_SECONDS = 5.0
 DEBRIEF_MIN_FLIGHT_SECONDS = 5 * 60
 CRASH_TIMEOUT_SECONDS = 10.0
 
+# Landing-rate (vertical speed at touchdown) grading bands, in feet/minute.
+# Standard flight-sim convention (butter/good/firm/hard/very hard) - NOT
+# confirmed to match Walker Air Transport's exact point-system numbers
+# (their page blocks automated access); swap these if you have their real
+# thresholds. Each tuple is (upper bound inclusive, label); anything above
+# the last bound gets VERY_HARD_LANDING_LABEL.
+LANDING_RATE_BANDS_FPM = [
+    (150, "Butter"),
+    (300, "Good"),
+    (600, "Firm"),
+    (900, "Hard"),
+]
+VERY_HARD_LANDING_LABEL = "Very Hard"
+MPS_TO_KNOTS = 1.943844
+MPS_TO_FPM = 196.850394
+METERS_TO_FEET = 3.280840
+METERS_TO_NM = 1 / 1852.0
+
+
+def grade_landing_rate(fpm):
+    for upper_bound, label in LANDING_RATE_BANDS_FPM:
+        if fpm <= upper_bound:
+            return label
+    return VERY_HARD_LANDING_LABEL
+
 FLIGHT_LOG_PATH = Path(__file__).parent.parent / "data" / "flight_log.json"
 
 # Temporary diagnostic logging for the "no debrief after a crash"
@@ -104,8 +129,24 @@ class FlightTracker:
         self.shooter_relation = None
         self.shooter_category = None
         self.weapon_type = None
+        # Accumulated across the whole flight via Phase 2 combat events -
+        # see on_kill/on_hit/on_shot. Never completes anything on their
+        # own, unlike on_combat_loss.
+        self.kills = []
+        self.hits_taken = []
+        self.weapons_expended = {}  # weapon type name -> count
+        # Flight performance stats, accumulated in update() from the same
+        # Export.lua telemetry already driving landing detection.
+        self.max_speed_mps = 0.0
+        self.max_agl_meters = 0.0
+        self.distance_meters = 0.0
+        # Vertical speed at the moment of the airborne->grounded
+        # transition, converted to fpm - only ever set by a real landing
+        # (see update()'s LANDING branch); stays None for a mid-air loss,
+        # since there was no landing to grade.
+        self.landing_rate_fpm = None
 
-    def update(self, aircraft, agl, vel, mission_name=None):
+    def update(self, aircraft, agl, vel, mission_name=None, vy=None):
         """Called on every export tick carrying flight-state telemetry."""
         with self.lock:
             now = self._now()
@@ -154,13 +195,26 @@ class FlightTracker:
                 self.landings += 1
                 self.is_airborne = False
                 self._stopped_since = None
+                # Vertical speed on this same tick, as a stand-in for "at
+                # touchdown" - telemetry only arrives every ~2s (see
+                # dcs_export_hook.lua), so this is the closest sample to
+                # the real moment, not a guaranteed exact reading of it.
+                # abs() sidesteps not having empirically confirmed which
+                # sign means "descending" - a hard landing reads the same
+                # either way.
+                if vy is not None:
+                    self.landing_rate_fpm = abs(vy) * MPS_TO_FPM
                 _debug_log(
-                    f"LANDING #{self.landings} (agl={agl:.1f} vel={vel:.1f}) "
-                    f"airborne_seconds so far={self.airborne_seconds:.1f}"
+                    f"LANDING #{self.landings} (agl={agl:.1f} vel={vel:.1f} "
+                    f"vy={vy!r}) airborne_seconds so far={self.airborne_seconds:.1f}"
                 )
+
+            self.max_speed_mps = max(self.max_speed_mps, vel)
+            self.max_agl_meters = max(self.max_agl_meters, agl)
 
             if self.is_airborne:
                 self.airborne_seconds += dt
+                self.distance_meters += vel * dt
                 self._stopped_since = None
             elif vel < STOPPED_VELOCITY_MPS:
                 if self._stopped_since is None:
@@ -200,6 +254,14 @@ class FlightTracker:
             "shooter_relation": self.shooter_relation,
             "shooter_category": self.shooter_category,
             "weapon_type": self.weapon_type,
+            "kills": list(self.kills),
+            "hits_taken": list(self.hits_taken),
+            "weapons_expended": dict(self.weapons_expended),
+            "max_speed_kts": round(self.max_speed_mps * MPS_TO_KNOTS, 0),
+            "max_altitude_agl_ft": round(self.max_agl_meters * METERS_TO_FEET, 0),
+            "distance_flown_nm": round(self.distance_meters * METERS_TO_NM, 1),
+            "landing_rate_fpm": round(self.landing_rate_fpm, 0) if self.landing_rate_fpm is not None else None,
+            "landing_grade": grade_landing_rate(self.landing_rate_fpm) if self.landing_rate_fpm is not None else None,
         }
         _debug_log(f"DEBRIEF READY {record}")
         _append_flight_log(record)
@@ -346,6 +408,58 @@ class FlightTracker:
                 f"weapon={weapon_type!r}"
             )
             self._complete(now)
+
+    def on_kill(self, target_name=None, target_relation=None, target_category=None, weapon_type=None):
+        """Called from the Phase 2 combat-event hook (S_EVENT_KILL) each
+        time the player destroys another unit. Accumulates into the
+        in-progress flight's kill list - unlike on_combat_loss, this never
+        completes or resets anything, since the flight continues."""
+        with self.lock:
+            if self.start_time is None:
+                return
+            self.kills.append({
+                "target_name": target_name,
+                "target_relation": target_relation,  # "enemy" or "friendly" (teamkill)
+                "target_category": target_category,
+                "weapon_type": weapon_type,
+            })
+            _debug_log(
+                f"KILL target={target_name!r} relation={target_relation!r} "
+                f"category={target_category!r} weapon={weapon_type!r}"
+            )
+
+    def on_hit(self, shooter_name=None, shooter_relation=None, shooter_category=None, weapon_type=None):
+        """Called from the Phase 2 combat-event hook (S_EVENT_HIT) every
+        time the player's own unit takes a hit, whether or not it ends the
+        flight - builds a damage-taken history. The hit that eventually
+        ends a flight (if any) also appears here, in addition to being
+        separately attributed on the final record via on_combat_loss."""
+        with self.lock:
+            if self.start_time is None:
+                return
+            self.hits_taken.append({
+                "shooter_name": shooter_name,
+                "shooter_relation": shooter_relation,
+                "shooter_category": shooter_category,
+                "weapon_type": weapon_type,
+            })
+            _debug_log(
+                f"HIT TAKEN shooter={shooter_name!r} relation={shooter_relation!r} "
+                f"category={shooter_category!r} weapon={weapon_type!r}"
+            )
+
+    def on_shot(self, weapon_type=None):
+        """Called from the Phase 2 combat-event hook (S_EVENT_SHOT) each
+        time the player releases a weapon. Tallied by type rather than
+        kept as a growing list - NOT yet empirically confirmed how DCS
+        buckets cannon/gun fire into this event (one event per burst? per
+        round?), so if a strafing run produces an implausibly huge tally,
+        that's the first thing to check."""
+        with self.lock:
+            if self.start_time is None:
+                return
+            key = weapon_type or "Unknown"
+            self.weapons_expended[key] = self.weapons_expended.get(key, 0) + 1
 
     def acknowledge_debrief(self):
         """Called once the user has opened the debrief - dims the

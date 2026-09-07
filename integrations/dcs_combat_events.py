@@ -72,6 +72,22 @@ def _dispatch(payload, flight_tracker):
             shooter_category=payload.get("shooterCategory"),
             weapon_type=payload.get("weaponType"),
         )
+    elif kind == "hit":
+        flight_tracker.on_hit(
+            shooter_name=payload.get("shooterName"),
+            shooter_relation=payload.get("shooterRelation"),
+            shooter_category=payload.get("shooterCategory"),
+            weapon_type=payload.get("weaponType"),
+        )
+    elif kind == "kill":
+        flight_tracker.on_kill(
+            target_name=payload.get("targetName"),
+            target_relation=payload.get("targetRelation"),
+            target_category=payload.get("targetCategory"),
+            weapon_type=payload.get("weaponType"),
+        )
+    elif kind == "shot":
+        flight_tracker.on_shot(weapon_type=payload.get("weaponType"))
 
 
 def start_combat_event_listener(flight_tracker, explicit_path=None, poll_interval_seconds=0.5):

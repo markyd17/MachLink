@@ -34,11 +34,12 @@ MachLink.lastSentModelTime = 0
 -- immediately, same as before this feature existed.
 MachLink.telemetryIntervalSeconds = 2.0
 
-local function ml_send(aircraftName, agl, vel)
+local function ml_send(aircraftName, agl, vel, vy)
     local ok, err = pcall(function()
         local msg = '{"game":"dcs","aircraft":"' .. tostring(aircraftName) .. '"'
         if agl ~= nil then msg = msg .. ',"agl":' .. tostring(agl) end
         if vel ~= nil then msg = msg .. ',"vel":' .. tostring(vel) end
+        if vy ~= nil then msg = msg .. ',"vy":' .. tostring(vy) end
         msg = msg .. '}'
         MachLink.udp:sendto(msg, "127.0.0.1", MachLink.port)
     end)
@@ -50,14 +51,19 @@ end
 -- reference-point height off the ground, not 0 - and velocity settles to
 -- ~0 m/s at rest). Real, documented DCS Export API functions (see
 -- Scripts/Export.lua in the DCS install) - not an invented signal.
+-- vy is the vertical component of the velocity vector (added for the
+-- landing-rate/fpm score) - its sign convention (which direction is
+-- "descending") isn't empirically confirmed yet, so the Python side takes
+-- its absolute value rather than assuming a sign.
 local function ml_flight_state()
     local ok1, agl = pcall(LoGetAltitudeAboveGroundLevel)
     local ok2, vel = pcall(LoGetVectorVelocity)
-    local velMag = nil
+    local velMag, vy = nil, nil
     if ok2 and vel then
         velMag = math.sqrt(vel.x * vel.x + vel.y * vel.y + vel.z * vel.z)
+        vy = vel.y
     end
-    return (ok1 and agl or nil), velMag
+    return (ok1 and agl or nil), velMag, vy
 end
 
 local ml_prev_LuaExportStart = LuaExportStart
@@ -66,8 +72,8 @@ LuaExportStart = function()
     local ok, selfData = pcall(LoGetSelfData)
     if ok and selfData and selfData.Name then
         MachLink.lastAircraft = selfData.Name
-        local agl, vel = ml_flight_state()
-        ml_send(selfData.Name, agl, vel)
+        local agl, vel, vy = ml_flight_state()
+        ml_send(selfData.Name, agl, vel, vy)
         local okTime, t = pcall(LoGetModelTime)
         MachLink.lastSentModelTime = (okTime and t) or 0
     end
@@ -84,8 +90,8 @@ LuaExportActivityNextEvent = function(t)
 
         if nameChanged or dueForTelemetry then
             MachLink.lastAircraft = selfData.Name
-            local agl, vel = ml_flight_state()
-            ml_send(selfData.Name, agl, vel)
+            local agl, vel, vy = ml_flight_state()
+            ml_send(selfData.Name, agl, vel, vy)
             MachLink.lastSentModelTime = modelTime
         end
     end
