@@ -17,6 +17,13 @@
   --hazard-red: #FF3B30;
   --text-primary: #E8EDEF;
   --text-dim: #7B8794;
+  /* Hangar's primary-nav identity color. Not reusing --caution-amber here
+     even though it's otherwise the obvious "third" accent - this file's
+     own header comment reserves amber specifically to mark unverified AI
+     fallback content vs. trusted cyan, and Hangar is real sourced Logbook
+     data, not that. New harmonious accent instead of colliding with an
+     already-meaningful one. */
+  --hangar-violet: #C084FC;
   --font-display: system-ui, "Bahnschrift", "Arial Narrow", "Segoe UI", sans-serif;
   --font-mono: "SF Mono", Consolas, "Roboto Mono", "SFMono-Regular", monospace;
   /* A kneeboard is a physical accessory strapped to a pilot's leg, not
@@ -38,6 +45,9 @@
 
 html, body { height: 100%; }
 
+/* Flex column (header, primary nav, content) so the content area's
+   height is just "whatever's left", not a hardcoded calc(100vh - Npx)
+   that has to be re-derived every time something is added above it. */
 body {
   margin: 0;
   background: var(--bg);
@@ -45,6 +55,9 @@ body {
   font-family: var(--font-display);
   font-size: 14px;
   line-height: 1.5;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 /* Monospace is reserved for status readouts, numbers, and checklist step
@@ -178,16 +191,69 @@ header {
 .logbook-btn:hover { background: rgba(0, 229, 255, 0.12); }
 
 /* ----------------------------------------------------------
-   MAIN TWO-COLUMN GRID
+   PRIMARY NAV - Ops / Hangar / Flight School. body is already a flex
+   column (header, nav, content - see the body rule near the top), so the
+   content area's height is just "whatever's left" rather than a second
+   hardcoded calc(100vh - Npx) to keep in sync with the header's.
    ---------------------------------------------------------- */
-.main-container {
-  display: grid;
-  grid-template-columns: 60% 40%;
-  gap: 12px;
-  padding: 12px;
-  height: calc(100vh - 61px);
-  min-height: 0;
+#primary-nav {
+  flex: 0 0 auto;
+  display: flex;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  padding: 0 20px;
 }
+.primary-nav-btn {
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  padding: 14px 26px;
+  color: var(--text-dim);
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.primary-nav-btn:hover { color: var(--text-primary); }
+.primary-nav-btn.active[data-section="ops"] {
+  color: var(--tactical-cyan);
+  border-bottom-color: var(--tactical-cyan);
+  background: rgba(0, 229, 255, 0.06);
+}
+.primary-nav-btn.active[data-section="hangar"] {
+  color: var(--hangar-violet);
+  border-bottom-color: var(--hangar-violet);
+  background: rgba(192, 132, 252, 0.08);
+}
+.primary-nav-btn.active[data-section="flightschool"] {
+  color: var(--mfd-green);
+  border-bottom-color: var(--mfd-green);
+  background: rgba(0, 255, 102, 0.06);
+}
+
+/* ----------------------------------------------------------
+   PRIMARY CONTENT - one of the three sections below is visible at a time
+   (switchPrimarySection() in app.js toggles [hidden]); everything else on
+   the page (kneeboard, debrief/logbook/map overlays) sits outside this
+   and stays reachable regardless of which section is active.
+   ---------------------------------------------------------- */
+#primary-content {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+}
+.primary-section {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+}
+/* Same gotcha as #device-modal-backdrop/.sub-panel below: a class selector
+   setting `display` beats the browser's own [hidden] default. */
+.primary-section[hidden] { display: none; }
 
 .panel {
   background: var(--panel-bg);
@@ -221,9 +287,38 @@ header {
 .sub-panel[hidden] { display: none; }
 
 /* Ask is a search bar under the OSB tabs now, not a side panel - SimBrief/
-   DCS Briefing is the only thing left in the right column, so it just
+   DCS Briefing is the only thing left in Ops's left column, so it just
    fills it. */
 .simbrief-panel { flex: 1; }
+
+/* Ops's two columns: planning/briefing on the left, the Live Map launcher
+   on the right - same 60/40 proportions the old main-container used, just
+   scoped to this one section now instead of the whole screen. */
+.ops-grid {
+  display: grid;
+  grid-template-columns: 60% 40%;
+  gap: 12px;
+  flex: 1;
+  min-height: 0;
+}
+.ops-map-launcher {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 16px;
+}
+.ops-map-launcher .panel-title { align-self: stretch; }
+
+/* Hangar's single content column - was #pilot-summary-body's overlay
+   padding, now the section's own scroll container since it's persistent
+   content instead of a modal. */
+.hangar-panel {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+.hangar-panel .checklist-title:first-child { margin-top: 0; }
+.hangar-panel h4.checklist-title { margin-top: 16px; }
 
 .panel-title {
   font-size: 0.78rem;
@@ -965,64 +1060,10 @@ header {
 #debrief-body .checklist-title:first-child { margin-top: 0; }
 #debrief-body h4.checklist-title { margin-top: 16px; }
 
-/* Pilot Summary overlay - same full-window treatment as the debrief
-   overlay, its own z-index band below it (both can be open at once:
-   clicking a past sortie opens the debrief panel on top of this one). */
-#pilot-summary-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.55);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 115;
-  padding: 24px;
-}
-#pilot-summary-overlay[hidden] { display: none; }
-#pilot-summary-panel {
-  background: var(--panel-bg);
-  border: 1px solid var(--tactical-cyan);
-  width: min(900px, 92vw);
-  max-height: 85vh;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
-}
-#pilot-summary-panel-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 20px;
-  border-bottom: 1px solid var(--border);
-}
-#pilot-summary-panel-title {
-  font-family: var(--font-display);
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  font-size: 1.1rem;
-  color: var(--tactical-cyan);
-}
-#pilot-summary-close {
-  background: none;
-  border: none;
-  color: var(--text-dim);
-  font-size: 26px;
-  line-height: 1;
-  padding: 0 4px;
-  cursor: pointer;
-}
-#pilot-summary-close:hover { color: var(--hazard-red); }
-#pilot-summary-body {
-  padding: 20px;
-  overflow-y: auto;
-}
-#pilot-summary-body .checklist-title:first-child { margin-top: 0; }
-#pilot-summary-body h4.checklist-title { margin-top: 16px; }
-
 /* Full Logbook overlay - the complete, unfiltered sortie history, opened
-   from Pilot Summary. Sits between it (115) and the debrief panel (120)
-   in the stacking order, so all three can be open at once: Pilot Summary
-   -> Logbook -> an individual flight's reopened debrief. */
+   from the Hangar tab's Pilot Performance content. Sits below the debrief
+   panel (120) in the stacking order, so both can be open at once:
+   Logbook -> an individual flight's reopened debrief. */
 #logbook-overlay {
   position: fixed;
   inset: 0;
@@ -1111,10 +1152,9 @@ header {
 .debrief-outcome-unconfirmed { color: var(--caution-amber); }
 
 /* ----------------------------------------------------------
-   LIVE MAP - same full-window overlay treatment as Pilot Summary/Logbook,
-   its own z-index band (116, between them - doesn't stack with either,
-   just needs to sit somewhere consistent) since it's opened independently
-   from the header, never on top of a career-history panel.
+   LIVE MAP - same full-window overlay treatment as the Logbook, its own
+   z-index band (116, below Logbook's 117/Debrief's 120) since it's opened
+   from the Ops tab, independently of either.
    ---------------------------------------------------------- */
 #map-overlay {
   position: fixed;
@@ -1296,12 +1336,13 @@ header {
    RESPONSIVE
    ---------------------------------------------------------- */
 @media (max-width: 800px) {
-  .main-container {
-    grid-template-columns: 1fr;
-    height: auto;
-    overflow-y: auto;
-  }
-  body { overflow-y: auto; }
+  /* Same idea as before the primary-nav reorg: below this width, stop
+     trying to fit everything in the viewport (flex column + internal
+     scroll areas) and just let the page flow and scroll normally. */
+  body { display: block; overflow-y: auto; }
+  #primary-content, .primary-section { display: block; height: auto; }
+  .ops-grid { grid-template-columns: 1fr; }
+  .hangar-panel { height: auto; overflow-y: visible; }
   header { flex-direction: column; align-items: flex-start; }
 }
 

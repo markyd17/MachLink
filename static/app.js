@@ -1,4 +1,10 @@
 const statusBar = document.getElementById("status-bar");
+const primaryNavBtns = document.querySelectorAll(".primary-nav-btn");
+const primarySections = {
+  ops: document.getElementById("section-ops"),
+  hangar: document.getElementById("section-hangar"),
+  flightschool: document.getElementById("section-flightschool"),
+};
 const mfdTabs = document.getElementById("mfd-tabs");
 const tabContent = document.getElementById("tab-content");
 const citationLine = document.getElementById("citation-line");
@@ -16,9 +22,6 @@ const debriefBtn = document.getElementById("debrief-btn");
 const debriefOverlay = document.getElementById("debrief-overlay");
 const debriefClose = document.getElementById("debrief-close");
 const debriefBody = document.getElementById("debrief-body");
-const pilotSummaryBtn = document.getElementById("pilot-summary-btn");
-const pilotSummaryOverlay = document.getElementById("pilot-summary-overlay");
-const pilotSummaryClose = document.getElementById("pilot-summary-close");
 const pilotSummaryStats = document.getElementById("pilot-summary-stats");
 const pilotSummaryFlightList = document.getElementById("pilot-summary-flight-list");
 const viewFullLogbookBtn = document.getElementById("view-full-logbook-btn");
@@ -54,6 +57,29 @@ const deviceModalClose = document.getElementById("device-modal-close");
 const deviceZoomOut = document.getElementById("device-zoom-out");
 const deviceZoomIn = document.getElementById("device-zoom-in");
 const deviceZoomReset = document.getElementById("device-zoom-reset");
+
+// ----------------------------------------------------------------------
+// PRIMARY NAV - Ops / Hangar / Flight School. Only one of the three
+// sections is visible at a time; everything else (kneeboard, debrief/
+// logbook/map overlays) lives outside this and stays reachable regardless
+// of which section is active. Sections that already poll/render in the
+// background (checklist, DCS briefing) keep doing so while hidden, so
+// switching to them always shows current data with no extra fetch here -
+// Hangar is the one exception, since its data was previously only ever
+// fetched on demand (the old Pilot Summary button's click handler).
+// ----------------------------------------------------------------------
+function switchPrimarySection(id) {
+  Object.entries(primarySections).forEach(([sectionId, el]) => {
+    el.hidden = sectionId !== id;
+  });
+  primaryNavBtns.forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.section === id);
+  });
+  if (id === "hangar") loadPilotSummary();
+}
+primaryNavBtns.forEach((btn) => {
+  btn.addEventListener("click", () => switchPrimarySection(btn.dataset.section));
+});
 
 // One shared zoom level for every diagram currently shown in the modal
 // (set as a CSS custom property on the modal body - see style.css) rather
@@ -449,14 +475,12 @@ debriefClose.addEventListener("click", () => {
 debriefOverlay.addEventListener("click", (e) => {
   if (e.target === debriefOverlay) debriefOverlay.hidden = true;
 });
-// Three overlays can be open at once - debrief on top of Logbook on top
-// of Pilot Summary - so Escape closes whichever's topmost rather than
-// all of them at once.
+// Debrief can be open on top of Logbook (reopening a past sortie from
+// the Hangar tab) - Escape closes whichever's topmost rather than both.
 document.addEventListener("keydown", (e) => {
   if (e.key !== "Escape") return;
   if (!debriefOverlay.hidden) { debriefOverlay.hidden = true; return; }
-  if (!logbookOverlay.hidden) { logbookOverlay.hidden = true; return; }
-  if (!pilotSummaryOverlay.hidden) { pilotSummaryOverlay.hidden = true; }
+  if (!logbookOverlay.hidden) { logbookOverlay.hidden = true; }
 });
 
 function formatFlightDate(unixSeconds) {
@@ -539,22 +563,22 @@ function renderFlightRows(container, flights) {
   });
 }
 
-// Fetched once when Pilot Summary opens, reused by the full Logbook so
-// "View Full Logbook" doesn't need a second round-trip. Fine to go a
-// little stale if a new flight completes while these stay open - an edge
-// case not worth a live-refresh for.
+// Fetched every time the Hangar tab is switched into (see
+// switchPrimarySection above), reused by the full Logbook so "View Full
+// Logbook" doesn't need a second round-trip. Fine to go a little stale if
+// a new flight completes while Logbook stays open - an edge case not
+// worth a live-refresh for.
 let cachedFlights = [];
 
-async function openPilotSummary() {
+async function loadPilotSummary() {
   try {
     const res = await fetch("/api/logbook");
     const data = await res.json();
     cachedFlights = data.flights || [];
     renderPilotSummaryStats(data.summary);
     renderFlightRows(pilotSummaryFlightList, cachedFlights.slice(0, 5));
-    pilotSummaryOverlay.hidden = false;
   } catch (e) {
-    // transient - leave the overlay closed, they can just click again
+    // transient - Hangar just keeps showing whatever it last had
   }
 }
 
@@ -563,13 +587,6 @@ function openLogbook() {
   logbookOverlay.hidden = false;
 }
 
-pilotSummaryBtn.addEventListener("click", openPilotSummary);
-pilotSummaryClose.addEventListener("click", () => {
-  pilotSummaryOverlay.hidden = true;
-});
-pilotSummaryOverlay.addEventListener("click", (e) => {
-  if (e.target === pilotSummaryOverlay) pilotSummaryOverlay.hidden = true;
-});
 viewFullLogbookBtn.addEventListener("click", openLogbook);
 logbookClose.addEventListener("click", () => {
   logbookOverlay.hidden = true;

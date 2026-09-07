@@ -23,19 +23,81 @@
     </h1>
     <!-- Dim/disabled until dcs_flight_tracker.py detects a real landed-
          and-stopped-after-5+-minutes flight (see pollDebriefStatus in
-         app.js) - lights up lime green and becomes clickable only then. -->
+         app.js) - lights up lime green and becomes clickable only then.
+         Stays in the header (not tucked inside a tab) since it's
+         time-critical - you want it glanceable the moment you land,
+         whichever tab you're on. -->
     <button type="button" id="debrief-btn" class="debrief-btn" disabled>GENERATE DEBRIEF</button>
-    <!-- Always enabled (unlike Generate Debrief) - browsing career history
-         doesn't depend on a flight having just completed. -->
-    <button type="button" id="pilot-summary-btn" class="logbook-btn">PILOT SUMMARY</button>
-    <!-- Always enabled, same as Pilot Summary - openMap() shows its own
-         "no data yet" placeholder rather than gating the button itself. -->
-    <button type="button" id="live-map-btn" class="logbook-btn">LIVE MAP</button>
     <div id="status-bar" class="status-block idle mono">DETECTING...</div>
   </header>
 
-  <div class="main-container">
-    <section class="panel left-panel" id="checklist-panel">
+  <!-- Primary nav - Ops / Hangar / Flight School. Ops first (pre-flight
+       planning + live tracking is what you check the moment you open the
+       app), Flight School last (procedures you flip to as needed, not the
+       landing view). Pilot Summary and Live Map used to be header buttons
+       opening full-window overlays; they're now native content inside
+       Hangar and Ops respectively - see switchPrimarySection() in app.js. -->
+  <nav id="primary-nav">
+    <button type="button" class="primary-nav-btn active" data-section="ops">Ops</button>
+    <button type="button" class="primary-nav-btn" data-section="hangar">Hangar</button>
+    <button type="button" class="primary-nav-btn" data-section="flightschool">Flight School</button>
+  </nav>
+
+  <div id="primary-content">
+    <!-- OPS - pre-flight planning (SimBrief OFP, DCS mission briefing) and
+         live in-flight tracking (Live Map), together: "what's happening
+         this sortie." Default landing section. -->
+    <section class="primary-section" id="section-ops">
+      <div class="ops-grid">
+        <div class="right-panel">
+          <!-- SimBrief has no DCS-mission equivalent - a real DCS mission
+               already carries its own authored briefing, so that's what
+               fills this slot instead when the detected sim is DCS (see
+               pollStatus in app.js). MSFS gets its own dedicated layout
+               later; for now this panel just stays hidden under DCS. -->
+          <section class="sub-panel simbrief-panel" id="simbrief-panel" hidden>
+            <h2 class="panel-title">SimBrief</h2>
+            <button id="simbrief-refresh" class="simbrief-btn">Pull Latest OFP</button>
+            <div id="simbrief-content" class="simbrief-content"></div>
+          </section>
+
+          <section class="sub-panel simbrief-panel" id="dcs-briefing-panel" hidden>
+            <h2 class="panel-title">DCS Mission Briefing</h2>
+            <div id="dcs-briefing-content" class="simbrief-content"></div>
+          </section>
+        </div>
+
+        <section class="sub-panel ops-map-launcher">
+          <h2 class="panel-title">Live Map</h2>
+          <!-- Always enabled - openMap() shows its own "no data yet"
+               placeholder rather than gating the button itself. -->
+          <button type="button" id="live-map-btn" class="logbook-btn">OPEN LIVE MAP</button>
+        </section>
+      </div>
+    </section>
+
+    <!-- HANGAR - pilot performance record. Was a header button opening a
+         modal overlay; now native content here (this is the content that
+         used to render inside #pilot-summary-overlay). Full Logbook stays
+         a genuine drill-down overlay on top of this, since it's the
+         complete unfiltered history, not a quick glance. -->
+    <section class="primary-section" id="section-hangar" hidden>
+      <div class="sub-panel hangar-panel">
+        <h2 class="panel-title">Pilot Performance</h2>
+        <div id="pilot-summary-stats"></div>
+        <h4 class="checklist-title">RECENT SORTIES</h4>
+        <div id="pilot-summary-flight-list"></div>
+        <button type="button" id="view-full-logbook-btn" class="logbook-btn" style="margin-top:10px;">VIEW FULL LOGBOOK</button>
+      </div>
+    </section>
+
+    <!-- FLIGHT SCHOOL - Chuck's Guide-sourced procedures & controls
+         reference for the detected airframe: checklists, weapons,
+         jettison, systems notes, the aircraft-search bar, bindings and
+         cockpit config. Unchanged from the old left panel, just promoted
+         to its own full-width tab instead of sharing the screen with
+         SimBrief/briefing. -->
+    <section class="primary-section panel left-panel" id="section-flightschool" hidden>
       <div class="mfd-tabs" id="mfd-tabs"></div>
       <!-- A search bar, not a separate Q&A panel: submitting jumps to
            whichever real tab the match actually belongs to and highlights
@@ -60,19 +122,6 @@
       <div class="tab-content-wrapper" id="tab-content">Waiting for aircraft detection...</div>
       <div class="citation-line" id="citation-line" hidden></div>
     </section>
-
-    <div class="right-panel">
-      <section class="sub-panel simbrief-panel" id="simbrief-panel" hidden>
-        <h2 class="panel-title">SimBrief</h2>
-        <button id="simbrief-refresh" class="simbrief-btn">Pull Latest OFP</button>
-        <div id="simbrief-content" class="simbrief-content"></div>
-      </section>
-
-      <section class="sub-panel simbrief-panel" id="dcs-briefing-panel" hidden>
-        <h2 class="panel-title">DCS Mission Briefing</h2>
-        <div id="dcs-briefing-content" class="simbrief-content"></div>
-      </section>
-    </div>
   </div>
 
   <!-- A kneeboard is a physical accessory strapped to the leg, not part of
@@ -134,29 +183,9 @@
     </div>
   </div>
 
-  <!-- Career overview - same full-window treatment as the debrief overlay.
-       Shows only the 5 most recent sorties; "View Full Logbook" opens
-       #logbook-overlay on top of this one for the complete history. Stays
-       open underneath when a past sortie or the full Logbook is opened
-       (reuses the same debrief rendering), so closing those just returns
-       here - no separate "back" button needed. -->
-  <div id="pilot-summary-overlay" hidden>
-    <div id="pilot-summary-panel">
-      <div id="pilot-summary-panel-header">
-        <span id="pilot-summary-panel-title">PILOT SUMMARY</span>
-        <button type="button" id="pilot-summary-close" aria-label="Close">&times;</button>
-      </div>
-      <div id="pilot-summary-body">
-        <div id="pilot-summary-stats"></div>
-        <h4 class="checklist-title">RECENT SORTIES</h4>
-        <div id="pilot-summary-flight-list"></div>
-        <button type="button" id="view-full-logbook-btn" class="logbook-btn" style="margin-top:10px;">VIEW FULL LOGBOOK</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- The complete, unfiltered sortie history - opened from Pilot Summary
-       (stacks on top of it, same convention as the debrief overlay). -->
+  <!-- The complete, unfiltered sortie history - opened from the Hangar
+       tab's Pilot Performance content (stacks on top, same convention as
+       the debrief overlay). -->
   <div id="logbook-overlay" hidden>
     <div id="logbook-panel">
       <div id="logbook-panel-header">
