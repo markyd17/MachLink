@@ -16,10 +16,14 @@ const debriefBtn = document.getElementById("debrief-btn");
 const debriefOverlay = document.getElementById("debrief-overlay");
 const debriefClose = document.getElementById("debrief-close");
 const debriefBody = document.getElementById("debrief-body");
-const logbookBtn = document.getElementById("logbook-btn");
+const pilotSummaryBtn = document.getElementById("pilot-summary-btn");
+const pilotSummaryOverlay = document.getElementById("pilot-summary-overlay");
+const pilotSummaryClose = document.getElementById("pilot-summary-close");
+const pilotSummaryStats = document.getElementById("pilot-summary-stats");
+const pilotSummaryFlightList = document.getElementById("pilot-summary-flight-list");
+const viewFullLogbookBtn = document.getElementById("view-full-logbook-btn");
 const logbookOverlay = document.getElementById("logbook-overlay");
 const logbookClose = document.getElementById("logbook-close");
-const logbookSummary = document.getElementById("logbook-summary");
 const logbookFlightList = document.getElementById("logbook-flight-list");
 const kneeboardTab = document.getElementById("kneeboard-tab");
 const kneeboardDrawer = document.getElementById("kneeboard-drawer");
@@ -436,13 +440,14 @@ debriefClose.addEventListener("click", () => {
 debriefOverlay.addEventListener("click", (e) => {
   if (e.target === debriefOverlay) debriefOverlay.hidden = true;
 });
-// Debrief takes priority - it can be open on top of the Logbook (see
-// openPastFlight below), so Escape should close whichever's topmost
-// rather than both at once.
+// Three overlays can be open at once - debrief on top of Logbook on top
+// of Pilot Summary - so Escape closes whichever's topmost rather than
+// all of them at once.
 document.addEventListener("keydown", (e) => {
   if (e.key !== "Escape") return;
   if (!debriefOverlay.hidden) { debriefOverlay.hidden = true; return; }
-  if (!logbookOverlay.hidden) { logbookOverlay.hidden = true; }
+  if (!logbookOverlay.hidden) { logbookOverlay.hidden = true; return; }
+  if (!pilotSummaryOverlay.hidden) { pilotSummaryOverlay.hidden = true; }
 });
 
 function formatFlightDate(unixSeconds) {
@@ -450,50 +455,59 @@ function formatFlightDate(unixSeconds) {
   return new Date(unixSeconds * 1000).toLocaleDateString([], { month: "short", day: "numeric" });
 }
 
-const LOSS_KIND_LABELS = {
-  dead: "Shot Down", crash: "Crashed", ejected: "Ejected", timeout: "Crashed (unconfirmed)",
-};
-
-function joinCounts(obj, labels) {
+function joinCounts(obj) {
   const entries = Object.entries(obj || {}).sort((a, b) => b[1] - a[1]);
   if (!entries.length) return "None yet";
-  return entries.map(([key, count]) => `${count}x ${(labels && labels[key]) || key}`).join(", ");
+  return entries.map(([key, count]) => `${count}x ${key}`).join(", ");
 }
 
-function renderLogbookSummary(s) {
-  logbookSummary.innerHTML = `
+function joinHours(obj) {
+  const entries = Object.entries(obj || {}).sort((a, b) => b[1] - a[1]);
+  if (!entries.length) return "None yet";
+  return entries.map(([key, hours]) => `${hours} hrs ${key}`).join(", ");
+}
+
+function renderPilotSummaryStats(s) {
+  // Landing rate and its grade share one wide cell - the grade describes
+  // the average rate itself (see logbook_stats.compute_stats), not a
+  // separate stat, so there's nothing to break out into its own cell.
+  const landingRateValue = s.avg_landing_rate_fpm != null
+    ? `${s.avg_landing_rate_fpm} ft/min${s.avg_landing_grade ? ` — ${s.avg_landing_grade}` : ""}`
+    : "—";
+  pilotSummaryStats.innerHTML = `
     <div class="data-grid mono">
       <div class="data-cell"><div class="data-label">Total Sorties</div><div class="data-value">${s.total_sorties}</div></div>
       <div class="data-cell"><div class="data-label">Total Flight Hours</div><div class="data-value">${s.total_flight_hours}</div></div>
       <div class="data-cell"><div class="data-label">Total Kills</div><div class="data-value">${s.total_kills}</div></div>
       <div class="data-cell"><div class="data-label">Avg Kills / Sortie</div><div class="data-value">${s.avg_kills_per_sortie}</div></div>
-      <div class="data-cell"><div class="data-label">Avg Landing Rate</div><div class="data-value">${s.avg_landing_rate_fpm != null ? s.avg_landing_rate_fpm + " ft/min" : "—"}</div></div>
-      <div class="data-cell"><div class="data-label">Best / Worst Landing</div><div class="data-value">${s.best_landing_rate_fpm ?? "—"} / ${s.worst_landing_rate_fpm ?? "—"} ft/min</div></div>
+      <div class="data-cell span-2"><div class="data-label">Avg Landing Rate</div><div class="data-value">${landingRateValue}</div></div>
       <div class="data-cell"><div class="data-label">Longest Sortie</div><div class="data-value">${s.longest_sortie_minutes ?? "—"} min</div></div>
       <div class="data-cell"><div class="data-label">Most Kills (1 Sortie)</div><div class="data-value">${s.most_kills_in_one_sortie}</div></div>
     </div>
+    <h4 class="checklist-title">FLIGHT HOURS BY AIRFRAME</h4>
+    <div class="debrief-cause mono">${escapeHtml(joinHours(s.flight_hours_by_airframe))}</div>
     <h4 class="checklist-title">KILLS BY TYPE</h4>
     <div class="debrief-cause mono">${escapeHtml(joinCounts(s.kills_by_type))}${s.total_friendly_fire_kills ? ` — ${s.total_friendly_fire_kills} friendly fire` : ""}</div>
-    <h4 class="checklist-title">LOSSES</h4>
-    <div class="debrief-cause mono">${escapeHtml(joinCounts(s.losses_by_kind, LOSS_KIND_LABELS))}</div>
-    <h4 class="checklist-title">LANDING GRADES</h4>
-    <div class="debrief-cause mono">${escapeHtml(joinCounts(s.landing_grade_distribution))}</div>`;
+    <h4 class="checklist-title">LOSSES BY AIRFRAME</h4>
+    <div class="debrief-cause mono">${escapeHtml(joinCounts(s.losses_by_airframe))}</div>`;
 }
 
-// Reopens a past sortie's full detail on top of the Logbook, reusing the
-// exact same rendering as a fresh debrief - a logged flight record has
-// the identical shape latest_debrief() returns.
+// Reopens a past sortie's full detail on top of whichever overlay it was
+// clicked from, reusing the exact same rendering as a fresh debrief - a
+// logged flight record has the identical shape latest_debrief() returns.
 function openPastFlight(flight) {
   renderDebrief(flight);
   debriefOverlay.hidden = false;
 }
 
-function renderLogbookFlightList(flights) {
+// Shared by Pilot Summary's 5-item preview and the full Logbook list -
+// same row markup either way, just a different slice of the same array.
+function renderFlightRows(container, flights) {
   if (!flights.length) {
-    logbookFlightList.innerHTML = `<div id="logbook-empty">No flights logged yet - fly a sortie past the minimum flight time and it'll show up here.</div>`;
+    container.innerHTML = `<div id="logbook-empty">No flights logged yet - fly a sortie past the minimum flight time and it'll show up here.</div>`;
     return;
   }
-  logbookFlightList.innerHTML = flights.map((f, i) => {
+  container.innerHTML = flights.map((f, i) => {
     const badge = outcomeBadge(f);
     const title = [f.aircraft, f.mission_name].filter(Boolean).join(" — ");
     const killCount = (f.kills || []).length;
@@ -511,24 +525,43 @@ function renderLogbookFlightList(flights) {
     </div>`;
   }).join("");
 
-  logbookFlightList.querySelectorAll(".logbook-flight-row").forEach((row) => {
+  container.querySelectorAll(".logbook-flight-row").forEach((row) => {
     row.addEventListener("click", () => openPastFlight(flights[Number(row.dataset.index)]));
   });
 }
 
-async function openLogbook() {
+// Fetched once when Pilot Summary opens, reused by the full Logbook so
+// "View Full Logbook" doesn't need a second round-trip. Fine to go a
+// little stale if a new flight completes while these stay open - an edge
+// case not worth a live-refresh for.
+let cachedFlights = [];
+
+async function openPilotSummary() {
   try {
     const res = await fetch("/api/logbook");
     const data = await res.json();
-    renderLogbookSummary(data.summary);
-    renderLogbookFlightList(data.flights);
-    logbookOverlay.hidden = false;
+    cachedFlights = data.flights || [];
+    renderPilotSummaryStats(data.summary);
+    renderFlightRows(pilotSummaryFlightList, cachedFlights.slice(0, 5));
+    pilotSummaryOverlay.hidden = false;
   } catch (e) {
     // transient - leave the overlay closed, they can just click again
   }
 }
 
-logbookBtn.addEventListener("click", openLogbook);
+function openLogbook() {
+  renderFlightRows(logbookFlightList, cachedFlights);
+  logbookOverlay.hidden = false;
+}
+
+pilotSummaryBtn.addEventListener("click", openPilotSummary);
+pilotSummaryClose.addEventListener("click", () => {
+  pilotSummaryOverlay.hidden = true;
+});
+pilotSummaryOverlay.addEventListener("click", (e) => {
+  if (e.target === pilotSummaryOverlay) pilotSummaryOverlay.hidden = true;
+});
+viewFullLogbookBtn.addEventListener("click", openLogbook);
 logbookClose.addEventListener("click", () => {
   logbookOverlay.hidden = true;
 });

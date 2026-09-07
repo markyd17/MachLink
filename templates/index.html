@@ -21,7 +21,7 @@
     <button type="button" id="debrief-btn" class="debrief-btn" disabled>GENERATE DEBRIEF</button>
     <!-- Always enabled (unlike Generate Debrief) - browsing career history
          doesn't depend on a flight having just completed. -->
-    <button type="button" id="logbook-btn" class="logbook-btn">LOGBOOK</button>
+    <button type="button" id="pilot-summary-btn" class="logbook-btn">PILOT SUMMARY</button>
     <div id="status-bar" class="status-block idle mono">DETECTING...</div>
   </header>
 
@@ -125,11 +125,29 @@
     </div>
   </div>
 
-  <!-- Career history - same full-window treatment as the debrief overlay.
-       Stays open underneath when a past sortie is clicked (reopens the
-       debrief overlay on top of it, reusing the same rendering) so
-       closing that just returns to the list, no separate "back" button
-       needed. -->
+  <!-- Career overview - same full-window treatment as the debrief overlay.
+       Shows only the 5 most recent sorties; "View Full Logbook" opens
+       #logbook-overlay on top of this one for the complete history. Stays
+       open underneath when a past sortie or the full Logbook is opened
+       (reuses the same debrief rendering), so closing those just returns
+       here - no separate "back" button needed. -->
+  <div id="pilot-summary-overlay" hidden>
+    <div id="pilot-summary-panel">
+      <div id="pilot-summary-panel-header">
+        <span id="pilot-summary-panel-title">PILOT SUMMARY</span>
+        <button type="button" id="pilot-summary-close" aria-label="Close">&times;</button>
+      </div>
+      <div id="pilot-summary-body">
+        <div id="pilot-summary-stats"></div>
+        <h4 class="checklist-title">RECENT SORTIES</h4>
+        <div id="pilot-summary-flight-list"></div>
+        <button type="button" id="view-full-logbook-btn" class="logbook-btn" style="margin-top:10px;">VIEW FULL LOGBOOK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- The complete, unfiltered sortie history - opened from Pilot Summary
+       (stacks on top of it, same convention as the debrief overlay). -->
   <div id="logbook-overlay" hidden>
     <div id="logbook-panel">
       <div id="logbook-panel-header">
@@ -137,8 +155,6 @@
         <button type="button" id="logbook-close" aria-label="Close">&times;</button>
       </div>
       <div id="logbook-body">
-        <div id="logbook-summary"></div>
-        <h4 class="checklist-title">SORTIE HISTORY</h4>
         <div id="logbook-flight-list"></div>
       </div>
     </div>

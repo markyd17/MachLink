@@ -965,10 +965,10 @@ header {
 #debrief-body .checklist-title:first-child { margin-top: 0; }
 #debrief-body h4.checklist-title { margin-top: 16px; }
 
-/* Logbook overlay - same full-window treatment as the debrief overlay,
-   just its own z-index-independent instance (both can be open at once:
+/* Pilot Summary overlay - same full-window treatment as the debrief
+   overlay, its own z-index band below it (both can be open at once:
    clicking a past sortie opens the debrief panel on top of this one). */
-#logbook-overlay {
+#pilot-summary-overlay {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.55);
@@ -976,6 +976,61 @@ header {
   align-items: center;
   justify-content: center;
   z-index: 115;
+  padding: 24px;
+}
+#pilot-summary-overlay[hidden] { display: none; }
+#pilot-summary-panel {
+  background: var(--panel-bg);
+  border: 1px solid var(--tactical-cyan);
+  width: min(900px, 92vw);
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
+}
+#pilot-summary-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+}
+#pilot-summary-panel-title {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  font-size: 1.1rem;
+  color: var(--tactical-cyan);
+}
+#pilot-summary-close {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 26px;
+  line-height: 1;
+  padding: 0 4px;
+  cursor: pointer;
+}
+#pilot-summary-close:hover { color: var(--hazard-red); }
+#pilot-summary-body {
+  padding: 20px;
+  overflow-y: auto;
+}
+#pilot-summary-body .checklist-title:first-child { margin-top: 0; }
+#pilot-summary-body h4.checklist-title { margin-top: 16px; }
+
+/* Full Logbook overlay - the complete, unfiltered sortie history, opened
+   from Pilot Summary. Sits between it (115) and the debrief panel (120)
+   in the stacking order, so all three can be open at once: Pilot Summary
+   -> Logbook -> an individual flight's reopened debrief. */
+#logbook-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 117;
   padding: 24px;
 }
 #logbook-overlay[hidden] { display: none; }
@@ -1016,8 +1071,6 @@ header {
   padding: 20px;
   overflow-y: auto;
 }
-#logbook-body .checklist-title:first-child { margin-top: 0; }
-#logbook-body h4.checklist-title { margin-top: 16px; }
 
 #logbook-empty {
   color: var(--text-dim);
