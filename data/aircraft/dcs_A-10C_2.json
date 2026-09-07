@@ -1,0 +1,846 @@
+{
+  "game": "dcs",
+  "display_name": "A-10C II Tank Killer",
+  "source": {
+    "name": "Chuck's Guide to the A-10C Warthog",
+    "version_or_date": "Last Updated: 31/08/2023 (as printed in the PDF header, page 1) - re-check chucksguides.com periodically for a newer edition",
+    "url": "https://chucksguides.com/aircraft/dcs/a-10c/"
+  },
+  "_extraction_note": "Checklist steps are Part 4 (Start-Up Procedure) copied directly from the guide's own numbered steps, not generated. The guide covers both the A-10C Legacy and A-10C II Tank Killer in one document, calling out the few steps where they differ (only step 10, radio setup) - the Tank Killer Expansion variant text was used throughout since that's the module this file is for; the Legacy-only radio steps were left out as not applicable. Two ground-crew interphone calls that precede numbered step 1 in the guide (retract ladder, remove chocks) are included as unnumbered steps '0a'/'0b'. IMPORTANT: this guide has no standalone engine-shutdown/post-flight checklist anywhere (verified against the full 18-part table of contents and a full-text search of the extracted PDF) - Part 6 'Landing' ends at touchdown and Part 7 moves straight into engine systems/fuel management, same gap already noted in the AH-64D file. The 'shutdown' list below is intentionally empty rather than guessed. Weapons are Part 10 (Offence: Weapons & Armament), copied/closely paraphrased from the guide's own lettered/numbered attack sequences (A/B/C.../1/2/3...), not generated. Where a weapon has two release-mode variants that share an identical DSMS profile-setup procedure (e.g. MK-82's manual-CCIP vs. CCIP-CR release), the shared setup is written once and the two attack procedures are both included rather than duplicating the setup steps twice - no steps were invented or altered, just de-duplicated. AGM-65L Laser Maverick, GBU-54 Laser JDAM, and APKWS are marked 'Tank Killer Only' in the guide itself and match this file's module. Ordnance jettison (Part 10 section 4) is included as its own list. Systems notes, flight-planning notes and Q&A snippets have not been curated yet.",
+  "checklists": {
+    "pre_start": [
+      {
+        "step": "0a",
+        "action": "Request the ground crew to retract the boarding ladder over the interphone: press \\ (Communication Menu), select Ground Crew (F8), select 'Stow boarding ladder' (F4)."
+      },
+      {
+        "step": "0b",
+        "action": "Request the ground crew to remove the wheel chocks over the interphone: press \\ (Communication Menu), select Ground Crew (F8), select 'Wheel Chocks' (F5), select 'Remove' (F2)."
+      },
+      {
+        "step": 1,
+        "action": "Battery - ON."
+      },
+      {
+        "step": 2,
+        "action": "Inverter - STBY."
+      },
+      {
+        "step": 3,
+        "action": "Emergency Flood Lights - ON (if doing a night operation)."
+      },
+      {
+        "step": 4,
+        "action": "AC Generators - PWR."
+      },
+      {
+        "step": 5,
+        "action": "Hold the Signal Lights Lamp Test switch and confirm the caution light panel is functioning."
+      },
+      {
+        "step": 6,
+        "action": "Oxygen - ON."
+      },
+      {
+        "step": 7,
+        "action": "Hold the OXY IND TEST switch and confirm the LOW OXY warning message is displayed and audible."
+      },
+      {
+        "step": 8,
+        "action": "Hold the Test Fuel Indicator switch to confirm the fuel indicator is working properly."
+      },
+      {
+        "step": 9,
+        "action": "Close the canopy by holding the canopy switch DOWN (right click, or LCTRL+C)."
+      },
+      {
+        "step": 10,
+        "action": "Set up radios (A-10C II Tank Killer Expansion): a) Set ARC-210 V/UHF Radio to TR (Transmit-Receive). b) Set UHF radio to MAIN. c) Set VHF FM Radio #2 to TR (Transmit-Receive). d) Set proper radio frequencies as required."
+      },
+      {
+        "step": 11,
+        "action": "Boost pumps for MAIN and WING tanks - ON."
+      }
+    ],
+    "apu_start": [
+      {
+        "step": 12,
+        "action": "APU (Auxiliary Power Unit) switch - START."
+      },
+      {
+        "step": 13,
+        "action": "Wait until APU RPM reaches 100%, then set the APU Generator switch - ON. Note: the APU generator supplies electrical power to the engine, and APU bleed air drives the engine starter."
+      }
+    ],
+    "engine_start": [
+      {
+        "step": 14,
+        "action": "Verify both Engine Operation switches are in the NORM position."
+      },
+      {
+        "step": 15,
+        "action": "Crank up the left engine by moving the left throttle from OFF to IDLE (RALT+HOME). This automatically initiates a left engine start with automatic ignition; once the throttle is at IDLE, the DC fuel boost pumps activate to feed that engine. Note: on the Warthog Throttle HOTAS you need to physically raise/pull up the throttle."
+      },
+      {
+        "step": 16,
+        "action": "During start, the ENG START CYCLE indication will be visible."
+      },
+      {
+        "step": 17,
+        "action": "Confirm oil pressure increases during start. ITT (Interstage Turbine Temperature) will spike at 900°C but should stabilize between 275 and 865°C."
+      },
+      {
+        "step": 18,
+        "action": "Wait until the engine spools up to a stabilized core RPM of 56% when idling on the ground. Monitor left hydraulic system pressure build-up, which should normalize between 2,800 and 3,350 PSI."
+      },
+      {
+        "step": 19,
+        "action": "When the engine reaches IDLE RPM, hydraulic pumps kick in and oil pressure stabilizes; the L-GEN, L-HYD PRESS and L-ENG OIL PRESS cautions will extinguish."
+      },
+      {
+        "step": 20,
+        "action": "When the Master Caution warning sound is heard, click the MASTER CAUTION switch."
+      },
+      {
+        "step": 21,
+        "action": "Crank up the right engine by moving the right throttle from OFF to IDLE (RCTRL+HOME). Wait until it spools up to IDLE settings as above."
+      },
+      {
+        "step": 22,
+        "action": "APU Generator - OFF/RESET."
+      },
+      {
+        "step": 23,
+        "action": "APU switch - OFF."
+      }
+    ],
+    "post_start": [
+      {
+        "step": 24,
+        "action": "Set the Pitot Heat Switch - ON (FWD)."
+      },
+      {
+        "step": 25,
+        "action": "Set the CDU (Control Display Unit) switch - ON."
+      },
+      {
+        "step": 26,
+        "action": "Set the EGI (Embedded GPS-INS) switch - ON."
+      },
+      {
+        "step": 27,
+        "action": "Once the EGI switch is ON, navigation system alignment starts and takes approx. 4 minutes. Status can be monitored on the CDU ALIGN sub-page (MFCDs are not powered yet)."
+      },
+      {
+        "step": 28,
+        "action": "Uncage the Standby Attitude Indicator (SAI)."
+      },
+      {
+        "step": 29,
+        "action": "Turn ON the left and right MFCD (Multi-Function Color Display) screens by left-clicking twice on each power switch."
+      },
+      {
+        "step": 30,
+        "action": "Set the CICU (Central Interface Control Unit) switch - ON. The MFCDs will turn blue."
+      },
+      {
+        "step": 31,
+        "action": "Set the JTRS (Joint Tactical Radio System) switch - ON. JTRS powers Situational Awareness Datalink (SADL), which helps identify friendly/enemy forces on your displays."
+      },
+      {
+        "step": 32,
+        "action": "Set the IFFCC (Integrated Flight & Fire Control Computer) switch - TEST (middle position)."
+      },
+      {
+        "step": 33,
+        "action": "Press ENT on the UFC (Up Front Controller) to engage Preflight BIT. This runs an automated Built-In Test taking about 1 minute."
+      },
+      {
+        "step": 34,
+        "action": "Once BIT is complete, press ENT on the UFC to exit the PREFLIGHT BIT menu."
+      },
+      {
+        "step": 35,
+        "action": "Scroll down the HUD menus using SEL and select EXIT by pressing ENT on the UFC."
+      },
+      {
+        "step": 36,
+        "action": "Set the IFFCC switch - ON (UP position)."
+      },
+      {
+        "step": 37,
+        "action": "Pitch and Yaw SAS (Stability Augmentation System) switches - ON."
+      },
+      {
+        "step": 38,
+        "action": "Hold the TAKEOFF TRIM switch for 1-2 seconds. This sets all trim tabs to neutral takeoff settings; the TAKEOFF TRIM light above the button illuminates once set.",
+        "binding_key": "takeoff_trim_switch"
+      },
+      {
+        "step": 39,
+        "action": "Once a DTS UPLOAD page appears on the MFCD (Data Transfer System), press the OSB (Option Selection Button) next to 'Load All' to load the DTS cartridge - mission waypoints, weapon data, bullseye data and other nav data set up in the mission editor. Takes about 15 seconds."
+      },
+      {
+        "step": 40,
+        "action": "Once the DTS cartridge is loaded, the white DSMS, INVT and CMBT cautions disappear and an asterisk appears next to every menu (* means loaded)."
+      },
+      {
+        "step": 41,
+        "action": "Select the OSB next to CDU on the right MFCD to display EGI Alignment data on that screen. Once the alignment status timer reads 'T = 4.0 0.8', the EGI is aligned."
+      },
+      {
+        "step": 42,
+        "action": "Set the STEERPOINT selector to FLIGHT PLAN. This enables using waypoints on the HUD and TAD to navigate."
+      },
+      {
+        "step": 43,
+        "action": "On the right MFCD (with CDU data displayed), select NAV mode by pressing the OSB next to the NAV menu. An asterisk appears once NAV mode is selected."
+      },
+      {
+        "step": 44,
+        "action": "Select the OSB next to TAD (Tactical Awareness Display) on the left MFCD to display TAD data on that screen."
+      },
+      {
+        "step": 45,
+        "action": "Set CMS (Countermeasures) mode to MAN."
+      },
+      {
+        "step": 46,
+        "action": "Set the MWS (Missile Warning System), JMR (ECM Jammer), RWR (Radar Warning Receiver) and DISP (Countermeasure Dispenser) switches - ON."
+      },
+      {
+        "step": 47,
+        "action": "Engage Nosewheel Steering (pinky switch on the HOTAS stick, or the INSERT key).",
+        "binding_key": "nosewheel_steering_button"
+      },
+      {
+        "step": 48,
+        "action": "Set the Anti-Skid Switch - ON."
+      },
+      {
+        "step": 49,
+        "action": "Select EGI navigation mode."
+      },
+      {
+        "step": 50,
+        "action": "Set the EAC (Enhanced Attitude Control) Switch - ARMED."
+      },
+      {
+        "step": 51,
+        "action": "Set the RDR ALTM (Radar Altimeter) Switch - NORMAL."
+      },
+      {
+        "step": 52,
+        "action": "Arm the ejection seat (lever DOWN). The SEAT NOT ARMED caution should disappear."
+      },
+      {
+        "step": 53,
+        "action": "Check the caution panel - any message still displayed will tell you if you forgot something."
+      },
+      {
+        "step": 54,
+        "action": "(A-10C II Tank Killer only) Set the Scorpion HMCS (Helmet-Mounted Cueing System) Power Switch - ON (FWD).",
+        "binding_key": "hmcs_power_switch"
+      }
+    ],
+    "shutdown": []
+  },
+  "weapons": [
+    {
+      "name": "MK-82 Low-Drag Unguided Bomb",
+      "employment_notes": "500 lb unguided general-purpose bomb, CCIP dive-bombing. Two release techniques share the same DSMS profile setup: manual CCIP (you release) and CCIP-CR/Computer Release (aircraft auto-releases when in solution, letting you start your escape maneuver earlier). Reference: Part 10, section 2.1.",
+      "switchology": [
+        {
+          "text": "Set Master Arm Switch - ON (UP).",
+          "binding_key": "master_arm_arm"
+        },
+        "Select the DSMS (Digital Stores Management System) page.",
+        "Select the MK-82 Bomb (turns green when selected).",
+        "Select the PROF (Weapon Profile) menu.",
+        "Set CCIP mode.",
+        "Set Release Type: SGL (single), PRS (pairs), RIP SGL (each press releases the RIP QTY setting), or RIP PRS (each press releases the RIP PRS quantity, in pairs).",
+        "Set Bomb Fuze Setting (Nose, Tail, or Nose & Tail).",
+        "Optional: set Bomb Ripple Quantity and Bomb Interval Distance (ft) via the UFC scratchpad and the RIP QTY / FT OSBs.",
+        "Optional: set horizontal/vertical offset (-15 to +15 mils), eject velocity (-10 to +30 ft/sec), rack delay (-0.40 to +0.40), Escape Maneuver Type (NONE/CLB/TRN/TLT), Time of Fall, and Minimum Release Altitude HUD cue - all via the UFC scratchpad and their respective OSBs.",
+        "Press the OSB next to SAVE to save the weapon profile.",
+        {
+          "text": "Select the MK-82 profile via the Option Select Buttons, then press the OSB next to ACT PRO (Active Profile). While HUD is SOI, you can also cycle profiles/stations with the DMS switch left/right.",
+          "binding_key": "dms_left_right"
+        },
+        "Set the IFFCC switch to TEST (middle position).",
+        "For manual CCIP release: select CCIP CONSENT with the SEL rocker key and cycle with DATA until it shows OFF.",
+        "For CCIP-CR (auto) release instead: select CCIP CONSENT and cycle with DATA until it shows 3/9 (solution cue must pass through the reticle) or 5 MIL (solution cue must pass over the reticle pipper).",
+        "Set the IFFCC switch back to ON (UP) - the HUD returns to normal.",
+        {
+          "text": "Press the Master Mode button until CCIP HUD mode is selected.",
+          "binding_key": "master_mode_button"
+        },
+        {
+          "text": "Press Coolie Hat UP (short) to set the HUD as SOI (an asterisk indicates HUD is SOI).",
+          "binding_key": "coolie_hat_up"
+        },
+        "Verify the HUD shows MAN REL mode, CCIP release, the MK-82 profile, and ARM status.",
+        "Perform a shallow dive between 10-45 degrees from at least 10,000 ft.",
+        {
+          "text": "Manual CCIP: a dashed 'Out of Solution' PBIL appears when not yet close enough; when close enough the CCIP Bombing Reticle appears and the PBIL turns solid. Place the reticle center on the target and press and hold the Weapon Release Button (RALT+SPACE) to release.",
+          "binding_key": "weapon_release_button"
+        },
+        {
+          "text": "CCIP-CR (auto): once pitched down more than 3 degrees, maneuver to place the designation pipper on the target and press and HOLD the Weapon Release Button. The PBIL turns solid and an Azimuth Steering Line (ASL) appears with a Solution Cue and Time-To-Release Numeric (TTRN). Keep flying the Solution Cue down the ASL - with the button still held, bombs release automatically once the Solution Cue passes through the reticle/pipper.",
+          "binding_key": "weapon_release_button"
+        }
+      ]
+    },
+    {
+      "name": "MK-82AIR High-Drag Unguided Bomb",
+      "employment_notes": "500 lb high-drag (retarded) bomb for low-altitude release, CCRP level-release mode. The SPI (target aim point) can be designated either with the HUD TDC or with the Targeting Pod. Reference: Part 10, section 2.2.",
+      "switchology": [
+        {
+          "text": "Set Master Arm Switch - ON (UP). Select the DSMS page, select MK-82AIR Bomb (green when selected), select the PROF menu.",
+          "binding_key": "master_arm_arm"
+        },
+        "Set CCRP mode. Set Release Type (SGL/PRS/RIP SGL/RIP PRS, same options as the MK-82).",
+        "Set Bomb Fuze Setting: nose fuze only = 'slick' (ballute not deployed); nose/tail or tail fuze = 'retarded' (ballute deployed).",
+        "Optional: ripple quantity/interval, offsets, eject velocity, rack delay, Escape Maneuver Type, HD/LD Time of Fall, Minimum Release Altitude cue - same UFC-scratchpad-plus-OSB pattern as the MK-82.",
+        "Press the OSB next to SAVE to save the profile, then select the MK-82APO profile and press ACT PRO to activate it.",
+        {
+          "text": "Option 1 - designate SPI with the HUD TDC: press Master Mode button for CCRP, Coolie Hat UP to set HUD as SOI, verify 5 MIL/CCIP release/MK-82APO/ARM on the HUD, use the Slew Control Switch to move the TDC (caged on the velocity vector by default) onto the target, then press TMS FWD LONG to set that TDC location as the SPI.",
+          "binding_key": [
+            "master_mode_button",
+            "coolie_hat_up",
+            "tms_forward",
+            "hotas_slew"
+          ]
+        },
+        {
+          "text": "Option 2 - designate SPI with the Targeting Pod: press Master Mode for CCRP, set TGP switch ON on the AHCP, press the OSB next to TGP and select A-G mode, press Coolie Hat LONG toward the MFCD showing the TGP feed to set TGP as SOI, then designate the target with the TGP (video mode via Boat Switch, FOV via China Hat, slew reticle onto target, TMS FWD SHORT to track, TMS FWD LONG to designate as SPI, China Hat FWD LONG to slave all sensors to the SPI).",
+          "binding_key": [
+            "coolie_hat_toward_mfcd",
+            "china_hat_forward",
+            "tms_forward",
+            "hotas_slew",
+            "boat_switch"
+          ]
+        },
+        "Fly level and align the CCRP Projected Bomb Release Line (PBRL)/pipper with the Azimuth Steering Line (ASL).",
+        {
+          "text": "At about 6 seconds on the TTRN, the Solution Cue starts falling down the ASL - press and hold the Weapon Release Button (RALT+SPACE) and maneuver so the Solution Cue falls through the CCRP pipper.",
+          "binding_key": "weapon_release_button"
+        },
+        "Bombs release automatically once the Solution Cue passes through the pipper."
+      ]
+    },
+    {
+      "name": "M-151 Hydra 70 Rockets",
+      "employment_notes": "2.75in unguided rockets, CCIP dive-fire. Reference: Part 10, section 2.3.",
+      "switchology": [
+        {
+          "text": "Set Master Arm Switch - ON (UP). Select DSMS page, select M-151 Hydra 70 Rockets (green when selected), select PROF menu.",
+          "binding_key": "master_arm_arm"
+        },
+        "Set CCIP mode. Set Release Type (SGL/PRS/RIP SGL/RIP PRS - same meanings as bombs, but launching rockets instead of dropping bombs).",
+        "Optional: set Rocket Ripple Quantity, horizontal/vertical offset, Minimum Release Altitude cue via UFC scratchpad + OSBs.",
+        "Press OSB next to SAVE, then select the M-151 profile and press ACT PRO to activate it.",
+        {
+          "text": "Press Master Mode button until CCIP HUD mode is selected; press Coolie Hat UP (short) to set HUD as SOI; verify MAN REL/CCIP/M-151/ARM on the HUD.",
+          "binding_key": [
+            "master_mode_button",
+            "coolie_hat_up"
+          ]
+        },
+        "Perform a shallow dive between 10-45 degrees from at least 10,000 ft.",
+        "A CCIP Rocket Reticle & Pipper appears when not close enough; inside 2 nm slant range the numeric range readout is replaced by an unwinding analog range bar. Place the reticle center on the target.",
+        {
+          "text": "At a slant range of around 1 nm, hold down the Weapon Release Button (RALT+SPACE) to launch rockets.",
+          "binding_key": "weapon_release_button"
+        }
+      ]
+    },
+    {
+      "name": "GAU-8/A 30mm Gun (Air-to-Ground)",
+      "employment_notes": "7-barrel Gatling cannon, the A-10's signature weapon. Carries Combat Mix (5x PGU-14 API/depleted-uranium : 1x PGU-13 HEI, effective vs. tanks to 21,600 ft), pure HEI, or inert Target Practice rounds - set in the Mission Editor; ammo type is confirmed/changed via the IFFCC test menu. Four gunsight reticle modes are cyclable with DMS while HUD is SOI: CCIP Reticle (most accurate), CCIP Cross (simplified, nearly as accurate), 4/8/12 Reticle, and 4000ft Wind-Corrected Cross (both useful as fallbacks when a CCIP solution can't be computed, i.e. a CCIP INVALID HUD message because the target is higher than the aircraft). Reference: Part 10, section 2.4.",
+      "switchology": [
+        "To confirm/change ammo type: set IFFCC to TEST (middle), SEL to WEAPONS then ENT, select the 30MM menu then ENT, use the DATA rocker in the AMMO TYPE field to toggle CM (Combat Mix) / HEI / TP, SEL to STORE then ENT, SEL to EXIT then ENT, set IFFCC back to ON (UP). The DSMS page and HUD will display the selected ammo type.",
+        "To set the gunsight's Minimum Altitude cue: set IFFCC to TEST, SEL to WEAPONS then ENT, select 30MM then ENT, SEL to MIN ALT, use DATA to set the value, SEL to STORE then ENT, SEL to EXIT then ENT, set IFFCC back to ON. The CCIP Reticle will then display a Minimum Range Cue.",
+        {
+          "text": "Set Master Arm Switch - ON (UP). Set GUN/PAC (Precision Attitude Correction) Switch - ARM (UP). Confirm GUN READY indication is visible.",
+          "binding_key": "master_arm_arm"
+        },
+        "To use PAC, make sure EAC (Enhanced Attitude Control) and the PITCH/YAW SAS switches are ON.",
+        {
+          "text": "Press the Master Mode button until GUNS HUD mode is selected; press Coolie Hat UP (short) to set HUD as SOI.",
+          "binding_key": [
+            "master_mode_button",
+            "coolie_hat_up"
+          ]
+        },
+        {
+          "text": "Press DMS LEFT/RIGHT to cycle gun reticle modes: CCIP Reticle, CCIP Cross, 4/8/12 Reticle, or 4000ft Wind Corrected Cross.",
+          "binding_key": "dms_left_right"
+        },
+        {
+          "text": "CCIP Reticle / CCIP Cross: the moving-target lead indices assume a 20kt perpendicular target - place the target between the pipper and the indices if it's moving. Put the target under the reticle/cross, partially depress the trigger (first detent) to activate PAC and stabilize flight, wait until slant range is 0.7 nm, then depress the trigger (second detent) for a short 1-second burst.",
+          "binding_key": "gun_trigger"
+        },
+        {
+          "text": "4/8/12 Reticle: generally used against targets above your altitude (e.g. on a slope) when a CCIP solution isn't available. Evaluate target distance, put the target under the pipper of the matching range (4000/8000/12000 ft slant-range dots), partially depress the trigger to activate PAC, and when the matching range pipper is on target, depress the trigger (second detent) for a short burst.",
+          "binding_key": "gun_trigger"
+        },
+        {
+          "text": "4000ft Wind Corrected Cross: also for above-altitude targets when CCIP is unavailable. Put the target under the cross, partially depress the trigger to activate PAC, then depress the trigger (second detent) when in range for a short burst.",
+          "binding_key": "gun_trigger"
+        }
+      ]
+    },
+    {
+      "name": "GBU-38 JDAM (JTAC Coordinates)",
+      "employment_notes": "1000 lb INS/GPS-guided JDAM, launch-and-leave - it homes on entered coordinates by itself, no need to keep tracking/lasing it. Employed by getting target coordinates from a JTAC over the radio, entering them as a new waypoint, and setting that waypoint as the SPI. Reference: Part 10, section 2.5.",
+      "switchology": [
+        "Set the required JTAC radio frequency. Press the HOTAS mic switch DOWN to transmit on UHF and select the JTAC in the radio menu; check in (give altitude, ordnance available, time on station).",
+        "Confirm ready to copy, receive the 9-line, confirm ready to copy remarks, receive remarks, read the 9-line back, and get cleared to engage.",
+        "9-line reference: Line 1 IP/BP, Line 2 heading from IP to target, Line 3 distance IP/BP to target, Line 4 target elevation (MSL), Line 5 target description, Line 6 target grid coordinates, Line 7 target mark type, Line 8 location of friendlies, Line 9 egress direction - plus remarks (troops in contact, danger close, SEAD, hazards, requested ordnance).",
+        "If the JTAC says 'Standby Data', a new tasking arrives on the MSG page - press the OSB next to MSG to view it, and the OSB next to ACK to acknowledge/clear the caution.",
+        "Enter the target coordinates as a new waypoint in the CDU: set STEER PT selector to MISSION and PAGE selector to OTHER, select the WP function key, select LSK next to STEERPOINT, select LSK to create a new waypoint, select LSK next to L/L to toggle to UTM format, type the JTAC's coordinates on the CDU keypad and select the LSK to apply them, optionally type and apply a waypoint name.",
+        {
+          "text": "Set Master Arm Switch - ON (UP), select DSMS page, select GBU-38 Bomb (green when selected), select PROF menu - CCRP is the only selectable mode.",
+          "binding_key": "master_arm_arm"
+        },
+        "Optional: set a Minimum Release Altitude HUD cue via the UFC scratchpad and MIN ALT OSB, then press the OSB next to SAVE.",
+        "Select the GBU-38 profile via the Option Select Buttons and press ACT PRO to activate it.",
+        {
+          "text": "Press Coolie Hat UP to set HUD as SOI, select the new JTAC waypoint with the STEER rocker or DMS up/down, and if it isn't already the SPI press TMS AFT LONG to set it as the SPI.",
+          "binding_key": [
+            "coolie_hat_up",
+            "tms_aft",
+            "dms_fwd_aft"
+          ]
+        },
+        {
+          "text": "Before the attack run, press China Hat FWD LONG to slave all sensors (including the TGP) to the SPI so you can visually confirm the target - launching at blind coordinates without a visual check is not recommended.",
+          "binding_key": "china_hat_forward"
+        },
+        {
+          "text": "Press the Master Mode button until CCRP HUD mode is selected.",
+          "binding_key": "master_mode_button"
+        },
+        "Legacy HUD symbology: fly level and align the CCRP reticle with the ASL; the Release Cue moves counter-clockwise from 12 o'clock as you approach max range; MAN REL appears once between the max and min range carets.",
+        "Tank Killer HUD symbology: fly level and align the velocity vector with the ASL; watch the DLZ (Dynamic Launch Zone) current-range caret; MAN REL appears once it's between the DLZ's max and min range indications.",
+        {
+          "text": "Press and hold the Weapon Release Button (RALT+SPACE) until the JDAM releases - it homes on the entered coordinates by itself via GPS.",
+          "binding_key": "weapon_release_button"
+        }
+      ]
+    },
+    {
+      "name": "GBU-38 JDAM (Targeting Pod)",
+      "employment_notes": "Same GBU-38 JDAM, but the target point comes from the Targeting Pod (with laser ranging) instead of JTAC coordinates. Reference: Part 10, section 2.6.",
+      "switchology": [
+        {
+          "text": "Set Master Arm Switch - ON (UP), select DSMS page, select GBU-38 Bomb, select PROF menu - CCRP is the only selectable mode. Optional Minimum Release Altitude cue, then SAVE the profile and activate it (ACT PRO).",
+          "binding_key": "master_arm_arm"
+        },
+        "On the AHCP, set the TGP switch ON and the LASER ARM switch to ARM.",
+        {
+          "text": "Press the OSB next to TGP to bring up the TGP feed and select A-G mode, then press Coolie Hat LONG toward that MFCD to set the TGP as SOI.",
+          "binding_key": "coolie_hat_toward_mfcd"
+        },
+        {
+          "text": "Designate the target with the TGP: select video mode with the Boat Switch (FLIR Black Hot / CCD / FLIR White Hot), FOV with the China Hat, slew the reticle onto the target, adjust zoom with DMS, and TMS FWD SHORT to track (AREA TRACK for static, POINT TRACK for moving targets).",
+          "binding_key": [
+            "china_hat_forward",
+            "tms_forward",
+            "hotas_slew",
+            "boat_switch",
+            "dms_fwd_aft"
+          ]
+        },
+        {
+          "text": "Select the Laser Designator Mode (LSR) via OSB, press the Nosewheel Steering Button to fire the laser, and while it's firing press TMS RIGHT SHORT to create a markpoint using the laser-ranged position - IMPORTANT: create the markpoint while the laser is firing, otherwise the markpoint lands short, behind the actual target (the un-ranged reticle points at the ground behind the target). Press the Nosewheel Steering Button again to stop the laser.",
+          "binding_key": [
+            "tms_right",
+            "nosewheel_steering_button"
+          ]
+        },
+        {
+          "text": "Set STEER PT selector to MARK and PAGE selector to OTHER, press Coolie Hat UP to set HUD as SOI, select the new markpoint (Steerpoint A/MRK A) with STEER or DMS up/down, and if needed press TMS AFT LONG to set it as the SPI. (Tank Killer: steps to select/set the markpoint as SPI can instead be done with a single TMS RIGHT LONG.)",
+          "binding_key": [
+            "coolie_hat_up",
+            "tms_aft",
+            "tms_right",
+            "dms_fwd_aft"
+          ]
+        },
+        {
+          "text": "Press China Hat FWD LONG to slave all sensors to the SPI, then press the Master Mode button until CCRP HUD mode is selected.",
+          "binding_key": [
+            "master_mode_button",
+            "china_hat_forward"
+          ]
+        },
+        "Legacy symbology: align the CCRP reticle with the ASL, wait for MAN REL between the max/min range carets. Tank Killer symbology: align the velocity vector with the ASL, wait for the DLZ current-range caret to fall between max/min.",
+        {
+          "text": "Press and hold the Weapon Release Button (RALT+SPACE) until the JDAM releases - it homes on the markpoint via GPS.",
+          "binding_key": "weapon_release_button"
+        }
+      ]
+    },
+    {
+      "name": "CBU-105 Wind Corrected Munitions Dispenser",
+      "employment_notes": "Cluster munition against soft/armored targets, guided to the SPI via INS (not GPS) using a WCMD tail kit. Two tunable parameters are set per-station in the DSMS Inventory page: Height of Function (HoF - release height, affects area spread/accuracy; recommended 2200 ft for the CBU-97/105 family) and RPM (bomblet spread; CBU-87/103 only, not applicable to the -105). CBU family for reference: CBU-87 (950 lb Combined Effects Munition, 202x BLU-97 bomblets, unguided), CBU-103 (CBU-87 + WCMD INS tail kit), CBU-97 (1000 lb sensor-fused anti-armor bomblets, unguided), CBU-105 (CBU-97 + WCMD INS tail kit - this weapon). Reference: Part 10, section 2.7.",
+      "switchology": [
+        "Set the HoF per station before flight: DSMS page - INV (Inventory) page - select the CBU-105 station - INV STAT - click the OSB next to HOF repeatedly until 2200 ft is set - OSB next to LOAD (or LOAD SYM for a symmetrical loadout on both pylons).",
+        {
+          "text": "Set Master Arm Switch - ON (UP), select DSMS page, select CBU-105 Bomb, select PROF menu - CCRP is the only selectable mode, set Release Type, optional Minimum Release Altitude cue, then SAVE and activate the profile (ACT PRO).",
+          "binding_key": "master_arm_arm"
+        },
+        {
+          "text": "On the AHCP, set TGP switch ON, press the OSB next to TGP and select A-G mode, press Coolie Hat LONG toward that MFCD to set TGP as SOI.",
+          "binding_key": "coolie_hat_toward_mfcd"
+        },
+        {
+          "text": "Designate the target with the TGP (video mode via Boat Switch, FOV via China Hat, slew reticle onto target, DMS to zoom, TMS FWD SHORT to track).",
+          "binding_key": [
+            "china_hat_forward",
+            "tms_forward",
+            "hotas_slew",
+            "boat_switch",
+            "dms_fwd_aft"
+          ]
+        },
+        {
+          "text": "Verify TGP is SOI, press TMS FWD LONG to designate the TGP point as the SPI, press China Hat FWD LONG to slave all sensors to the SPI, then press the Master Mode button until CCRP HUD mode is selected.",
+          "binding_key": [
+            "master_mode_button",
+            "china_hat_forward",
+            "tms_forward"
+          ]
+        },
+        "Fly level and align the CCRP reticle with the ASL; wait for the Release Cue to fall between the Maximum and Minimum Range Carets, showing MAN REL.",
+        {
+          "text": "Press and hold the Weapon Release Button (RALT+SPACE) until the CBU releases - at the programmed HoF the dispenser opens and bomblets descend and explode in clusters over the target.",
+          "binding_key": "weapon_release_button"
+        }
+      ]
+    },
+    {
+      "name": "GBU-12 Paveway II Laser-Guided Bomb",
+      "employment_notes": "500 lb laser-guided bomb - unlike the JDAM family it doesn't fly itself, and requires continuous laser designation (from your own TGP, in this workflow) through impact. Reference: Part 10, section 2.8. Guide note: normally you'd launch the GBU-12 first and then fire the laser to guide it in; the guide simplifies by lasing first, then attacking.",
+      "switchology": [
+        "Program the laser code the bomb will track: DSMS - INV page - select the GBU-12 station - INV STAT - enter the desired code (e.g. 1687) on the UFC scratchpad - OSB next to LSR CODE - OSB next to LOAD (or LOAD SYM for a symmetrical loadout).",
+        {
+          "text": "Set Master Arm Switch - ON (UP), select DSMS page, select GBU-12 Bomb, select PROF menu.",
+          "binding_key": "master_arm_arm"
+        },
+        "Set CCRP mode, Release Type (SGL/PRS/RIP SGL/RIP PRS), and Bomb Fuze Setting.",
+        "Set Auto Laser: OFF to fire the laser manually, or ON with an LS TIME (seconds before impact the laser fires automatically - 8 sec recommended for best accuracy, 0 defaults to 4 sec).",
+        "Optional: offsets, eject velocity, rack delay, Escape Maneuver Type, Time of Fall, Minimum Release Altitude cue, and Solution Option (ORP - Optimal Release Point, or BAL - ballistic) via UFC scratchpad + OSBs.",
+        "Press the OSB next to SAVE, then select the GBU-12 profile and press ACT PRO to activate it.",
+        {
+          "text": "On the AHCP, set TGP switch ON and LASER ARM to ARM. Press the OSB next to TGP, select A-G mode, and press Coolie Hat LONG toward that MFCD to set TGP as SOI.",
+          "binding_key": "coolie_hat_toward_mfcd"
+        },
+        {
+          "text": "Designate the target with the TGP (Boat Switch for video mode, China Hat for FOV, slew reticle onto target, DMS to zoom, TMS FWD SHORT to track), then TMS FWD LONG to designate the TGP point as SPI, and China Hat FWD LONG to slave all sensors to the SPI. Press Master Mode until CCRP HUD mode is selected.",
+          "binding_key": [
+            "china_hat_forward",
+            "tms_forward",
+            "hotas_slew",
+            "boat_switch",
+            "dms_fwd_aft"
+          ]
+        },
+        {
+          "text": "Enter the same laser code on the TGP AG Control Page (OSB next to CNTL, enter code, OSB next to 'L'), select LATCH mode (ON = laser stays firing once triggered), OSB next to RTN to return, then press the Nosewheel Steering Button to fire the laser.",
+          "binding_key": "nosewheel_steering_button"
+        },
+        {
+          "text": "Fly level and align the CCRP Projected Bomb Release Line with the ASL. At about 6 seconds on the TTRN the Solution Cue starts falling - press and hold the Weapon Release Button (RALT+SPACE) and maneuver so the cue falls through the CCRP pipper; the bomb releases automatically.",
+          "binding_key": "weapon_release_button"
+        },
+        {
+          "text": "Verify the laser is firing (blinking 'L' on the HUD) - if not, press the Nosewheel Steering Button again. Keep lasing until the bomb follows the laser to impact, then press the Nosewheel Steering Button once more to stop firing.",
+          "binding_key": "nosewheel_steering_button"
+        }
+      ]
+    },
+    {
+      "name": "AGM-65 Maverick (IR, Maverick Sensor Only)",
+      "employment_notes": "Infrared-guided air-to-ground missile, locked using its own seeker rather than the Targeting Pod - shorter effective range but simpler to set up. Reference: Part 10, section 2.9.",
+      "switchology": [
+        {
+          "text": "Set Master Arm Switch - ON (UP), select the MAV page on an MFCD, press the OSB next to EO OFF to begin the ~3-minute Electro-Optical alignment (MAV page shows ALIGN, HUD shows ALN). Alignment is complete when ALIGN disappears and HUD shows RDY.",
+          "binding_key": "master_arm_arm"
+        },
+        {
+          "text": "Select DSMS page and select the AGM-65 Missile (green when selected). While HUD is SOI, cycle stations/profiles with DMS left/right.",
+          "binding_key": "dms_left_right"
+        },
+        {
+          "text": "Press Coolie Hat LONG toward the MFCD showing the MAV feed to set the Maverick as SOI.",
+          "binding_key": "coolie_hat_toward_mfcd"
+        },
+        "Optional: set the Adjustment Boresight Function and/or missile slew rate (default 5.0; some pilots prefer 9.0) via the UFC scratchpad and SLEW OSB.",
+        {
+          "text": "Lock the target: select video mode with the Boat Switch, FOV with the China Hat, use the Slew Control Switch to put the MAV reticle on the target - releasing the slew lets the seeker auto-lock onto the center of mass of whatever's inside the tracking gate (if it can't lock, the seeker enters Break Lock and the crosshairs expand). TMS AFT SHORT ground-stabilizes the reticle; TMS FWD LONG sets the Maverick as SPI.",
+          "binding_key": [
+            "china_hat_forward",
+            "tms_forward",
+            "tms_aft",
+            "hotas_slew",
+            "boat_switch"
+          ]
+        },
+        {
+          "text": "When the missile has a good lock (generally 3-7 nm), press the Weapon Release Button (RALT+SPACE) to fire - a LAUNCH INHIBIT message means no valid lock yet.",
+          "binding_key": "weapon_release_button"
+        },
+        "Note: flaps must be UP when firing any missile, or they can be damaged by the launch."
+      ]
+    },
+    {
+      "name": "AGM-65 Maverick (IR, Targeting Pod Slaved)",
+      "employment_notes": "Same IR Maverick, but the Targeting Pod (longer range, easier to use) designates the target first and slaves the Maverick seeker to it, so the missile locks once in range. Reference: Part 10, section 2.10.",
+      "switchology": [
+        "Prepare the Maverick: Master Arm ON, MAV page, OSB next to EO OFF to align (~3 min, watch for RDY), select the AGM-65 Missile on the DSMS page.",
+        {
+          "text": "On the AHCP set TGP switch ON, press the OSB next to TGP and select A-G mode, then press Coolie Hat LONG toward that MFCD to set TGP as SOI.",
+          "binding_key": "coolie_hat_toward_mfcd"
+        },
+        {
+          "text": "Designate the target with the TGP (Boat Switch for video mode, China Hat for FOV, slew reticle onto target, DMS to zoom, TMS FWD SHORT to track), verify TGP is SOI, then press TMS FWD LONG to set it as the SPI.",
+          "binding_key": [
+            "china_hat_forward",
+            "tms_forward",
+            "hotas_slew",
+            "boat_switch",
+            "dms_fwd_aft"
+          ]
+        },
+        {
+          "text": "Press Coolie Hat LONG toward the MFCD showing the MAV feed to set the Maverick as SOI, then press China Hat FWD LONG to slave the Maverick seeker to the SPI - it slews there automatically (expect Break Lock crosshairs until it locks).",
+          "binding_key": [
+            "coolie_hat_toward_mfcd",
+            "china_hat_forward"
+          ]
+        },
+        {
+          "text": "As you approach, use the DLZ (Dynamic Launch Zone) to judge range; once inside 3-7 nm press TMS FWD SHORT to attempt a lock (may take a couple of tries) - the crosshair symbology changes once locked.",
+          "binding_key": "tms_forward"
+        },
+        {
+          "text": "When the missile has a good lock, press the Weapon Release Button (RALT+SPACE) to fire - LAUNCH INHIBIT means no valid lock yet. Flaps must be UP when firing.",
+          "binding_key": "weapon_release_button"
+        }
+      ]
+    },
+    {
+      "name": "AGM-65L Laser Maverick (Tank Killer Only)",
+      "employment_notes": "Laser-guided Maverick variant, exclusive to the A-10C II Tank Killer. Tracks a specific laser code (PRF) rather than an IR image, so it can be cued onto a target lased by your own TGP, another aircraft, or a JTAC laser designator. Reference: Part 10, section 2.11.",
+      "switchology": [
+        {
+          "text": "Program the missile's laser code: either via DSMS - INV - select the AGM-65L station - INV STAT - enter code (e.g. 1687) on the UFC scratchpad - OSB next to CODE - OSB next to LOAD/LOAD SYM; or via the MAV page using the Boat Switch to cycle each of the 4 code digits (1-7) and, optionally, a 5th 'C' countermeasure-mode digit.",
+          "binding_key": "boat_switch"
+        },
+        {
+          "text": "Set Master Arm Switch - ON (UP), select DSMS page, select the AGM-65L Missile.",
+          "binding_key": "master_arm_arm"
+        },
+        {
+          "text": "On the AHCP set TGP switch ON and LASER ARM to ARM. Press the OSB next to TGP, select A-G mode, press Coolie Hat LONG toward that MFCD to set TGP as SOI.",
+          "binding_key": "coolie_hat_toward_mfcd"
+        },
+        {
+          "text": "Designate the target with the TGP and press TMS FWD LONG to set it as the SPI.",
+          "binding_key": "tms_forward"
+        },
+        {
+          "text": "Enter the same laser code on the TGP AG Control Page (OSB CNTL, enter code, OSB 'L'), choose LATCH mode, OSB RTN to return, then press the Nosewheel Steering Button to start lasing.",
+          "binding_key": "nosewheel_steering_button"
+        },
+        {
+          "text": "Press Coolie Hat LONG toward the MAV feed's MFCD to set the Maverick as SOI, then press TMS FWD SHORT to uncage the seeker into 'Activate' mode - it scans its boresight line of sight for the matching laser code; a flashing GPI (Gimbal Pointing Indicator) means it's detecting energy, a solid white square means a valid lock.",
+          "binding_key": [
+            "coolie_hat_toward_mfcd",
+            "tms_forward"
+          ]
+        },
+        {
+          "text": "If no return is detected, releasing the slew switch enters 'Slew'/scan mode (GPI sweeps +/-22 degrees); alternatively, China Hat FWD LONG slaves the seeker to the current SPI/TGP point to auto-track-scan that area.",
+          "binding_key": "china_hat_forward"
+        },
+        "Verify the laser is firing (blinking 'L' on HUD) and the GPI shows a solid white square inside the Launch Constraint Circle.",
+        {
+          "text": "When locked and in range (generally 3-7 nm, per the Maverick DLZ), press the Weapon Release Button (RALT+SPACE) to fire - the missile tracks the laser to impact. Press the Nosewheel Steering Button again after impact to stop lasing.",
+          "binding_key": [
+            "weapon_release_button",
+            "nosewheel_steering_button"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "GBU-54 Laser JDAM (Tank Killer Only)",
+      "employment_notes": "Hybrid of the GBU-38 JDAM and GBU-12 laser bomb, exclusive to the A-10C II Tank Killer - can guide on INS/GPS coordinates alone (launch-and-leave, works through cloud/dust) or switch to laser tracking, which automatically takes precedence if a matching laser code is detected. Useful for engaging moving targets designated by your own TGP, a wingman, or a JTAC laser. Reference: Part 10, section 2.12.",
+      "switchology": [
+        "Program the laser code via DSMS - INV - select the GBU-54 station - INV STAT - enter code (e.g. 1687) - OSB next to CODE - OSB next to LOAD/LOAD SYM.",
+        {
+          "text": "Set Master Arm Switch - ON (UP), select DSMS page, select GBU-54 Bomb, select PROF menu - CCRP is the only selectable mode.",
+          "binding_key": "master_arm_arm"
+        },
+        "Optional profile settings: AUTO LS (auto-fire the laser after launch) with an LS TIME, IMP AZ (impact azimuth), IMP ANG (impact angle), and Minimum Release Altitude cue - all via UFC scratchpad + OSB, then SAVE and activate the profile (ACT PRO).",
+        {
+          "text": "On the AHCP set TGP switch ON and LASER ARM to ARM. Press the OSB next to TGP, select A-G mode, press Coolie Hat LONG toward that MFCD to set TGP as SOI.",
+          "binding_key": "coolie_hat_toward_mfcd"
+        },
+        {
+          "text": "Designate the target with the TGP, press TMS FWD LONG to set it as the SPI, and China Hat FWD LONG to slave all sensors to the SPI.",
+          "binding_key": [
+            "china_hat_forward",
+            "tms_forward"
+          ]
+        },
+        "Enter the same laser code on the TGP AG Control Page (OSB CNTL, enter code, OSB 'L'), choose LATCH mode, OSB RTN to return.",
+        "Fly level and align the velocity vector (or CCRP reticle, Legacy) with the ASL; wait for the DLZ current-range caret to fall between max/min range, showing MAN REL.",
+        {
+          "text": "Press and hold the Weapon Release Button (RALT+SPACE) until the GBU-54 releases - it homes on the GPS coordinates by default.",
+          "binding_key": "weapon_release_button"
+        },
+        {
+          "text": "To switch to laser guidance instead, press the Nosewheel Steering Button to fire the laser - the bomb automatically switches to tracking it instead of INS/GPS. Press the Nosewheel Steering Button again after impact to stop lasing.",
+          "binding_key": "nosewheel_steering_button"
+        }
+      ]
+    },
+    {
+      "name": "APKWS Laser-Guided Rockets (Tank Killer Only)",
+      "employment_notes": "AGR-20A - a standard 2.75in Hydra 70 rocket fitted with a laser guidance kit and control fins, exclusive to the A-10C II Tank Killer. Comes in M-151 (High Explosive) or M-282 (Penetrator) warheads. Guided the same way as the laser Maverick/GBU-12/GBU-54: designate and lase with the TGP, fire in a CCIP dive like unguided rockets. Reference: Part 10, section 2.13.",
+      "switchology": [
+        "Program the laser code via DSMS - INV - select the APKWS (M-151L/M-282L) station - INV STAT - enter code (e.g. 1687) - OSB next to CODE - OSB next to LOAD/LOAD SYM.",
+        {
+          "text": "Set Master Arm Switch - ON (UP), select DSMS page, select the APKWS rockets, select PROF menu.",
+          "binding_key": "master_arm_arm"
+        },
+        "Set CCIP mode and Release Type (SGL/PRS/RIP SGL/RIP PRS), optional ripple quantity/offsets/Minimum Release Altitude cue, then SAVE and activate the profile (ACT PRO).",
+        {
+          "text": "On the AHCP set TGP switch ON and LASER ARM to ARM. Press the OSB next to TGP, select A-G mode, press Coolie Hat LONG toward that MFCD to set TGP as SOI.",
+          "binding_key": "coolie_hat_toward_mfcd"
+        },
+        {
+          "text": "Designate the target with the TGP and press TMS FWD LONG to set it as the SPI.",
+          "binding_key": "tms_forward"
+        },
+        {
+          "text": "Enter the same laser code on the TGP AG Control Page (OSB CNTL, enter code, OSB 'L'), choose LATCH mode, OSB RTN to return, then press the Nosewheel Steering Button to start lasing.",
+          "binding_key": "nosewheel_steering_button"
+        },
+        {
+          "text": "Press the Master Mode button until CCIP HUD mode is selected; verify MAN REL/CCIP/profile/ARM on the HUD.",
+          "binding_key": "master_mode_button"
+        },
+        "Perform a shallow dive between 10-45 degrees from at least 10,000 ft. Verify the laser is firing (blinking 'L'). When slant range to target is under 10 nm, place the CCIP reticle center on the target.",
+        {
+          "text": "At a slant range of about 5.0-5.5 nm, hold down the Weapon Release Button (RALT+SPACE) to launch - the rockets track the laser to impact. Press the Nosewheel Steering Button again after impact to stop lasing.",
+          "binding_key": [
+            "weapon_release_button",
+            "nosewheel_steering_button"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "GAU-8/A 30mm Gun (Air-to-Air)",
+      "employment_notes": "Same cannon used air-to-air via a lead-computing 'funnel' reticle sized to a target aircraft's wingspan. Several aircraft profiles are preset in the AAS (Air-to-Air Sub-menu); custom wingspan/length/speed profiles can also be programmed for aircraft without a preset. Reference: Part 10, sections 3.1 A and B.",
+      "switchology": [
+        {
+          "text": "Set Master Arm Switch - ON (UP), set GUN/PAC Switch to GUNARM (DOWN), confirm GUN READY.",
+          "binding_key": "master_arm_arm"
+        },
+        {
+          "text": "Press Coolie Hat UP (short) to set HUD as SOI, then press and hold the Master Mode Switch for about 3 seconds to enter Air-to-Air Master Mode.",
+          "binding_key": [
+            "master_mode_button",
+            "coolie_hat_up"
+          ]
+        },
+        {
+          "text": "Use DMS LEFT/RIGHT to cycle the AAS aircraft options to match the target you're engaging.",
+          "binding_key": "dms_left_right"
+        },
+        {
+          "text": "Fly so the target sits inside the gun funnel with just its wingtips/rotor tips touching the funnel sides (or use the AMIL - Air Mass Impact Line - which shows the lead angle from trajectory shift and gravity drop over the first ~2 seconds of flight), then depress the trigger (second detent) for a short 1-second burst.",
+          "binding_key": "gun_trigger"
+        },
+        "To program a custom funnel for an aircraft without a preset: set IFFCC to TEST, SEL to AAS then ENT, enable/disable which preset profiles show up via SEL+ENT ('o' = available); MAN-FXD is the programmable fixed-wing profile, MAN-RTY the rotary-wing one.",
+        "In the chosen MAN-FXD/MAN-RTY menu, set FXD WNGSPN (wingspan, ft), FXD LENGTH (ft), and FXD TGTSPEED (approx. target speed, kts) via the SEL/DATA rockers, then SEL to STORE and ENT, SEL to EXIT AAS and ENT, set IFFCC back to ON.",
+        {
+          "text": "Select the new custom profile the same way as a preset: Coolie Hat UP for HUD SOI, hold Master Mode ~3 sec for Air-to-Air mode, DMS LEFT/RIGHT to select it.",
+          "binding_key": [
+            "coolie_hat_up",
+            "dms_left_right"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "AIM-9 Sidewinder",
+      "employment_notes": "Infrared-guided air-to-air missile. Reference: Part 10, section 3.2.",
+      "switchology": [
+        {
+          "text": "Set Master Arm Switch - ON (UP), select DSMS page, select the AIM-9 Missile (green when selected).",
+          "binding_key": "master_arm_arm"
+        },
+        {
+          "text": "Press Coolie Hat UP (short) to set HUD as SOI, use DMS LEFT/RIGHT to select the desired weapon profile, then press and hold the Master Mode Switch ~3 seconds to enter Air-to-Air Master Mode.",
+          "binding_key": [
+            "master_mode_button",
+            "coolie_hat_up",
+            "dms_left_right"
+          ]
+        },
+        {
+          "text": "The Sidewinder reticle is caged in boresight mode by default (steer the aircraft to keep it on the target) - press TMS FWD SHORT to uncage it so it actively searches for heat signatures (you'll hear a low-pitch growl); TMS AFT SHORT re-cages it. The Slew Control Switch can slew the reticle manually.",
+          "binding_key": [
+            "tms_forward",
+            "tms_aft",
+            "hotas_slew"
+          ]
+        },
+        "Once the seeker tracks a heat source, the reticle locks on and the growl becomes high-pitched.",
+        {
+          "text": "Press the Weapon Release Button (RALT+SPACE) to fire.",
+          "binding_key": "weapon_release_button"
+        }
+      ]
+    }
+  ],
+  "ordnance_jettison": [
+    {
+      "name": "Selective Jettison",
+      "notes": "Drops a chosen station individually, with control over rack vs. store and fuze state. Reference: Part 10, section 4.1.",
+      "steps": [
+        {
+          "text": "Set Master Arm Switch - ON (UP).",
+          "binding_key": "master_arm_arm"
+        },
+        "Select the DSMS page and press the OSB next to SJET (Selective Jettison).",
+        "Select the desired station via its OSB - it flashes once selected.",
+        "Select Jettison Mode: RACK (jettisons the launcher rack and the store), STR (jettisons the store only, keeps the rack), or MSL (fires a Maverick without arming or guiding it).",
+        "If STR mode is selected, choose the Fuze Option: SAFE (disarmed), NOSE ARM, TAIL ARM, or ARMED (both nose and tail fuzes armed).",
+        {
+          "text": "Press the Weapon Release Button (RALT+SPACE) to drop the ordnance.",
+          "binding_key": "weapon_release_button"
+        }
+      ]
+    },
+    {
+      "name": "Emergency Stores Jettison",
+      "notes": "One-button jettison of everything except the Targeting Pod and ECM pod, regardless of landing gear position. Reference: Part 10, section 4.2.",
+      "steps": [
+        "Press the EXT STORES JETT (External Stores Jettison) button.",
+        "All stores on stations 1 through 11 (excluding the Targeting Pod and ECM pod) release in station-priority order, regardless of landing gear handle position."
+      ]
+    }
+  ],
+  "flight_planning_notes": [],
+  "qa_snippets": []
+}

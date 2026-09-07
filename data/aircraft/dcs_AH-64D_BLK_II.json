@@ -1,0 +1,320 @@
+{
+  "game": "dcs",
+  "display_name": "AH-64D Apache (Block II)",
+  "source": {
+    "name": "Chuck's Guide to the AH-64D Apache Block II",
+    "version_or_date": "Last Updated: 7/09/2024 (as printed in the PDF header) - guide has since grown to 927 pages per the copy used, so this may be a newer edition; re-check chucksguides.com periodically",
+    "url": "https://chucksguides.com/aircraft/dcs/ah-64d/"
+  },
+
+  "_extraction_note": "Steps below were extracted directly from the guide's own numbered [P]/[CPG] checklist format, not generated. Some sub-steps were dropped where the PDF's multi-column kneeboard layout split a sentence across a graphic sidebar and the extraction tool couldn't reliably rejoin it (step numbers may skip, e.g. 6 to 9) - these are minor sub-bullets/notes, not missing major actions, but you or Marky should do one real read-through against the PDF before treating this as complete. No standalone 'aircraft shutdown' checklist exists in this guide (verified by full-text search) - it covers Cold Start in extreme depth but not a formal post-flight shutdown sequence.",
+
+  "checklists": {
+    "before_start_up": [
+      { "step": 1, "action": "[P+CPG] If required during night operations, turn on flashlight (LALT+L)." },
+      { "step": 2, "action": "[P+CPG] To view the cockpit more easily, remove the IHADSS monocle by pressing \"I\"." },
+      { "step": 3, "action": "[P] Insert Ignition Key and set MSTR IGN (Master Ignition) Selector to BATT (Battery)." },
+      { "step": 7, "action": "[P+CPG] Set Signal Lights Control Knob to BRT (Bright)." },
+      { "step": 9, "action": "[P+CPG] Set NVS (Night Vision System) Mode Switch to OFF (AFT)." },
+      { "step": 10, "action": "[P+CPG] Set KU (Keyboard Unit) Brightness Knob to Bright (turn clockwise as required)." },
+      { "step": 13, "action": "[P+CPG] Set MPD Mode Selector to DAY for day operations, or NT for night operations." },
+      { "step": 14, "action": "[P+CPG] Set EUFD Brightness Control Knob to Bright (turn clockwise as required)." },
+      { "step": 15, "action": "[CPG] Set TDU (TEDAC Display Unit) Mode Selector to DAY or NT as appropriate." },
+      { "step": 16, "action": "[P+CPG] Adjust VHF, UHF, FM1, FM2 and HF Radio Volume as required." },
+      { "step": 19, "action": "[P+CPG] Adjust SENS (Sensitivity) Control Knob as required." },
+      { "step": 20, "action": "[P+CPG] Set ICS (Intercom System) Switch to VOX (middle)." },
+      { "step": 21, "action": "[P+CPG] Adjust IFF, RLWR, and ADF as required." },
+      { "step": 29, "action": "[P+CPG] Close Cockpit Door (LCTRL+C or click the door handle)." }
+    ],
+    "apu_start": [
+      { "step": 1, "action": "[P] Flip the APU Start Button Guard." },
+      { "step": 2, "action": "[P] Press the APU Start Button for 1-2 seconds, then release." },
+      { "step": 3, "action": "[P] During APU start-up, watch for advisories on the EUFD (APU START active)." },
+      { "step": 4, "action": "[P] When APU start-up completes: 'ON' light illuminates on APU Start Button; EUFD shows APU POWER ON, and APU START / ACCUM OIL PRES LO advisories clear." },
+      { "step": 5, "action": "[P] Once started, the APU generator powers the MPDs and other helicopter systems." },
+      { "step": 6, "action": "[P] During extended APU operation, monitor XMSN OIL temperature on the ENG SYS page." }
+    ],
+    "systems_setup_dms_sweep": [
+      { "step": 4, "action": "[P/CPG] Press VAB next to MASTER LOAD to load the DTU (Data Transfer Unit)." },
+      { "step": 7, "action": "[P/CPG] Press VAB next to SET." },
+      { "step": 14, "action": "[P/CPG] Turn on radar altimeter (press VAB next to RDR ALT)." },
+      { "step": 15, "action": "[P/CPG] Press VAB next to SET again to exit the FLT SET sub-menu." },
+      { "step": 28, "action": "[P/CPG] Press VAB next to Chaff Arm/Safe to toggle SAFE to ARM (must be airborne, weight-on-wheels interlock)." },
+      { "step": 30, "action": "[P/CPG] Press VAB next to UTIL." },
+      { "step": 34, "action": "[P/CPG] Press VAB next to UTIL (Utility)." },
+      { "step": 35, "action": "[P/CPG] Turn on Doppler Navigation System (press VAB next to DOPPLER)." },
+      { "step": 36, "action": "[P/CPG] While nav alignment runs, wait until position confidence stabilizes." },
+      { "step": 37, "action": "[P/CPG] Nav system alignment typically takes ~4-5 minutes." },
+      { "step": 70, "action": "[CPG] Press VAB next to LASER to power the LRFD (Laser Rangefinder/Designator)." },
+      { "step": 71, "action": "[CPG] Press VAB next to UTIL to return to the main WPN page." },
+      { "step": 72, "action": "[P/CPG] Press the FCR FAB to access the Fire Control Radar page.", "binding_key": "fcr_fab" },
+      { "step": 73, "action": "[P/CPG] Press VAB next to UTIL to select the Utility page." },
+      { "step": 74, "action": "[P/CPG] FCR NOT POWERED indication should be visible until powered." },
+      { "step": 78, "action": "[P/CPG] Note the AN/APR-48 RFI may still be powered independently for threat warning." }
+    ],
+    "ihadss_boresight": [
+      { "step": 1, "action": "[P+CPG] Put on the IHADSS monocle (press \"I\")." },
+      { "step": 3, "action": "[P+CPG] Press the WPN FAB to access the Weapon menu." },
+      { "step": 4, "action": "[P+CPG] Press VAB next to BORESIGHT." },
+      { "step": 5, "action": "[P+CPG] Press VAB next to IHADSS to activate the Boresight Reticle Unit (BRU)." },
+      { "step": 6, "action": "[P+CPG] Position your head naturally and aim the HDU line-of-sight reticle at the boresight target." },
+      { "step": 8, "action": "[P+CPG] If accepted, the BRU bullseye extinguishes and B/S NOW clears from the IHADSS menu." },
+      { "step": 9, "action": "[P+CPG] Adjust HDU Symbology Brightness as required." }
+    ],
+    "engine_start": [
+      { "step": 2, "action": "[P] Set RTR BRK (Rotor Brake) Switch to FWD (OFF)." },
+      { "step": 3, "action": "[P] Set Collective fully down.", "binding_key": "collective_axis" },
+      { "step": 4, "action": "[P] Check both Power Levers are set to OFF (fully aft)." },
+      { "step": 5, "action": "[P] Confirm APU is running." },
+      { "step": 6, "action": "[P] Select the ENG page (press the A/C FAB)." },
+      { "step": 8, "action": "[P] Confirm initiation of the left (No. 1) engine start sequence." },
+      { "step": 9, "action": "[P] Move left Power Lever to IDLE (RALT+HOME). Fuel flow and ignition begin." },
+      { "step": 10, "action": "[P] Wait for left engine parameters to stabilize (see guide for exact NG/NP/torque figures)." },
+      { "step": 11, "action": "[P] Set Right (No. 2) Engine Start Switch to START (fwd) for 1-2 seconds, then release." },
+      { "step": 13, "action": "[P] Move right Power Lever to IDLE (RSHIFT+HOME). Fuel flow and ignition begin." },
+      { "step": 14, "action": "[P] Wait for right engine parameters to stabilize." },
+      { "step": 15, "action": "[P] If required, reset MSTR WARN and MSTR CAUT pushbuttons." },
+      { "step": 17, "action": "[P] Monitor the ENG page for abnormal engine parameters." },
+      { "step": 18, "action": "[P] Monitor the ENG SYS sub-page for abnormal engine parameters." },
+      { "step": 19, "action": "[P] Before advancing power levers to FLY, confirm both ENG 1 and ENG 2 OIL PSI are in range." },
+      { "step": 20, "action": "[P] Slowly advance both Power Levers to FLY." },
+      { "step": 22, "action": "[P] Confirm LOW ROTOR RPM advisory is not shown on the EUFD." },
+      { "step": 23, "action": "[P] Press the APU Start Button for 1-2 seconds to shut down the APU (no longer needed once engines are running)." }
+    ],
+    "after_start_up": [
+      { "step": 1, "action": "[P] Uncage the SAI (Standby Attitude Indicator) by pulling and turning the caging knob; confirm the red OFF flag disappears." },
+      { "step": 2, "action": "[P] Set CMWS Power/Test Knob to ON." },
+      { "step": 3, "action": "[P] Set CMWS Display Brightness Control Knob as required." },
+      { "step": 4, "action": "[P] Set CMWS/NAV Switch to CMWS (up)." }
+    ],
+    "shutdown": [],
+    "defensive_systems_cmws_setup": [
+      { "step": 1, "action": "[P] Set CMWS (Common Missile Warning System) Power/Test Knob to ON." },
+      { "step": 2, "action": "[P] Set CMWS Display Brightness Control Knob as required." },
+      { "step": 3, "action": "[P] Set CMWS/NAV Switch to CMWS (up)." },
+      { "step": 4, "action": "[P] Set CMWS Bypass/Auto Switch as desired - Chuck's Guide recommends BYPASS since AUTO can waste flares needlessly." },
+      { "step": 5, "action": "[P] Adjust Missile Warning System volume via the ADF Auxiliary System Volume Knob (note: this disables ADF navaid audio while active)." },
+      { "step": 6, "action": "[P] Set the CMWS Arm/Safe Switch to ARM (up).", "binding_key": "cmws_arm_safe_arm" },
+      { "step": 7, "action": "[P] Consult the CMWS Indicator Display for missile launch direction/audio warnings." }
+    ],
+    "defensive_systems_chaff_manual": [
+      { "step": 1, "action": "[P/CPG] From the ASE page, press VAB next to 'CHAFF' to arm chaff." },
+      { "step": 2, "action": "[P/CPG] Press VAB next to 'CHAFF MODE' and set release mode to MANUAL." },
+      { "step": 3, "action": "[P/CPG] Press the Chaff Dispense Button on the cyclic to dispense a single chaff.", "binding_key": "countermeasures_dispense_button" },
+      { "step": 4, "action": "[P/CPG] Chaff counters are visible on the ASE page, WPN page, and the CMWS panel (pilot only)." }
+    ],
+    "defensive_systems_chaff_programmed": [
+      { "step": 1, "action": "[P/CPG] From the ASE page, press VAB next to 'CHAFF' to arm chaff." },
+      { "step": 2, "action": "[P/CPG] Press VAB next to 'CHAFF MODE' and set release mode to PROGRAM." },
+      { "step": 3, "action": "[P/CPG] Press VAB next to 'UTIL' to enter the ASE Utility sub-page." },
+      { "step": 4, "action": "[P/CPG] Set Burst Counter, Burst Interval, Salvo Count, and Salvo Interval via the associated VABs." },
+      { "step": 5, "action": "[P/CPG] Press the Chaff Dispense Button on the cyclic to dispense chaff as programmed.", "binding_key": "countermeasures_dispense_button" },
+      { "step": 6, "action": "[P/CPG] Chaff counters are visible on the ASE page, WPN page, and the CMWS panel (pilot only)." }
+    ],
+    "defensive_systems_flares_bypass_mode": [
+      { "step": 1, "action": "[P] Set CMWS Power/Test Knob to ON." },
+      { "step": 2, "action": "[P] Set CMWS Display Brightness Control Knob as required." },
+      { "step": 3, "action": "[P] Set CMWS/NAV Switch to CMWS (up)." },
+      { "step": 4, "action": "[P] Set CMWS Bypass/Auto Switch to BYPASS." },
+      { "step": 5, "action": "[P] Set the CMWS Arm/Safe Switch to ARM (up).", "binding_key": "cmws_arm_safe_arm" },
+      { "step": 6, "action": "[P] Press the Flare Dispense Button to dispense the flare program manually. Note: in BYPASS mode, flares are never dispensed automatically - you control every release.", "binding_key": "countermeasures_dispense_button" }
+    ],
+    "defensive_systems_flares_auto_mode": [
+      { "step": 1, "action": "[P] Set CMWS Power/Test Knob to ON." },
+      { "step": 2, "action": "[P] Set CMWS Display Brightness Control Knob as required." },
+      { "step": 3, "action": "[P] Set CMWS/NAV Switch to CMWS (up)." },
+      { "step": 4, "action": "[P] Set CMWS Bypass/Auto Switch to AUTO." },
+      { "step": 5, "action": "[P] Set the CMWS Arm/Safe Switch to ARM (up).", "binding_key": "cmws_arm_safe_arm" },
+      { "step": 6, "action": "[P] In AUTO mode, flares dispense automatically per the preset flare program (set on the ground, engines off, or via Mission Editor)." },
+      { "step": 7, "action": "[P] You can still press the Flare Dispense Button to manually trigger the flare program if desired.", "binding_key": "countermeasures_dispense_button" }
+    ],
+    "defensive_systems_flare_jettison": [
+      { "step": 1, "action": "[P] Set CMWS Power/Test Knob to ON." },
+      { "step": 2, "action": "[P] Set the CMWS Arm/Safe Switch to ARM (up).", "binding_key": "cmws_arm_safe_arm" },
+      { "step": 3, "action": "[P] Flip the Flare Jettison Cover up, then switch JETTISON up to jettison flares. Used in a forced-landing situation since flares are a fire hazard." }
+    ]
+  },
+
+  "weapons": [
+    {
+      "name": "M230 30mm Chain Gun",
+      "employment_notes": "Standard gun employment steps per Chuck's Guide section 2.2, NORM mode with HMD.",
+      "switchology": [
+        "[P] Set Sight Select Switch to FWD (HMD). HDU should show 'P-HMD'.",
+        { "text": "[P] Press A/S (Arm/Safe) Pushbutton to set Master Arm ON (ARM).", "binding_key": "master_arm_as_pushbutton" },
+        "[P] Press WAS (Weapon Action Switch) UP to select the Gun.",
+        "[P] Flip Weapons Trigger Switch Guard UP (Safety OFF/OPEN).",
+        "[P] Press VAB next to MAN RNG to set gun ranging distance.",
+        "[P] Press VAB next to desired BURST LIMIT setting.",
+        "[P] Fire by squeezing the Weapons Trigger, second detent (default Spacebar binding)."
+      ]
+    },
+    {
+      "name": "2.75in Rockets",
+      "employment_notes": "Standard rocket employment steps per Chuck's Guide, lateral (roll) or pedal-turn steering onto the Rocket Steering Cursor depending on cockpit/mode.",
+      "switchology": [
+        "[P] Set Sight Select Switch to FWD (HMD).",
+        { "text": "[P] Press A/S (Arm/Safe) Pushbutton to set Master Arm ON (ARM).", "binding_key": "master_arm_as_pushbutton" },
+        "[P] Press WAS (Weapon Action Switch) LEFT to select Rockets.",
+        "[P] Flip Weapons Trigger Switch Guard UP (Safety OFF/OPEN).",
+        "[P] Press VAB next to desired rocket type.",
+        "[P] Press VAB next to MAN RNG to set ranging distance.",
+        "[P] Press VAB next to desired Salvo Quantity.",
+        "[P] Steer the Rocket Steering Cursor onto the target using pedals or cyclic roll depending on configuration.",
+        "[P] Fire by squeezing the Weapons Trigger, second detent (default Spacebar binding)."
+      ]
+    },
+    {
+      "name": "AGM-114K Hellfire (Laser-Guided, LOBL)",
+      "employment_notes": "Lock-On Before Launch engagement per Chuck's Guide section 4.2.1.1: the CPG lases the target with the TADS LRFD, then fires - missile tracks the laser to impact. This is the primary/most common Hellfire engagement method covered in the guide. Two other modes exist (LOAL-DIR, LOAL-LO/HI) for cases like backscatter or minimizing exposure time, not yet transcribed here - ask if you need those.",
+      "switchology": [
+        "[CPG] From the WPN page, press VAB next to UTIL to select the Weapon Utility page.",
+        "[CPG] Press VABs next to TADS and FLIR to power those systems on if needed.",
+        "[CPG] Press VAB next to LASER to power on the LRFD (only the CPG can do this).",
+        "[CPG] Press VAB next to UTIL to return to the main WPN page.",
+        { "text": "[CPG] Press A/S (Arm/Safe) Pushbutton to set Master Arm ON (ARM).", "binding_key": "master_arm_as_pushbutton" },
+        "[CPG] Press TEDAC Left Hand Grip WAS RIGHT to select Missiles.",
+        "[CPG] Flip TEDAC Left Hand Grip Weapons Trigger Switch Guard UP (Safety OFF/OPEN).",
+        "[CPG] Set Missile Type to SAL (Semi-Active Laser).",
+        "[CPG] Set Missile Mode to NORMAL.",
+        "[CPG] Set Missile Trajectory to DIR (Direct).",
+        "[CPG] Set LRFD Mode Selector as required (commonly LAST).",
+        "[CPG] Set Missile Priority/Alternate laser codes via the CHAN sub-page as briefed.",
+        "[CPG] Set the Sight Select Switch to RIGHT (TADS).",
+        "[CPG] Slew the TADS Line-of-Sight onto the target using the Right Hand Grip.",
+        "[CPG] Squeeze and hold the Right Hand Grip LRFD Trigger to lase and designate the target.",
+        "[CPG] Verify no weapon inhibit messages (e.g. SKR LIMIT, YAW LIMIT) and that PRI CHAN TRK is displayed.",
+        "[CPG] While continuing to lase, fire the missile by squeezing the Left Hand Grip Weapons Trigger, second detent.",
+        "[CPG] Keep lasing the target continuously until missile impact - the missile tracks the laser to the target."
+      ]
+    },
+    {
+      "name": "AGM-114K Hellfire (Laser-Guided, LOAL-DIR)",
+      "employment_notes": "Lock-On After Launch, Direct trajectory, per Chuck's Guide section 4.2.1.2. CPG fires first, then lases - missile seeker is slaved to the TADS/HMD line-of-sight. Used to minimize exposure time or when backscatter (dust/smoke/fire between aircraft and target) prevents a clean LOBL lock. If the TADS line-of-sight and missile seeker differ by more than 2 degrees at launch, a BACKSCATTER message blocks the launch.",
+      "switchology": [
+        "[CPG] Complete the same power-up/arming steps as LOBL, but set Missile Trajectory to DIR (Direct).",
+        "[CPG] Fire the missile first (direct trajectory).",
+        "[CPG] Lase the target with the TADS LRFD.",
+        "[CPG] Missile tracks the laser until impact - keep lasing continuously."
+      ]
+    },
+    {
+      "name": "AGM-114K Hellfire (Laser-Guided, LOAL-LO / LOAL-HI)",
+      "employment_notes": "Lock-On After Launch, Low or High trajectory, per Chuck's Guide section 4.2.1.3. CPG fires first; missile climbs shallow (LO) or steep (HI) to clear an obstacle, allowing a stand-off shot from behind cover before popping up to lase for terminal guidance. In LO/HI mode the missile seeker is caged to the most recently selected TSD target point, not the active sight.",
+      "switchology": [
+        "[CPG] Select the target point as your ACQ (Acquisition Source) on the TSD before firing.",
+        "[CPG] Fire the missile (low trajectory for LOAL-LO, high trajectory for LOAL-HI).",
+        "[CPG] Pop up from cover and lase the target with the TADS.",
+        "[CPG] Missile tracks the laser until impact - keep lasing continuously."
+      ]
+    },
+    {
+      "name": "AGM-114L Hellfire (Radar-Guided, without FCR)",
+      "employment_notes": "Fire-and-forget radar-guided missile, TADS-designated targeting per Chuck's Guide section 4.3.1.1. Unlike the AGM-114K, this variant does not track a laser - once fired it homes on the target autonomously, so continuous lasing after launch is not required.",
+      "switchology": [
+        "[CPG] From the WPN page, press VAB next to UTIL, then power on TADS/FLIR/LASER as needed, then VAB next to UTIL to return.",
+        "[CPG] Set the Sight Select Switch to RIGHT (TADS).",
+        { "text": "[CPG] Press A/S (Arm/Safe) Pushbutton to set Master Arm ON (ARM).", "binding_key": "master_arm_as_pushbutton" },
+        "[CPG] Press TEDAC Left Hand Grip WAS RIGHT to select Missiles.",
+        "[CPG] Flip TEDAC Left Hand Grip Weapons Trigger Switch Guard UP (Safety OFF/OPEN).",
+        "[CPG] Confirm the selected sight is the TADS via the WPN page and select TADS video feed (TAD button).",
+        "[CPG] Slew the TADS Line-of-Sight onto the target.",
+        "[CPG] Squeeze and hold the Right Hand Grip LRFD Trigger to designate the target (this provides target data to the missile, not laser tracking).",
+        "[CPG] Verify no weapon inhibit messages (e.g. SKR LIMIT, YAW LIMIT) are displayed.",
+        "[CPG] Fire by squeezing the Left Hand Grip Weapons Trigger, second detent.",
+        "[CPG] Missile is fire-and-forget - it homes on the target autonomously after launch."
+      ]
+    },
+    {
+      "name": "AGM-114L Hellfire (Radar-Guided, with FCR)",
+      "employment_notes": "Fire-and-forget radar-guided missile, FCR (Fire Control Radar) designated targeting per Chuck's Guide section 4.3.1.2. The FCR automatically locates and ranges the Next-to-Shoot (NTS) target - this is the primary use case for the AGM-114L, letting the radar do target detection instead of the TADS.",
+      "switchology": [
+        "[CPG] From the WPN page, press VAB next to UTIL, power on TADS/FLIR/FCR as needed, then VAB next to UTIL to return.",
+        { "text": "[P/CPG] Press the FCR FAB to access the Fire Control Radar menu.", "binding_key": "fcr_fab" },
+        "[P/CPG] Set Sight Selector Switch to LEFT (FCR).",
+        "[P/CPG] Set FCR Mode Selector to FWD (GTM).",
+        "[P/CPG] Optionally enable TSD ATK mode and/or C-SCP to display FCR symbology on the display/HMD.",
+        "[P/CPG] From the FCR UTIL page, select the desired Priority Scheme and Scan Field-of-View.",
+        { "text": "[CPG] Press A/S (Arm/Safe) Pushbutton to set Master Arm ON (ARM).", "binding_key": "master_arm_as_pushbutton" },
+        "[CPG] Press TEDAC Left Hand Grip WAS RIGHT to select Missiles.",
+        "[CPG] Flip TEDAC Left Hand Grip Weapons Trigger Switch Guard UP (Safety OFF/OPEN).",
+        "[CPG] Confirm the selected sight is the FCR.",
+        "[CPG] The FCR automatically locates and ranges the NTS (Next-to-Shoot) target.",
+        "[CPG] Verify no weapon inhibit messages are displayed in the High Action Display.",
+        "[CPG] Fire by squeezing the Left Hand Grip Weapons Trigger, second detent.",
+        "[CPG] Missile is fire-and-forget - it homes on the target autonomously after launch."
+      ]
+    }
+  ],
+
+  "ordnance_jettison": [
+    {
+      "name": "Selective Stores Jettison",
+      "notes": "Chuck's Guide section 5.1 - jettison specific stations only.",
+      "steps": [
+        "Press the desired Station Jettison Arm/Select Pushbutton (L OUTBD / L INBD / R INBD / R OUTBD) for the station(s) you want to jettison.",
+        "Press the JETT (Jettison) Button to jettison all selected/armed stations."
+      ]
+    },
+    {
+      "name": "Emergency Stores Jettison",
+      "notes": "Chuck's Guide section 5.2 - jettisons ALL stores at once, for emergencies.",
+      "steps": [
+        "Flip the Emergency Jettison Switch Cover Guard.",
+        "Press the Emergency Jettison Switch."
+      ]
+    }
+  ],
+
+  "flight_planning_notes": [
+    "Cold Start Procedure follows the guide's own A-F structure: Before Start-Up, APU Start, DMS Sweep/systems setup, IHADSS Boresight, Engine Start, After Start-Up.",
+    "Nav system (Doppler) alignment takes roughly 4-5 minutes once started - plan startup timing around this if you have a tight mission start."
+  ],
+
+  "qa_snippets": [
+    {
+      "question_hints": ["agm-114l", "radar hellfire", "radar guided missile", "fcr missile"],
+      "answer": "AGM-114L is fire-and-forget - no lasing needed after launch. With FCR: set sight to FCR (LEFT), FCR mode FWD/GTM, let the radar auto-locate the Next-to-Shoot target, Master Arm ON, WAS RIGHT for missiles, fire on second trigger detent. Without FCR: same arming steps but designate the target with the TADS LRFD trigger instead of the radar."
+    },
+    {
+      "question_hints": ["jettison", "drop stores", "emergency jettison", "dump ordnance"],
+      "answer": "Selective: press the Station Jettison Arm/Select button for the station(s) you want, then press JETT. Emergency (all stores at once): flip the Emergency Jettison Switch Cover Guard, then press the Emergency Jettison Switch."
+    },
+    {
+      "question_hints": ["chaff", "dispense chaff"],
+      "answer": "Arm chaff via the ASE page VAB, set CHAFF MODE to MANUAL (single press = one dispense) or PROGRAM (set burst/salvo counts on the ASE Utility sub-page first), then press the Chaff Dispense Button on the cyclic."
+    },
+    {
+      "question_hints": ["flares", "dispense flares", "flare"],
+      "answer": "Power CMWS ON, set CMWS/NAV to CMWS, choose BYPASS (fully manual - flares only dispense when you press the button) or AUTO (auto-dispenses on missile threat detection, per the preset flare program), Arm/Safe to ARM, then use the Flare Dispense Button."
+    },
+    {
+      "question_hints": ["jettison flares", "dump flares", "emergency flares"],
+      "answer": "For a forced landing (flares are a fire hazard): CMWS Power ON, Arm/Safe to ARM, flip the Flare Jettison Cover up, then switch JETTISON up."
+    },
+    {
+      "question_hints": ["cmws", "missile warning", "threat warning"],
+      "answer": "Power ON, set brightness as required, CMWS/NAV switch to CMWS, choose Bypass or Auto for flares, set Arm/Safe to ARM, then read launch direction and threat info off the CMWS Indicator Display."
+    },
+    {
+      "question_hints": ["hellfire", "agm-114", "missile", "fire the missile"],
+      "answer": "LOBL (Lock-On Before Launch) is the primary method: power up TADS/FLIR/laser, Master Arm ON, WAS RIGHT to select Missiles, set missile type to SAL/mode NORMAL/trajectory DIR, set laser codes, select TADS sight, lase the target with the LRFD trigger, verify PRI CHAN TRK shows in the display, then fire on the left grip's second trigger detent while continuing to lase until impact."
+    },
+    {
+      "question_hints": ["how do I start the apu", "apu start", "start apu"],
+      "answer": "Flip the APU Start Button Guard, then press the APU Start Button for 1-2 seconds and release. Watch for APU START on the EUFD during spin-up, then APU POWER ON once complete."
+    },
+    {
+      "question_hints": ["how do I fire the gun", "gun employment", "m230", "chain gun"],
+      "answer": "Set Sight Select Switch to FWD (HMD), Master Arm ON via the A/S pushbutton, WAS UP to select the gun, flip the trigger guard up, set your range/burst limit via the VABs, then fire on the second trigger detent (default Spacebar)."
+    },
+    {
+      "question_hints": ["how do I fire rockets", "rocket employment", "2.75"],
+      "answer": "Master Arm ON, WAS LEFT to select Rockets, flip the trigger guard up, select rocket type and set range/salvo via the VABs, steer the Rocket Steering Cursor onto the target, then fire on the second trigger detent."
+    },
+    {
+      "question_hints": ["shutdown", "how do I shut down", "post-flight shutdown"],
+      "answer": "Chuck's Guide does not include a dedicated post-flight shutdown checklist as of this extraction - it focuses on Cold Start in depth. As a placeholder, the general DCS Apache shutdown pattern is: power levers to OFF/idle-cutoff, engage rotor brake once rotor RPM has decayed, then battery/master ignition OFF - but this has NOT been verified against the guide and should be confirmed in-sim or against another source before relying on it."
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "_notes": "THIS IS FAKE DEMO DATA. Do not use for real flying. It exists only to show the JSON shape and let you test the app end to end before you've built any real airframe files.",
+
+  "game": "dcs",
+  "display_name": "DEMO AIRCRAFT (placeholder)",
+  "source": {
+    "name": "Placeholder - not a real source",
+    "version_or_date": "n/a",
+    "url": ""
+  },
+
+  "checklists": {
+    "cold_and_dark_startup": [
+      { "step": 1, "action": "[placeholder] Battery ON" },
+      { "step": 2, "action": "[placeholder] APU start, wait for stable RPM" },
+      { "step": 3, "action": "[placeholder] Engine start sequence" }
+    ],
+    "shutdown": [
+      { "step": 1, "action": "[placeholder] Throttles idle, engines off" },
+      { "step": 2, "action": "[placeholder] Battery OFF" }
+    ]
+  },
+
+  "weapons": [
+    {
+      "name": "[placeholder weapon]",
+      "employment_notes": "This is demo text, not real employment guidance.",
+      "switchology": [ "[placeholder] Master arm ON", "[placeholder] Select station" ]
+    }
+  ],
+
+  "systems_notes": [
+    { "topic": "Demo system", "notes": "Placeholder text for UI testing only." }
+  ],
+
+  "flight_planning_notes": [
+    "Placeholder note - replace with real airframe-specific planning guidance."
+  ],
+
+  "qa_snippets": [
+    {
+      "question_hints": ["test question", "demo"],
+      "answer": "This is a placeholder answer proving the Q&A retrieval works before you've loaded real data."
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "game": "dcs",
+  "aircraft_module": "AH-64D_BLK_II",
+
+  "_notes": "Second pass adds weapons, per Marky's stated priority order (weapons, flight controls, navigation, countermeasures). Same rule as the countermeasures pass: only add an entry once real bindings for it actually exist in data/bindings_live/ (checked 2026-09-06, both AH-64D pilot and CPG profile exports) - most weapon-specific controls (Weapons Trigger, WAS switch, Sight Select Switch, TADS/LRFD power, LRFD Trigger, Missile Type/Mode/Trajectory selectors) are NOT currently bound to any physical device in either seat's export, so those checklist/weapon steps correctly stay unannotated for now rather than guessed - Marky would need to bind those in DCS (or they're on keyboard only, which this app can't yet distinguish from unbound - see bindings.py). 'dcs_command' can be a single string or a list of equivalent strings, for cases where one binding_key legitimately matches more than one raw DCS command (different command IDs per seat, or the same page-select button existing separately on each MFD). Every string is copied exactly as it appears in the live export - including Chinese ones - since that's the real lookup key; 'display_label' (from data/dcs_command_translations.json where needed) is for display only.",
+
+  "command_map": {
+    "cmws_arm_safe_arm": {
+      "dcs_command": "CMWS 红外干扰弹安全开关 - ARM",
+      "display_label": "CMWS Flare Safety Switch - ARM",
+      "translated": true
+    },
+    "countermeasures_dispense_button": {
+      "dcs_command": "红外干扰布撒按钮 - 按下",
+      "display_label": "IR Countermeasures Dispense Button - Press",
+      "translated": true,
+      "note": "One physical DCS command covers both the checklist's 'Chaff Dispense Button' and 'Flare Dispense Button' references - on the real Apache (and in DCS) chaff and flares share one dispense button on the cyclic; the ASE page's armed mode decides which one actually comes out, not a separate physical control."
+    },
+    "master_arm_as_pushbutton": {
+      "dcs_command": ["A/S 按钮", "A/S Pushbutton"],
+      "display_label": "A/S (Arm/Safe) Pushbutton",
+      "translated": true,
+      "note": "Pilot seat's A/S command exports in Chinese ('A/S 按钮'), CPG seat's in English ('A/S Pushbutton') - both are bound to the same physical Button 81 on the throttle, so one binding_key covers both seats' version of this step."
+    },
+    "fcr_fab": {
+      "dcs_command": ["Left MPD Pushbutton - FCR", "Right MPD Pushbutton - FCR"],
+      "display_label": "FCR FAB (MFD Pushbutton)",
+      "note": "Two separate real commands (one per physical MFD) that do the same thing - press whichever MFD is showing the button. Both are bound (Left MFD and Center/Right MFD), so both show up as valid options."
+    },
+    "collective_axis": {
+      "dcs_command": "总距",
+      "display_label": "Collective (Axis)",
+      "translated": true,
+      "note": "An axis, not a discrete button - resolves to a physical device/axis (e.g. 'Axis RY, <throttle>'), not a press. Third pass, flight controls: checked for cyclic/pedal/trim/SAS/rotor-brake bindings too, but Collective was the only flight-control axis actually bound in the current export."
+    }
+  }
+}

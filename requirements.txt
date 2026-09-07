@@ -1,0 +1,10 @@
+flask>=3.0
+pyyaml>=6.0
+requests>=2.31
+pdfplumber>=0.11
+SimConnect>=0.4.26 ; sys_platform == 'win32'
+anthropic>=0.34 ; python_version >= '3.8'
+# Gives MachLink its own app window (via the OS's WebView2 engine on
+# Windows) instead of opening a browser tab. Optional - MachLink falls
+# back to the old browser-tab behavior if this isn't installed.
+pywebview>=5.0

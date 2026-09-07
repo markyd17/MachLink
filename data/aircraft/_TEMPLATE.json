@@ -1,0 +1,43 @@
+{
+  "_notes": "Copy this file to <exact in-sim aircraft name>.json. For DCS, use the module short name DCS reports on export (e.g. 'FA-18C_hornet'). For MSFS, use the exact ATC Model/Title string (check the aircraft's aircraft.cfg or the in-sim aircraft selector). Delete this _notes field in real files.",
+
+  "game": "dcs | msfs",
+  "display_name": "F/A-18C Hornet",
+  "source": {
+    "name": "Chuck's Guide to the F/A-18C Hornet",
+    "version_or_date": "fill in the guide version/date you sourced from",
+    "url": "https://www.mudspike.com/chucks-guides-dcs/ (or wherever you got it)"
+  },
+
+  "checklists": {
+    "cold_and_dark_startup": [
+      { "step": 1, "action": "..." }
+    ],
+    "shutdown": [
+      { "step": 1, "action": "..." }
+    ]
+  },
+
+  "weapons": [
+    {
+      "name": "AIM-9X",
+      "employment_notes": "...",
+      "switchology": [ "..." ]
+    }
+  ],
+
+  "systems_notes": [
+    { "topic": "Fuel system", "notes": "..." }
+  ],
+
+  "flight_planning_notes": [
+    "Any airframe-specific planning quirks (range, fuel burn rules of thumb, etc.)"
+  ],
+
+  "qa_snippets": [
+    {
+      "question_hints": ["how do I start the APU", "APU start"],
+      "answer": "Direct excerpt or close paraphrase from your source, used verbatim by the retrieval engine so it never drifts from the guide."
+    }
+  ]
+}

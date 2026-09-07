@@ -1,0 +1,73 @@
+# Copy this file to config.yaml and fill in your details.
+
+simbrief:
+  # Either one works - username is easier to find, pilot_id is more stable.
+  username: ""        # SimBrief / Navigraph username, if you have one
+  pilot_id: ""         # SimBrief Pilot ID (Account Settings page)
+
+# Optional. Only used by the "Ask" free-text fallback for questions your
+# loaded aircraft data doesn't cover. Leave blank to disable that feature
+# entirely and run on pure retrieval (recommended if zero-hallucination
+# matters more to you than answering everything).
+anthropic:
+  api_key: ""
+  model: "claude-sonnet-5"
+
+server:
+  port: 5000
+  # Opens MachLink in its own real app window (own icon/taskbar entry, no
+  # address bar or tabs) via pywebview instead of a browser tab. This is
+  # what "double-click the shortcut, get an app" actually depends on -
+  # requires `pip install pywebview` (see requirements.txt); if it's not
+  # installed, MachLink automatically falls back to the open_browser
+  # setting below instead of failing to start.
+  native_window: true
+  # Only used when native_window is off (or pywebview isn't installed).
+  # Opens the app in your default browser automatically on startup, so the
+  # desktop shortcut launches the whole thing (server + UI), not just the
+  # console window. Set to false if you'd rather open it yourself.
+  open_browser: true
+
+dcs:
+  udp_listen_port: 39234
+  # Leave blank to auto-detect (checks Saved Games/DCS, then DCS.openbeta,
+  # then the server variants). Set this explicitly only if auto-detect
+  # picks the wrong install, or DCS is installed in a non-standard place.
+  export_lua_path: ""
+  # How often (seconds) MachLink re-checks Export.lua for its export
+  # hook while running, and re-adds it if something else (e.g. a HOTAS/
+  # panel tool like SimApp Pro) has overwritten it. 60s is a good default;
+  # lower it if you want faster recovery, at the cost of a bit more disk I/O.
+  hook_check_interval_seconds: 60
+  # Leave blank to auto-detect (same Saved Games folder as export_lua_path).
+  # Set explicitly only if auto-detect picks the wrong install. Used to
+  # extract the real mission briefing (sortie/overview/coalition tasks)
+  # from dcs.log + the loaded .miz - shown in place of SimBrief when DCS
+  # is the detected sim, since SimBrief has no DCS-mission equivalent.
+  log_path: ""
+  # Leave blank to auto-detect (checks the standard Eagle Dynamics/Steam
+  # install locations). Set explicitly only if DCS is installed somewhere
+  # else. Used to find each aircraft's real static kneeboard reference
+  # pages (Mods/aircraft/<module>/Cockpit/Scripts/KNEEBOARD/pages/*.png) -
+  # not every module ships these as plain images (some render their
+  # kneeboard in Lua instead), so this being blank/unavailable for a given
+  # aircraft is a real limitation, not a misconfiguration.
+  install_path: ""
+  # Leave blank to auto-detect (same Saved Games folder as export_lua_path).
+  # Set explicitly only if auto-detect picks the wrong install. Used to
+  # find your own custom kneeboard pages (Saved Games/DCS/Kneeboard/ - both
+  # the global root folder and any per-aircraft subfolder), if you've added
+  # any via DCS's own in-sim "add to kneeboard" feature or dropped in
+  # manually. An empty folder here is normal, not a misconfiguration.
+  kneeboard_path: ""
+
+msfs:
+  poll_interval_seconds: 5
+
+joystick_diagrams:
+  # Folder Joystick Diagrams' own general Export page saves its device SVGs
+  # into (Settings there, not our machlink_export output plugin's
+  # folder) - used to show a real picture of the device with the resolved
+  # button highlighted. Leave blank to disable device pictures entirely;
+  # the text button annotations still work fine without this.
+  svg_export_dir: ""

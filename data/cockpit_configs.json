@@ -1,0 +1,22 @@
+{
+  "_notes": "Cockpit Configuration presets (binding spec section 2d) - a manually-picked 'which devices are active today' list, used instead of trying to auto-detect live USB state (not a problem for this rig anyway, since WinCtrl's 3 MFDs report distinct names: MFD L / MFD C / MFD R). Device names are copied exactly from data/bindings_live/*.json's 'device_name' field - that's the real matching key bindings.py uses. 'active' is whichever config bindings.py currently treats as the real cockpit setup; the UI dropdown just rewrites this field.\n\nTwo real configs per Marky (2026-09-06): the MFD Center unit is the one that comes and goes - MFD Left and MFD Right are always in use. '2-MFD setup' (Center excluded) is the default for most aircraft, including the AH-64D when flying Pilot. '3-MFD setup' (all three) is for the AH-64D CPG/gunner seat (Center becomes the TEDAC display) and the F/A-18C (which uses all 3 the normal way). Same two physical configs cover both of those aircraft/seat cases - no need for aircraft-specific configs, since it's the physical device set that matters here, not which airframe is loaded.",
+
+  "active": "2-MFD setup",
+  "configs": {
+    "2-MFD setup": [
+      "WINCTRL Orion Throttle Base II + TGRIP-F16",
+      "WINCTRL Orion Joystick Base Metal 2 + JGRIP-F16",
+      "WINCTRL CarrierAce MFD L",
+      "WINCTRL CarrierAce MFD R",
+      "WINCTRL ViperAce ICP"
+    ],
+    "3-MFD setup": [
+      "WINCTRL Orion Throttle Base II + TGRIP-F16",
+      "WINCTRL Orion Joystick Base Metal 2 + JGRIP-F16",
+      "WINCTRL CarrierAce MFD L",
+      "WINCTRL CarrierAce MFD C",
+      "WINCTRL CarrierAce MFD R",
+      "WINCTRL ViperAce ICP"
+    ]
+  }
+}

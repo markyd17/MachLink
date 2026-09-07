@@ -1,0 +1,23 @@
+{
+  "_notes": "Some DCS AH-64D command labels exported by Joystick Diagrams come through in Chinese instead of English. Investigated 2026-09-06: all 17 affected commands come from exactly one device (WINCTRL Orion Throttle Base II + TGRIP-F16) on exactly one profile (AH-64D pilot seat) - every other device (3 MFDs, ICP, stick) and both other AH-64D profiles (CPG, AI menu) export cleanly in English. DCS's own UI_LANGUAGE option is set to English (0) too. This points to SimAppPro (used to program that throttle) as the source of the Chinese labels, not a DCS-wide language/locale setting - matches Marky's own diagnosis. These translations were done directly (literal, standard DCS/helicopter terminology) rather than pulled from DCS's own official English command reference for this module, so flag anything that reads oddly. IMPORTANT: this table is for DISPLAY only. Anything that actually matches/looks up a binding (data/bindings/<aircraft>.json's command_map, and the runtime resolution code) must keep using the original left-hand string, since that's what will keep showing up in every future export unless the underlying SimAppPro/DCS issue gets fixed at the source.",
+
+  "translations": {
+    "A/S 按钮": "A/S Button",
+    "CMWS 红外干扰弹安全开关 - ARM": "CMWS Flare Safety Switch - ARM",
+    "CMWS 红外干扰弹安全开关 - ARM/SAFE": "CMWS Flare Safety Switch - ARM/SAFE",
+    "HOCAS 游标控制器 - X轴": "HOCAS Cursor Controller - X Axis",
+    "HOCAS 游标控制器 - Y轴": "HOCAS Cursor Controller - Y Axis",
+    "PTT/RTS 开关 - ICS (VOIP)": "PTT/RTS Switch - ICS (VOIP)",
+    "PTT/RTS 开关 - RADIO (VOIP)": "PTT/RTS Switch - RADIO (VOIP)",
+    "PTT/RTS 开关 - RTS/按下": "PTT/RTS Switch - RTS/Press",
+    "光标输入 - 按下": "Cursor Enter - Press",
+    "地面超控按钮": "Ground Override Button",
+    "夜视镜 开/关": "NVG On/Off",
+    "夜视镜增益 减小": "NVG Gain Decrease",
+    "夜视镜增益 提高": "NVG Gain Increase",
+    "尾轮锁定/解锁按钮 - 按下": "Tail Wheel Lock/Unlock Button - Press",
+    "总距": "Collective",
+    "红外干扰布撒按钮 - 按下": "IR Countermeasures Dispense Button - Press",
+    "缩放视野": "Zoom Field of View"
+  }
+}

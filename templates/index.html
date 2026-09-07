@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MachLink</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header>
+    <h1 class="brand">
+      <span class="brand-mark">
+        <span class="brand-word brand-mach">Mach</span>
+        <span class="brand-word brand-link">Link</span>
+      </span>
+      <span class="brand-sub">// SIMULATOR COMPANION</span>
+    </h1>
+    <!-- Dim/disabled until dcs_flight_tracker.py detects a real landed-
+         and-stopped-after-5+-minutes flight (see pollDebriefStatus in
+         app.js) - lights up lime green and becomes clickable only then. -->
+    <button type="button" id="debrief-btn" class="debrief-btn" disabled>GENERATE DEBRIEF</button>
+    <div id="status-bar" class="status-block idle mono">DETECTING...</div>
+  </header>
+
+  <div class="main-container">
+    <section class="panel left-panel" id="checklist-panel">
+      <div class="mfd-tabs" id="mfd-tabs"></div>
+      <!-- A search bar, not a separate Q&A panel: submitting jumps to
+           whichever real tab the match actually belongs to and highlights
+           it there (see handleAskResponse/jumpToMatch in app.js) - only
+           content with no tab of its own (a qa_snippet, or the AI
+           fallback) renders in ask-bar-result below. -->
+      <form id="ask-form" class="ask-input-container">
+        <input type="text" id="ask-input" class="ask-input" placeholder="Search this aircraft's data - e.g. APU start, mk-82, hellfire" autocomplete="off">
+        <button type="submit" class="ask-btn">Search</button>
+      </form>
+      <div id="ask-bar-result" hidden></div>
+      <div class="panel-controls">
+        <label class="binding-toggle">
+          <input type="checkbox" id="binding-toggle">
+          Show physical bindings (my HOTAS)
+        </label>
+        <label class="cockpit-config-picker">
+          Cockpit config:
+          <select id="cockpit-config-select"><option value="">Loading...</option></select>
+        </label>
+      </div>
+      <div class="tab-content-wrapper" id="tab-content">Waiting for aircraft detection...</div>
+      <div class="citation-line" id="citation-line" hidden></div>
+    </section>
+
+    <div class="right-panel">
+      <section class="sub-panel simbrief-panel" id="simbrief-panel" hidden>
+        <h2 class="panel-title">SimBrief</h2>
+        <button id="simbrief-refresh" class="simbrief-btn">Pull Latest OFP</button>
+        <div id="simbrief-content" class="simbrief-content"></div>
+      </section>
+
+      <section class="sub-panel simbrief-panel" id="dcs-briefing-panel" hidden>
+        <h2 class="panel-title">DCS Mission Briefing</h2>
+        <div id="dcs-briefing-content" class="simbrief-content"></div>
+      </section>
+    </div>
+  </div>
+
+  <!-- A kneeboard is a physical accessory strapped to the leg, not part of
+       the instrument panel - so it gets its own pull-tab on the screen
+       edge rather than another MFD OSB button, and slides out over the
+       page instead of replacing a panel. -->
+  <button type="button" id="kneeboard-tab" hidden>K<br>N<br>E<br>E<br>B<br>O<br>A<br>R<br>D</button>
+  <div id="kneeboard-drawer" hidden>
+    <div id="kneeboard-clip"></div>
+    <div id="kneeboard-header">
+      <span id="kneeboard-page-label"></span>
+      <div id="kneeboard-header-controls">
+        <button type="button" id="kneeboard-zoom-out" aria-label="Zoom out">&minus;</button>
+        <button type="button" id="kneeboard-zoom-reset">100%</button>
+        <button type="button" id="kneeboard-zoom-in" aria-label="Zoom in">&plus;</button>
+        <button type="button" id="kneeboard-close" aria-label="Stow kneeboard">&times;</button>
+      </div>
+    </div>
+    <div id="kneeboard-page-area">
+      <img id="kneeboard-image" alt="Kneeboard page">
+    </div>
+    <div id="kneeboard-nav">
+      <button type="button" id="kneeboard-prev">&lsaquo; PREV</button>
+      <span id="kneeboard-goto" class="mono">
+        <input type="number" id="kneeboard-page-input" min="1" aria-label="Go to page">
+        / <span id="kneeboard-total"></span>
+      </span>
+      <button type="button" id="kneeboard-next">NEXT &rsaquo;</button>
+    </div>
+  </div>
+
+  <div id="device-modal-backdrop" hidden>
+    <div id="device-modal">
+      <div id="device-modal-header">
+        <span id="device-modal-title"></span>
+        <div id="device-modal-controls">
+          <button type="button" id="device-zoom-out" aria-label="Zoom out">&minus;</button>
+          <button type="button" id="device-zoom-reset">100%</button>
+          <button type="button" id="device-zoom-in" aria-label="Zoom in">&plus;</button>
+          <button type="button" id="device-modal-close" aria-label="Close">&times;</button>
+        </div>
+      </div>
+      <div id="device-modal-body"></div>
+    </div>
+  </div>
+
+  <!-- Covers the whole window with a semi-transparent background (per
+       spec) rather than a small centered dialog like the device-diagram
+       modal - an after-action report is the main thing you're looking at
+       for a moment, not a quick reference glanced at alongside the rest
+       of the app. -->
+  <div id="debrief-overlay" hidden>
+    <div id="debrief-panel">
+      <div id="debrief-panel-header">
+        <span id="debrief-panel-title">DEBRIEF</span>
+        <button type="button" id="debrief-close" aria-label="Close">&times;</button>
+      </div>
+      <div id="debrief-body"></div>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

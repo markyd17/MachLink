@@ -1,0 +1,80 @@
+{
+  "game": "dcs",
+  "aircraft_module": "A-10C_2",
+  "live_profile_prefix": "A-10c_ii",
+
+  "_notes": "First bindings pass for the A-10C II, built the same way as the AH-64D's: only real, currently-bound commands get a binding_key, matched against the actual text of the checklist/weapons file rather than guessed. CORRECTION 2026-09-06: 'aircraft_module' was briefly (and wrongly) set to 'A-10C II' based on the Saved Games\\DCS\\Config\\Input folder name, which turned out NOT to be what DCS actually reports live - a real in-flight test showed DCS reports 'A-10C_2', which is also the name matching the aircraft content file dcs_A-10C_2.json. Lesson: only trust a live in-game confirmation (or the Export.lua hook's actual output) for this, never the Input folder name. Separately, Joystick Diagrams' own DCS World parser names this aircraft's exported profile 'A-10c_ii' (derived from the Input folder name, 'A-10C II') - since that doesn't share a prefix with the real module name 'A-10C_2' at all, 'live_profile_prefix' tells bindings.py explicitly which live-export profile prefix to use for device/binding lookups, instead of trying to derive it automatically from aircraft_module (which only works when the two names happen to already agree, as they do for the AH-64D). Unlike the AH-64D, none of the A-10's commands export in Chinese - all 5 bound devices (throttle, stick, ICP, MFD L, MFD R - no MFD Center, matching the '2-MFD setup' cockpit configuration) came through in clean English. Coverage is broad because the A-10 weapons/checklist text uses a small, repeated HOTAS vocabulary (Master Arm, Weapon Release, TMS, DMS, China Hat, Coolie Hat, Boat Switch, Slew, Nosewheel Steering, Gun Trigger, Master Mode) that happens to already be bound almost everywhere it's mentioned. Not bound in the current export (so correctly left untagged): the AHCP TGP/LASER ARM switches, IFFCC switch, UFC scratchpad entry, most OSB/VAB softkey presses (those are cockpit MFD clicks, not HOTAS binds), EXT STORES JETT button, and the Emergency Jettison Switch Cover/Switch.",
+
+  "command_map": {
+    "master_arm_arm": {
+      "dcs_command": "Master switch ARM",
+      "display_label": "Master Arm Switch - ARM"
+    },
+    "weapon_release_button": {
+      "dcs_command": "Weapon release",
+      "display_label": "Weapon Release Button"
+    },
+    "master_mode_button": {
+      "dcs_command": "HOTAS Master Mode Control Button",
+      "display_label": "Master Mode Control Button"
+    },
+    "coolie_hat_up": {
+      "dcs_command": "HOTAS Coolie Switch Up",
+      "display_label": "Coolie Hat - Up"
+    },
+    "coolie_hat_toward_mfcd": {
+      "dcs_command": ["HOTAS Coolie Switch Left", "HOTAS Coolie Switch Right"],
+      "display_label": "Coolie Hat - Left/Right (toward MFCD)",
+      "note": "The checklist's direction depends on which MFCD is showing the relevant page (left or right) - both real bindings are shown since either may apply depending on setup."
+    },
+    "gun_trigger": {
+      "dcs_command": ["Gun Trigger (first stage)", "Gun Trigger"],
+      "display_label": "Gun Trigger (1st/2nd detent)"
+    },
+    "dms_left_right": {
+      "dcs_command": ["HOTAS DMS Left", "HOTAS DMS Right"],
+      "display_label": "DMS - Left/Right"
+    },
+    "dms_fwd_aft": {
+      "dcs_command": ["HOTAS DMS Forward", "HOTAS DMS Aft"],
+      "display_label": "DMS - Forward/Aft"
+    },
+    "china_hat_forward": {
+      "dcs_command": "HOTAS China Hat Forward",
+      "display_label": "China Hat - Forward"
+    },
+    "tms_forward": {
+      "dcs_command": "HOTAS TMS Forward",
+      "display_label": "TMS - Forward"
+    },
+    "tms_aft": {
+      "dcs_command": "HOTAS TMS Aft",
+      "display_label": "TMS - Aft"
+    },
+    "tms_right": {
+      "dcs_command": "HOTAS TMS Right",
+      "display_label": "TMS - Right"
+    },
+    "hotas_slew": {
+      "dcs_command": ["HOTAS Slew Horizontal", "HOTAS Slew Vertical"],
+      "display_label": "Slew Control (Horizontal/Vertical axes)",
+      "note": "An axis pair, not a button - resolves to two physical axes on the same device, not a press."
+    },
+    "boat_switch": {
+      "dcs_command": ["HOTAS Boat Switch Forward", "HOTAS Boat Switch Center", "HOTAS Boat Switch Aft"],
+      "display_label": "Boat Switch (Fwd/Center/Aft)"
+    },
+    "nosewheel_steering_button": {
+      "dcs_command": "HOTAS Nosewheel Steering Button",
+      "display_label": "Nosewheel Steering Button"
+    },
+    "takeoff_trim_switch": {
+      "dcs_command": "Take off trim",
+      "display_label": "Takeoff Trim Switch"
+    },
+    "hmcs_power_switch": {
+      "dcs_command": "HMCS Power ON/OFF",
+      "display_label": "Scorpion HMCS Power Switch"
+    }
+  }
+}

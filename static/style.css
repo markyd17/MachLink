@@ -1,0 +1,984 @@
+/* ==========================================================
+   MachLink — Ergonomic MFD theme
+   Palette/typography spec: military glass-cockpit ergonomics -
+   large glanceable targets, sharp edges, and an unmistakable
+   visual split between trusted sourced data (cyan) and
+   unverified AI fallback content (amber).
+   ========================================================== */
+
+:root {
+  --bg: #0B0F12;
+  --panel-bg: #11161B;
+  --panel-raised: #171D24;
+  --border: #1F2933;
+  --mfd-green: #00FF66;
+  --tactical-cyan: #00E5FF;
+  --caution-amber: #FF9900;
+  --hazard-red: #FF3B30;
+  --text-primary: #E8EDEF;
+  --text-dim: #7B8794;
+  --font-display: system-ui, "Bahnschrift", "Arial Narrow", "Segoe UI", sans-serif;
+  --font-mono: "SF Mono", Consolas, "Roboto Mono", "SFMono-Regular", monospace;
+  /* A kneeboard is a physical accessory strapped to a pilot's leg, not
+     another instrument - these deliberately break from the green/cyan MFD
+     palette to read as a real clipboard object sitting on top of the
+     panel, while its frame/chrome still uses the app's own accent colors
+     so it doesn't feel like a foreign component. */
+  --kneeboard-paper: #D8CFAF;
+  --kneeboard-paper-shadow: #BFB48C;
+  --kneeboard-frame: #262A22;
+  --kneeboard-clip: #4A4E44;
+  /* Matches static/machlink.ico exactly - same dark grey fill behind the
+     lime-green outline on "Link", so the desktop shortcut and the on-page
+     logo read as the same mark. */
+  --logo-dark-grey: #2E343A;
+}
+
+* { box-sizing: border-box; }
+
+html, body { height: 100%; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* Monospace is reserved for status readouts, numbers, and checklist step
+   text - everything structural (titles, labels, buttons) stays condensed
+   sans so dense screens stay horizontally efficient. */
+.mono { font-family: var(--font-mono); }
+
+/* ----------------------------------------------------------
+   HEADER / STATUS BAR
+   ---------------------------------------------------------- */
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  border-bottom: 2px solid var(--border);
+  background: var(--panel-bg);
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-weight: 800;
+  text-transform: uppercase;
+  font-size: 20px;
+  margin: 0;
+  color: var(--text-primary);
+}
+/* Same wordmark as static/machlink.ico (the shortcut/taskbar icon) - MACH
+   stacked over LINK, not side by side, same typeface as the icon (forced
+   explicitly - the body's own font stack leads with "system-ui", which a
+   browser always matches first, so "Bahnschrift" further down that list
+   never actually gets used without this). */
+.brand-mark {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.05;
+  font-family: "Bahnschrift", system-ui, "Segoe UI", sans-serif;
+}
+.brand-word { display: block; }
+/* MACH and LINK are naturally different widths at equal letter-spacing (M
+   is a wide letter, I is a narrow one - measured ~23% narrower) - these
+   two values converge them to the same rendered text width, tightening
+   the wider word and loosening the narrower one rather than distorting
+   either word's actual letterforms. Re-measure and adjust if the font
+   stack above, the weight, or the wording ever changes. */
+.brand-mach { color: var(--mfd-green); letter-spacing: -0.0594em; }
+.brand-link {
+  color: var(--logo-dark-grey);
+  letter-spacing: 0.0594em;
+  -webkit-text-stroke: 1.5px var(--mfd-green);
+  paint-order: stroke fill;
+}
+.brand-sub {
+  color: var(--text-dim);
+  font-weight: 600;
+  font-size: 0.55em;
+  letter-spacing: 0.08em;
+}
+
+.status-block {
+  font-size: 0.85rem;
+  font-weight: bold;
+  padding: 6px 12px;
+  border: 1px solid var(--tactical-cyan);
+  color: var(--tactical-cyan);
+  background: rgba(0, 229, 255, 0.05);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+.status-block.idle {
+  border-color: var(--text-dim);
+  color: var(--text-dim);
+  background: transparent;
+}
+.status-block.alarm {
+  border-color: var(--hazard-red);
+  color: var(--hazard-red);
+  background: rgba(255, 59, 48, 0.06);
+  animation: mfd-alarm-blink 1.4s ease-in-out infinite;
+}
+@keyframes mfd-alarm-blink {
+  50% { opacity: 0.45; }
+}
+
+/* Dim/inert until dcs_flight_tracker.py says a real flight just landed and
+   stopped after 5+ minutes - then fills solid lime green (the "press
+   this" treatment used everywhere else in the app) and pulses gently to
+   draw the eye, same as a real MFD annunciator lighting up. */
+.debrief-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  padding: 8px 16px;
+  cursor: default;
+  border-radius: 0;
+}
+.debrief-btn.ready {
+  background: var(--mfd-green);
+  border-color: var(--mfd-green);
+  color: var(--bg);
+  cursor: pointer;
+  animation: debrief-btn-pulse 1.8s ease-in-out infinite;
+}
+.debrief-btn.ready:hover { filter: brightness(1.1); }
+@keyframes debrief-btn-pulse {
+  50% { box-shadow: 0 0 0 4px rgba(0, 255, 102, 0.25); }
+}
+
+/* ----------------------------------------------------------
+   MAIN TWO-COLUMN GRID
+   ---------------------------------------------------------- */
+.main-container {
+  display: grid;
+  grid-template-columns: 60% 40%;
+  gap: 12px;
+  padding: 12px;
+  height: calc(100vh - 61px);
+  min-height: 0;
+}
+
+.panel {
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.left-panel { padding: 14px 16px; }
+
+.right-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+}
+
+.sub-panel {
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+/* Same gotcha as #device-modal-backdrop: a class selector setting `display`
+   beats the browser's own [hidden] default, so without this, toggling
+   .hidden on the SimBrief/DCS-briefing panels would have no visual effect -
+   both would stay showing regardless of which sim is detected. */
+.sub-panel[hidden] { display: none; }
+
+/* Ask is a search bar under the OSB tabs now, not a side panel - SimBrief/
+   DCS Briefing is the only thing left in the right column, so it just
+   fills it. */
+.simbrief-panel { flex: 1; }
+
+.panel-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-dim);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin: 0 0 12px 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* ----------------------------------------------------------
+   LEFT PANEL: MFD OSB TABS
+   ---------------------------------------------------------- */
+.mfd-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.mfd-btn {
+  background: transparent;
+  border: 1px solid var(--mfd-green);
+  color: var(--mfd-green);
+  padding: 10px 16px;
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: bold;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-radius: 0;
+}
+.mfd-btn:hover { background: rgba(0, 255, 102, 0.1); }
+.mfd-btn.active { background: var(--mfd-green); color: var(--bg); }
+.mfd-btn:focus-visible { outline: 2px solid var(--tactical-cyan); outline-offset: 2px; }
+
+.panel-controls {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+.binding-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-dim);
+  cursor: pointer;
+  user-select: none;
+}
+.binding-toggle input { cursor: pointer; }
+.cockpit-config-picker {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-dim);
+}
+.cockpit-config-picker select {
+  background: var(--panel-raised);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  padding: 4px 6px;
+  text-transform: none;
+  letter-spacing: normal;
+  border-radius: 0;
+}
+
+.tab-content-wrapper {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 4px;
+  min-height: 0;
+}
+
+.checklist-block { margin-bottom: 20px; }
+/* Landed on by a search jump (see jumpToMatch in app.js) - a brief pulse
+   to draw the eye to the real entry the search actually meant, then fades
+   back to normal on its own (no JS cleanup needed - it's just the
+   animation's own end state). */
+.search-highlight {
+  animation: search-highlight-pulse 2s ease-out;
+  border-radius: 2px;
+}
+@keyframes search-highlight-pulse {
+  0% { box-shadow: 0 0 0 3px var(--tactical-cyan); background: rgba(0, 229, 255, 0.15); }
+  100% { box-shadow: 0 0 0 0 rgba(0, 229, 255, 0); background: transparent; }
+}
+.checklist-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--tactical-cyan);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0 0 8px 0;
+}
+.checklist-subnote {
+  color: var(--text-dim);
+  font-size: 0.78rem;
+  margin: -4px 0 8px 0;
+}
+
+.checklist-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 6px 12px;
+  min-height: 44px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 8px 0;
+}
+.checklist-left {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  flex: 1 1 260px;
+  min-width: 0;
+}
+.step-text {
+  font-family: var(--font-mono);
+  font-size: 0.92rem;
+  letter-spacing: 0.01em;
+  overflow-wrap: anywhere;
+}
+.checklist-item.plain { min-height: 32px; }
+
+/* Custom MFD square checkbox */
+.mfd-checkbox {
+  appearance: none;
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border: 2px solid var(--mfd-green);
+  border-radius: 0;
+  cursor: pointer;
+  position: relative;
+  background: transparent;
+}
+.mfd-checkbox:checked { background: var(--mfd-green); }
+.mfd-checkbox:checked::after {
+  content: '\2713';
+  position: absolute;
+  color: var(--bg);
+  font-size: 15px;
+  font-weight: bold;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+.mfd-checkbox:focus-visible { outline: 2px solid var(--tactical-cyan); outline-offset: 2px; }
+
+/* Inline HOTAS binding badges - pill-shaped, spaced to the right of the
+   step text. These are real resolved bindings (bindings.py), not a future
+   stub: bound = cyan solid, not-in-config = amber (mapped/known but not in
+   your active cockpit config), unbound = dim/muted. */
+.hotas-badge {
+  flex: 0 1 auto;
+  max-width: 100%;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+  padding: 3px 8px;
+  border-radius: 999px;
+  /* Most resolved bindings are short enough to stay a true single-line
+     pill, but a long device name (or several matches joined with " / ")
+     should wrap instead of running off the row and getting clipped. */
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.hotas-badge.bound {
+  color: var(--tactical-cyan);
+  border: 1px solid var(--tactical-cyan);
+  background: rgba(0, 229, 255, 0.06);
+}
+.hotas-badge.not-in-config {
+  color: var(--caution-amber);
+  border: 1px solid var(--caution-amber);
+  background: rgba(255, 153, 0, 0.06);
+  font-style: italic;
+}
+.hotas-badge.unbound {
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+  font-style: italic;
+}
+.hotas-badge.has-diagram { cursor: pointer; }
+.hotas-badge.has-diagram:hover { filter: brightness(1.3); }
+
+.placeholder-warning {
+  border: 1px solid var(--hazard-red);
+  color: var(--hazard-red);
+  padding: 8px 10px;
+  margin-bottom: 14px;
+  font-size: 0.8rem;
+  letter-spacing: 0.02em;
+}
+
+/* Full-panel crosshatch alarm state for a genuinely missing data file -
+   the zero-hallucination gap case, not just "still detecting." */
+.warning-overlay {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  border: 2px dashed var(--caution-amber);
+  background: repeating-linear-gradient(
+    45deg,
+    rgba(255, 153, 0, 0.04),
+    rgba(255, 153, 0, 0.04) 10px,
+    rgba(0, 0, 0, 0.2) 10px,
+    rgba(0, 0, 0, 0.2) 20px
+  );
+  color: var(--caution-amber);
+  padding: 30px;
+}
+.warning-overlay h3 {
+  font-size: 1.05rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin: 0 0 10px 0;
+}
+.warning-overlay p {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  max-width: 60ch;
+  margin: 0;
+}
+
+.citation-line {
+  margin-top: 10px;
+  padding-top: 10px;
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  border-top: 1px solid var(--border);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* ----------------------------------------------------------
+   SEARCH BAR (VERIFIED VS UNVERIFIED)
+   A search across this aircraft's data, not a separate Q&A panel - a
+   match that belongs to a real OSB tab (weapon/jettison/systems note)
+   jumps straight there instead of showing here (see jumpToMatch in
+   app.js). Only content with no tab of its own renders below the bar.
+   ---------------------------------------------------------- */
+.ask-input-container { display: flex; gap: 8px; margin-bottom: 12px; }
+.ask-input {
+  flex: 1;
+  background: var(--panel-raised);
+  border: 1px solid var(--mfd-green);
+  color: var(--text-primary);
+  padding: 10px;
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  border-radius: 0;
+}
+.ask-input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(0, 255, 102, 0.3);
+}
+.ask-btn {
+  background: var(--mfd-green);
+  border: none;
+  color: var(--bg);
+  padding: 0 22px;
+  font-family: var(--font-display);
+  font-weight: bold;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-radius: 0;
+}
+.ask-btn:hover { filter: brightness(1.1); }
+
+#ask-bar-result {
+  margin-bottom: 12px;
+  max-height: 40vh;
+  overflow-y: auto;
+}
+
+.response-box {
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+.response-tag {
+  display: inline-block;
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  font-weight: bold;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  margin-bottom: 8px;
+}
+.response-box.verified {
+  border: 2px solid var(--tactical-cyan);
+  background: rgba(0, 229, 255, 0.03);
+}
+.response-box.verified .response-tag {
+  background: var(--tactical-cyan);
+  color: var(--bg);
+}
+.response-box.unverified {
+  border: 2px dashed var(--caution-amber);
+  background: rgba(255, 153, 0, 0.05);
+}
+.response-box.unverified .response-tag {
+  background: var(--caution-amber);
+  color: var(--bg);
+}
+.response-box .response-body { font-family: var(--font-mono); }
+
+.ask-picker { margin-bottom: 10px; }
+.ask-picker-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+}
+.ask-picker-btn {
+  margin: 0 6px 6px 0;
+  padding: 7px 12px;
+  font-size: 0.78rem;
+  background: transparent;
+  border: 1px solid var(--tactical-cyan);
+  color: var(--tactical-cyan);
+  font-family: var(--font-display);
+  font-weight: bold;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-radius: 0;
+}
+.ask-picker-btn:hover { background: rgba(0, 229, 255, 0.1); }
+
+/* ----------------------------------------------------------
+   RIGHT PANEL: SIMBRIEF
+   ---------------------------------------------------------- */
+.simbrief-btn {
+  width: 100%;
+  background: transparent;
+  border: 1px solid var(--tactical-cyan);
+  color: var(--tactical-cyan);
+  padding: 12px;
+  font-family: var(--font-display);
+  font-weight: bold;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  margin-bottom: 12px;
+  flex-shrink: 0;
+  border-radius: 0;
+}
+.simbrief-btn:hover { background: rgba(0, 229, 255, 0.1); }
+
+.simbrief-content { flex: 1; overflow-y: auto; min-height: 0; }
+
+.data-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+.data-cell {
+  border: 1px solid var(--border);
+  padding: 8px 10px;
+  background: rgba(0, 0, 0, 0.15);
+}
+.data-cell.span-2 { grid-column: span 2; }
+.data-label {
+  font-family: var(--font-display);
+  font-size: 0.68rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+}
+.data-value {
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  font-weight: bold;
+  color: var(--text-primary);
+}
+
+/* ----------------------------------------------------------
+   DEVICE DIAGRAM MODAL (with zoom controls)
+   ---------------------------------------------------------- */
+#device-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 24px;
+}
+/* An ID selector setting `display` beats the browser's own [hidden] rule,
+   so without this, toggling the hidden attribute (open/close, Escape key)
+   has no visual effect at all - the backdrop stays showing regardless. */
+#device-modal-backdrop[hidden] { display: none; }
+
+#device-modal {
+  background: var(--panel-bg);
+  border: 1px solid var(--tactical-cyan);
+  max-width: 900px;
+  max-height: 90vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+#device-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+}
+#device-modal-title {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.85rem;
+  font-weight: bold;
+  color: var(--tactical-cyan);
+}
+#device-modal-controls { display: flex; align-items: center; gap: 4px; }
+#device-modal-controls button {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  line-height: 1;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  border-radius: 0;
+}
+#device-modal-controls button:hover { border-color: var(--tactical-cyan); color: var(--tactical-cyan); }
+#device-zoom-reset { min-width: 46px; }
+#device-modal-close {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 22px;
+  line-height: 1;
+  padding: 0 4px;
+  cursor: pointer;
+  margin-left: 4px;
+}
+#device-modal-close:hover { color: var(--hazard-red); }
+#device-modal-body {
+  overflow: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.device-diagram-label {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 6px;
+}
+.device-diagram-svg { overflow: auto; }
+.device-diagram-svg svg {
+  /* --diagram-zoom is set on #device-modal-body by the zoom controls - one
+     shared level, so multiple diagrams (e.g. a binding matched on 2 MFDs)
+     all zoom together rather than needing separate controls each. */
+  width: calc(var(--diagram-zoom, 100) * 1%);
+  min-width: 100%;
+  height: auto;
+  display: block;
+  background: #fff;
+  border: 1px solid var(--border);
+  cursor: zoom-in;
+}
+.device-diagram-svg svg.zoomed { cursor: zoom-out; }
+
+/* ----------------------------------------------------------
+   KNEEBOARD - a real physical accessory, not another MFD page,
+   so it lives as an edge pull-tab + slide-out drawer rather than
+   another OSB tab in the checklist panel.
+   ---------------------------------------------------------- */
+#kneeboard-tab {
+  position: fixed;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 90;
+  /* Solid fill, not just an outline - the same "filled = press this"
+     treatment as .ask-btn/.mfd-btn.active, since a thin cyan-on-black
+     outline at the very edge of the screen was too easy to miss entirely. */
+  background: var(--tactical-cyan);
+  border: 1px solid var(--tactical-cyan);
+  border-right: none;
+  color: var(--bg);
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  line-height: 1.6;
+  padding: 20px 8px;
+  cursor: pointer;
+  box-shadow: -3px 2px 12px rgba(0, 0, 0, 0.55);
+}
+#kneeboard-tab:hover { background: var(--text-primary); border-color: var(--text-primary); }
+#kneeboard-tab[hidden] { display: none; }
+
+#kneeboard-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100vh;
+  width: min(1200px, 96vw);
+  z-index: 95;
+  display: flex;
+  flex-direction: column;
+  background: var(--kneeboard-frame);
+  border-left: 2px solid var(--tactical-cyan);
+  box-shadow: -6px 0 24px rgba(0, 0, 0, 0.5);
+  animation: kneeboard-slide-in 0.22s ease-out;
+}
+#kneeboard-drawer[hidden] { display: none; }
+@keyframes kneeboard-slide-in {
+  from { transform: translateX(24px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+/* The clip a real kneeboard binder holds its pages under - purely
+   decorative, sits above the paper area. */
+#kneeboard-clip {
+  height: 14px;
+  margin: 10px 40px 0;
+  background: linear-gradient(var(--kneeboard-clip), #33362E);
+  border: 1px solid #1a1c17;
+  flex-shrink: 0;
+}
+
+#kneeboard-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 16px;
+  flex-shrink: 0;
+}
+#kneeboard-page-label {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: bold;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--tactical-cyan);
+}
+#kneeboard-header-controls { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+#kneeboard-header-controls button {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  line-height: 1;
+  padding: 7px 12px;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  border-radius: 0;
+}
+#kneeboard-header-controls button:hover { border-color: var(--tactical-cyan); color: var(--tactical-cyan); }
+#kneeboard-zoom-reset { min-width: 50px; }
+#kneeboard-close {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 26px;
+  line-height: 1;
+  padding: 0 4px;
+  cursor: pointer;
+  margin-left: 4px;
+}
+#kneeboard-close:hover { color: var(--hazard-red); }
+
+#kneeboard-page-area {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  background: var(--kneeboard-paper);
+  background-image: linear-gradient(180deg, var(--kneeboard-paper) 0%, var(--kneeboard-paper-shadow) 100%);
+  margin: 0 16px;
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.2);
+}
+#kneeboard-image {
+  /* Width/height are set directly in JS (setKneeboardZoom in app.js), not
+     CSS percentages - these are portrait charts in a landscape drawer, so
+     a plain width-based zoom (like the device-diagram modal's) changes a
+     dimension that's already off-screen and looks like it does nothing.
+     JS instead computes an exact "fits entirely in the visible area" size
+     from the image's real dimensions, then scales that by the zoom level -
+     100% always means "whole page visible, no scrolling", and zooming
+     past that predictably grows it from there. */
+  display: block;
+  margin: 0 auto;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  cursor: zoom-in;
+}
+#kneeboard-image.zoomed { cursor: zoom-out; }
+
+#kneeboard-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 14px 16px;
+  flex-shrink: 0;
+}
+#kneeboard-nav button {
+  background: transparent;
+  border: 1px solid var(--mfd-green);
+  color: var(--mfd-green);
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: bold;
+  letter-spacing: 0.04em;
+  padding: 8px 12px;
+  cursor: pointer;
+  border-radius: 0;
+}
+#kneeboard-nav button:hover:not(:disabled) { background: rgba(0, 255, 102, 0.1); }
+#kneeboard-nav button:disabled {
+  border-color: var(--border);
+  color: var(--text-dim);
+  cursor: default;
+}
+#kneeboard-goto { color: var(--text-dim); font-size: 0.8rem; display: flex; align-items: center; gap: 4px; }
+#kneeboard-page-input {
+  width: 3.2em;
+  background: var(--panel-raised);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  text-align: center;
+  padding: 4px 2px;
+  border-radius: 0;
+}
+#kneeboard-page-input:focus { outline: 1px solid var(--tactical-cyan); }
+/* Chrome/Edge/Safari spinner arrows - remove, they clash with the sharp
+   MFD aesthetic and the field is too narrow for them anyway. */
+#kneeboard-page-input::-webkit-outer-spin-button,
+#kneeboard-page-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+#kneeboard-page-input { -moz-appearance: textfield; }
+
+@media (max-width: 800px) {
+  #kneeboard-tab { padding: 10px 5px; font-size: 0.65rem; }
+}
+
+/* ----------------------------------------------------------
+   DEBRIEF - covers the whole window with a semi-transparent background
+   (per spec), a solid opaque report card centered on top - not a small
+   dialog like the device-diagram modal, since this is the main thing
+   you're looking at for a moment, not a quick reference glanced at
+   alongside everything else.
+   ---------------------------------------------------------- */
+#debrief-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 120;
+  padding: 24px;
+}
+/* Same [hidden]-vs-class-display gotcha as everywhere else in this file. */
+#debrief-overlay[hidden] { display: none; }
+
+#debrief-panel {
+  background: var(--panel-bg);
+  border: 1px solid var(--tactical-cyan);
+  width: min(900px, 92vw);
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
+}
+#debrief-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+}
+#debrief-panel-title {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  font-size: 1.1rem;
+  color: var(--mfd-green);
+}
+#debrief-close {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 26px;
+  line-height: 1;
+  padding: 0 4px;
+  cursor: pointer;
+}
+#debrief-close:hover { color: var(--hazard-red); }
+#debrief-body {
+  padding: 20px;
+  overflow-y: auto;
+}
+#debrief-body .checklist-title:first-child { margin-top: 0; }
+.debrief-outcome {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 4px 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  font-size: 0.85rem;
+  border: 1px solid currentColor;
+  border-radius: 3px;
+}
+.debrief-outcome-landing { color: var(--mfd-green); }
+.debrief-outcome-crash { color: var(--hazard-red); }
+.debrief-outcome-unconfirmed { color: var(--caution-amber); }
+.debrief-cause {
+  margin-top: 8px;
+  color: var(--text-dim);
+  font-size: 0.85rem;
+}
+
+/* ----------------------------------------------------------
+   RESPONSIVE
+   ---------------------------------------------------------- */
+@media (max-width: 800px) {
+  .main-container {
+    grid-template-columns: 1fr;
+    height: auto;
+    overflow-y: auto;
+  }
+  body { overflow-y: auto; }
+  header { flex-direction: column; align-items: flex-start; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
