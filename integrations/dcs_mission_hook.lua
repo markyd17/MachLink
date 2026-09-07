@@ -345,13 +345,26 @@ local function build_json_array(rawItems)
 end
 
 -- DCS world coordinates: x = north/south (+x north), z = east/west
--- (+z east), y = altitude - only x/z matter for a 2D map.
+-- (+z east), y = altitude. Also includes real-world lat/lon via DCS's own
+-- coord.LOtoLL() - DCS's maps are modeled on real-world regions (Caucasus
+-- is the real Georgia/Abkhazia coastline, etc.), so this is DCS's own
+-- authoritative answer for where a world-coordinate point sits on Earth,
+-- not a separate approximation - lets the frontend plot on a real map
+-- background instead of a blank grid. coord.LOtoLL needs a full Vec3
+-- (x/y/z, y=altitude) - defaults y to 0 if the caller's point lacks it
+-- (e.g. coalition.getMainRefPoint's bullseye may not carry altitude).
 local function point_fields(point)
 	if not point then return {} end
-	return {
+	local fields = {
 		{"x", point.x},
 		{"z", point.z},
 	}
+	local okLL, lat, lon = pcall(coord.LOtoLL, {x = point.x, y = point.y or 0, z = point.z})
+	if okLL and lat then
+		fields[#fields + 1] = {"lat", lat}
+		fields[#fields + 1] = {"lon", lon}
+	end
+	return fields
 end
 
 local function heading_degrees(unit)
@@ -377,25 +390,35 @@ local function unit_json(unit, extraFields)
 	return build_json(fields)
 end
 
+-- Returns both the friendlies JSON array (for rendering) AND the raw list
+-- of friendly unit objects (fed into coalition-wide detection aggregation
+-- below) - one walk of coalition.getGroups() serves both instead of two.
+-- The raw list includes the player's own unit (excluded only from the
+-- JSON, not from detection aggregation - your own aircraft's detections,
+-- e.g. a TGP lock, should count too).
 local function gather_friendlies(myCoalition, myUnitId)
 	local items = {}
+	local units = {}
 	local ok, groups = pcall(coalition.getGroups, myCoalition)
-	if not ok or not groups then return items end
+	if not ok or not groups then return items, units end
 	for _, group in ipairs(groups) do
-		local okUnits, units = pcall(function() return group:getUnits() end)
-		if okUnits and units then
-			for _, unit in ipairs(units) do
+		local okUnits, groupUnits = pcall(function() return group:getUnits() end)
+		if okUnits and groupUnits then
+			for _, unit in ipairs(groupUnits) do
 				local okExist, exists = pcall(function() return unit:isExist() end)
 				if okExist and exists then
 					local okId, unitId = pcall(function() return unit:getID() end)
-					if okId and unitId ~= myUnitId then
-						items[#items + 1] = unit_json(unit)
+					if okId then
+						units[#units + 1] = unit
+						if unitId ~= myUnitId then
+							items[#items + 1] = unit_json(unit)
+						end
 					end
 				end
 			end
 		end
 	end
-	return items
+	return items, units
 end
 
 local function gather_airbases()
@@ -411,24 +434,90 @@ local function gather_airbases()
 	return items
 end
 
-local function gather_detected(playerUnit)
-	local items = {}
-	local controller = safe_call(playerUnit, "getController")
-	if not controller then return items end
-	local ok, detected = pcall(function() return controller:getDetectedTargets() end)
-	if not ok or not detected then return items end
-	for _, d in ipairs(detected) do
-		local target = d.object
-		local okExist, exists = target and pcall(function() return target:isExist() end)
-		if target and okExist and exists then
-			items[#items + 1] = unit_json(target, {
-				{"typeKnown", d.type == true},
-				{"distanceKnown", d.distance == true},
-				{"visualKnown", d.visible == true},
-			})
+-- getDetectedTargets() reads a passively-accumulated cache that DCS's AI
+-- behavior loop fills in as it "thinks" - confirmed empirically (2 real
+-- test flights, flying directly over 2 known, stationary enemy Urals in
+-- broad daylight, closing to ~300m) that this cache stays completely
+-- empty for a player-flown aircraft, because there's no AI loop running
+-- to populate it. Fixed by switching to isTargetDetected(target, ...),
+-- which forces DCS to answer "have I detected THIS specific unit?" live,
+-- on demand, rather than reading whatever an AI happened to cache. This
+-- is still 100% DCS's own answer, never our own guess: for every unit on
+-- the OPPOSING coalition (candidates only, not a filtered/precomputed
+-- list), ask every friendly unit's controller whether DCS currently
+-- considers it detected, across all detection types, and show only the
+-- ones DCS says yes to. No cheating: we never show a candidate DCS
+-- itself hasn't confirmed detected.
+--
+-- Performance note: this is unitsChecked x candidatesChecked controller
+-- calls per poll interval - trivial for a typical single/small-multi
+-- mission's unit count; worth revisiting (slower dedicated poll rate,
+-- or cache candidate list less often) if a very large mission's unit
+-- count ever makes it a real cost - not yet confirmed to be one.
+local ALL_DETECTION_TYPES = {
+	Controller.Detection.VISUAL,
+	Controller.Detection.OPTIC,
+	Controller.Detection.RADAR,
+	Controller.Detection.IRST,
+	Controller.Detection.RWR,
+	Controller.Detection.DLINK,
+}
+
+-- All coalitions are 0 (neutral), 1, 2 - gather every existing unit on
+-- every coalition OTHER than the player's own as detection candidates.
+local function gather_opposing_units(myCoalition)
+	local units = {}
+	for _, side in ipairs({0, 1, 2}) do
+		if side ~= myCoalition then
+			local okGroups, groups = pcall(coalition.getGroups, side)
+			if okGroups and groups then
+				for _, group in ipairs(groups) do
+					local okUnits, groupUnits = pcall(function() return group:getUnits() end)
+					if okUnits and groupUnits then
+						for _, unit in ipairs(groupUnits) do
+							local okExist, exists = pcall(function() return unit:isExist() end)
+							if okExist and exists then
+								units[#units + 1] = unit
+							end
+						end
+					end
+				end
+			end
 		end
 	end
-	return items
+	return units
+end
+
+local function gather_detected(friendlyUnits, myCoalition)
+	local items = {}
+	local seenIds = {}
+	local unitsChecked, candidatesChecked, totalDetected = 0, 0, 0
+	local opposing = gather_opposing_units(myCoalition)
+	for _, unit in ipairs(friendlyUnits) do
+		local controller = safe_call(unit, "getController")
+		if controller then
+			unitsChecked = unitsChecked + 1
+			for _, target in ipairs(opposing) do
+				candidatesChecked = candidatesChecked + 1
+				local ok, detected = pcall(function()
+					return controller:isTargetDetected(
+						target,
+						ALL_DETECTION_TYPES[1], ALL_DETECTION_TYPES[2], ALL_DETECTION_TYPES[3],
+						ALL_DETECTION_TYPES[4], ALL_DETECTION_TYPES[5], ALL_DETECTION_TYPES[6]
+					)
+				end)
+				if ok and detected then
+					totalDetected = totalDetected + 1
+					local okTid, tid = pcall(function() return target:getID() end)
+					if okTid and not seenIds[tid] then
+						seenIds[tid] = true
+						items[#items + 1] = unit_json(target)
+					end
+				end
+			end
+		end
+	end
+	return items, {unitsChecked = unitsChecked, candidatesChecked = candidatesChecked, totalDetected = totalDetected}
 end
 
 local function gather_bullseye(myCoalition)
@@ -446,11 +535,14 @@ local function write_map_snapshot()
 	local myCoalition = safe_call(playerUnit, "getCoalition")
 	local myUnitId = safe_call(playerUnit, "getID")
 
+	local friendlyItems, friendlyUnits = gather_friendlies(myCoalition, myUnitId)
+	local detectedItems = gather_detected(friendlyUnits, myCoalition)
+
 	local fields = {
 		{"own", unit_json(playerUnit)},
-		{"friendlies", build_json_array(gather_friendlies(myCoalition, myUnitId))},
+		{"friendlies", build_json_array(friendlyItems)},
 		{"airbases", build_json_array(gather_airbases())},
-		{"detected", build_json_array(gather_detected(playerUnit))},
+		{"detected", build_json_array(detectedItems)},
 	}
 	local bullseyeJson = gather_bullseye(myCoalition)
 	if bullseyeJson then
