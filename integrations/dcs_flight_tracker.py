@@ -47,9 +47,13 @@ DEBRIEF_MIN_FLIGHT_SECONDS = 5 * 60
 CRASH_TIMEOUT_SECONDS = 10.0
 # A takeoff transition this soon after a landing transition is a bounce
 # (main gear touched, briefly airborne again), not a real go-around or
-# deliberate touch-and-go - confirmed against a real flight's log: landing
-# -> takeoff -> landing all within 4 seconds.
-BOUNCE_WINDOW_SECONDS = 15.0
+# deliberate touch-and-go (which takes a full pattern - minutes, not
+# seconds). Confirmed against a real flight's log: landing -> takeoff ->
+# landing all within 4 seconds. Can't go much tighter than this - Export.lua
+# only sends telemetry every ~2s (see telemetryIntervalSeconds there), so
+# two consecutive samples are already ~2s apart; a window under that would
+# miss real bounces (like the one that prompted this) entirely.
+BOUNCE_WINDOW_SECONDS = 5.0
 
 # Landing-rate (vertical speed at touchdown) grading bands, in feet/minute.
 # Standard flight-sim convention (butter/good/firm/hard/very hard) - NOT
