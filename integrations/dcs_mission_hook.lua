@@ -283,12 +283,16 @@ function eventHandler:onLoss(event, kind)
 	end
 	ml_send(fields)
 	if unitId then MachLinkMission.lastHit[unitId] = nil end
+	if MachLinkMission.playerUnit == event.initiator then
+		MachLinkMission.playerUnit = nil  -- stop map polling until the next birth
+	end
 end
 
 function eventHandler:onBirth(event)
 	if not event.initiator or not is_player_unit(event.initiator) then
 		return
 	end
+	MachLinkMission.playerUnit = event.initiator  -- for the map snapshot poll below
 	ml_send({
 		{"type", "birth"},
 		{"unitName", safe_call(event.initiator, "getName")},
@@ -297,3 +301,175 @@ function eventHandler:onBirth(event)
 end
 
 world.addEventHandler(eventHandler)
+
+-- ============================================================
+-- Live map data (own position, friendlies, airbases, bullseye, detected
+-- contacts) - a periodic SNAPSHOT overwritten every mapPollIntervalSeconds
+-- at Scripts\MachLinkMapData.json, not an appended log like the events
+-- file above (that would grow forever at this polling rate). Separate
+-- concern from the discrete combat events, but shares MachLinkMission.
+-- playerUnit, already tracked via onBirth/onLoss above.
+--
+-- Deliberately conservative on enemy visibility, per explicit
+-- requirement: no cheating, only what the mission's actual Fog of War
+-- setting would show. Enemy contacts come ONLY from
+-- Controller.getDetectedTargets() called on the PLAYER'S OWN unit (every
+-- detection type, including datalink) - never a raw dump of every unit
+-- in the mission. DCS's exact coalition-wide detection-sharing logic for
+-- F10 isn't officially documented (confirmed via Hoggit), so this can
+-- only ever show FEWER contacts than the real F10 map might in some edge
+-- case (e.g. another friendly unit detected something not yet shared to
+-- this aircraft specifically) - never more. That's the safe direction to
+-- be wrong in.
+-- ============================================================
+
+MachLinkMission.mapDataPath = lfs.writedir() .. [[Scripts\MachLinkMapData.json]]
+MachLinkMission.mapPollIntervalSeconds = 1.0
+
+-- Same idea as build_json, but every field's value is already a valid
+-- JSON fragment (an object or array built via this same family of
+-- functions) rather than a plain Lua value to quote/escape - needed here
+-- for nested objects/arrays that build_json alone can't produce. Kept
+-- separate from build_json rather than adding a raw/escaped flag to it,
+-- so the already-working event-reporting code above stays untouched.
+local function build_json_of_raw_fields(fields)
+	local parts = {}
+	for _, kv in ipairs(fields) do
+		parts[#parts + 1] = '"' .. kv[1] .. '":' .. kv[2]
+	end
+	return "{" .. table.concat(parts, ",") .. "}"
+end
+
+local function build_json_array(rawItems)
+	return "[" .. table.concat(rawItems, ",") .. "]"
+end
+
+-- DCS world coordinates: x = north/south (+x north), z = east/west
+-- (+z east), y = altitude - only x/z matter for a 2D map.
+local function point_fields(point)
+	if not point then return {} end
+	return {
+		{"x", point.x},
+		{"z", point.z},
+	}
+end
+
+local function heading_degrees(unit)
+	local pos = safe_call(unit, "getPosition")
+	if not pos or not pos.x then return nil end
+	local heading = math.atan2(pos.x.z, pos.x.x)
+	if heading < 0 then heading = heading + 2 * math.pi end
+	return math.deg(heading)
+end
+
+local function unit_json(unit, extraFields)
+	local point = safe_call(unit, "getPoint")
+	local fields = point_fields(point)
+	fields[#fields + 1] = {"heading", heading_degrees(unit)}
+	fields[#fields + 1] = {"name", safe_call(unit, "getName")}
+	fields[#fields + 1] = {"type", safe_call(unit, "getTypeName")}
+	fields[#fields + 1] = {"category", category_label(unit)}
+	if extraFields then
+		for _, f in ipairs(extraFields) do
+			fields[#fields + 1] = f
+		end
+	end
+	return build_json(fields)
+end
+
+local function gather_friendlies(myCoalition, myUnitId)
+	local items = {}
+	local ok, groups = pcall(coalition.getGroups, myCoalition)
+	if not ok or not groups then return items end
+	for _, group in ipairs(groups) do
+		local okUnits, units = pcall(function() return group:getUnits() end)
+		if okUnits and units then
+			for _, unit in ipairs(units) do
+				local okExist, exists = pcall(function() return unit:isExist() end)
+				if okExist and exists then
+					local okId, unitId = pcall(function() return unit:getID() end)
+					if okId and unitId ~= myUnitId then
+						items[#items + 1] = unit_json(unit)
+					end
+				end
+			end
+		end
+	end
+	return items
+end
+
+local function gather_airbases()
+	local items = {}
+	local ok, airbases = pcall(world.getAirbases)
+	if not ok or not airbases then return items end
+	for _, ab in ipairs(airbases) do
+		local fields = point_fields(safe_call(ab, "getPoint"))
+		fields[#fields + 1] = {"name", safe_call(ab, "getName")}
+		fields[#fields + 1] = {"coalition", safe_call(ab, "getCoalition")}
+		items[#items + 1] = build_json(fields)
+	end
+	return items
+end
+
+local function gather_detected(playerUnit)
+	local items = {}
+	local controller = safe_call(playerUnit, "getController")
+	if not controller then return items end
+	local ok, detected = pcall(function() return controller:getDetectedTargets() end)
+	if not ok or not detected then return items end
+	for _, d in ipairs(detected) do
+		local target = d.object
+		local okExist, exists = target and pcall(function() return target:isExist() end)
+		if target and okExist and exists then
+			items[#items + 1] = unit_json(target, {
+				{"typeKnown", d.type == true},
+				{"distanceKnown", d.distance == true},
+				{"visualKnown", d.visible == true},
+			})
+		end
+	end
+	return items
+end
+
+local function gather_bullseye(myCoalition)
+	local ok, point = pcall(coalition.getMainRefPoint, myCoalition)
+	if not ok or not point then return nil end
+	return build_json(point_fields(point))
+end
+
+local function write_map_snapshot()
+	local playerUnit = MachLinkMission.playerUnit
+	if not playerUnit then return end
+	local okExist, exists = pcall(function() return playerUnit:isExist() end)
+	if not okExist or not exists then return end
+
+	local myCoalition = safe_call(playerUnit, "getCoalition")
+	local myUnitId = safe_call(playerUnit, "getID")
+
+	local fields = {
+		{"own", unit_json(playerUnit)},
+		{"friendlies", build_json_array(gather_friendlies(myCoalition, myUnitId))},
+		{"airbases", build_json_array(gather_airbases())},
+		{"detected", build_json_array(gather_detected(playerUnit))},
+	}
+	local bullseyeJson = gather_bullseye(myCoalition)
+	if bullseyeJson then
+		fields[#fields + 1] = {"bullseye", bullseyeJson}
+	end
+
+	local jsonText = build_json_of_raw_fields(fields)
+	pcall(function()
+		local f = io.open(MachLinkMission.mapDataPath, "w")
+		if f then
+			f:write(jsonText)
+			f:close()
+		end
+	end)
+end
+
+local function map_poll_loop(_, currentTime)
+	pcall(write_map_snapshot)
+	return currentTime + MachLinkMission.mapPollIntervalSeconds
+end
+
+timer.scheduleFunction(map_poll_loop, nil, timer.getTime() + MachLinkMission.mapPollIntervalSeconds)

@@ -26,6 +26,7 @@ from integrations.dcs_flight_tracker import (
     FlightTracker, FLIGHT_LOG_PATH, start_crash_watchdog, DEBRIEF_MIN_FLIGHT_SECONDS,
 )
 from integrations.dcs_combat_events import start_combat_event_listener
+from integrations.dcs_map_data import MapDataStore, start_map_data_watcher
 from integrations.logbook_stats import compute_stats as compute_logbook_stats
 from integrations.dcs_kneeboard import (
     find_dcs_install,
@@ -88,6 +89,7 @@ CONFIG = load_config()
 flight_tracker = FlightTracker(
     min_flight_seconds=(CONFIG.get("dcs") or {}).get("debrief_min_flight_seconds", DEBRIEF_MIN_FLIGHT_SECONDS)
 )
+map_data_store = MapDataStore()
 
 
 def load_aircraft_file(name, game=None):
@@ -288,6 +290,15 @@ def api_logbook():
     })
 
 
+@app.route("/api/map_data")
+def api_map_data():
+    """Live F10-style map snapshot (own position, friendlies, airbases,
+    bullseye, detected contacts) - see dcs_map_data.py/dcs_mission_hook.lua.
+    {"available": false} until the mission hook's first snapshot arrives
+    (needs Phase 2 installed and a unit under control)."""
+    return jsonify(map_data_store.get())
+
+
 def _kneeboard_context():
     """The live values every kneeboard source is resolved against, read
     once per request so /api/kneeboard and the page-serving route below
@@ -395,6 +406,7 @@ if __name__ == "__main__":
     start_dcs_listener(state, flight_tracker, port=dcs_cfg.get("udp_listen_port", 39234))
     start_crash_watchdog(flight_tracker)
     start_combat_event_listener(flight_tracker, explicit_path=dcs_cfg.get("mission_events_path") or None)
+    start_map_data_watcher(map_data_store, explicit_path=dcs_cfg.get("map_data_path") or None)
     start_mission_briefing_watcher(state, explicit_log_path=dcs_cfg.get("log_path") or None)
     start_msfs_watcher(state, poll_interval_seconds=msfs_cfg.get("poll_interval_seconds", 5))
 
