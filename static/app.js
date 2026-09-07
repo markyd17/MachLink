@@ -25,6 +25,13 @@ const viewFullLogbookBtn = document.getElementById("view-full-logbook-btn");
 const logbookOverlay = document.getElementById("logbook-overlay");
 const logbookClose = document.getElementById("logbook-close");
 const logbookFlightList = document.getElementById("logbook-flight-list");
+const liveMapBtn = document.getElementById("live-map-btn");
+const mapOverlay = document.getElementById("map-overlay");
+const mapClose = document.getElementById("map-close");
+const mapLeafletDiv = document.getElementById("map-leaflet");
+const mapEmptyState = document.getElementById("map-empty-state");
+const mapRecenterBtn = document.getElementById("map-recenter");
+const mapRangeLabel = document.getElementById("map-range-label");
 const kneeboardTab = document.getElementById("kneeboard-tab");
 const kneeboardDrawer = document.getElementById("kneeboard-drawer");
 const kneeboardClose = document.getElementById("kneeboard-close");
@@ -567,6 +574,262 @@ logbookClose.addEventListener("click", () => {
 });
 logbookOverlay.addEventListener("click", (e) => {
   if (e.target === logbookOverlay) logbookOverlay.hidden = true;
+});
+
+// ----------------------------------------------------------------------
+// LIVE MAP - polls /api/map_data (dcs_mission_hook.lua's own snapshot,
+// via dcs_map_data.py) once a second while open and updates markers on a
+// real OpenStreetMap background. Every marker placed here comes straight
+// from that snapshot: lat/lon come from DCS's own coord.LOtoLL() (DCS's
+// terrain maps are modeled on real-world regions, so this is accurate,
+// not decorative), and "detected" is only ever what DCS's own
+// Controller:isTargetDetected() already confirmed. Nothing is computed,
+// estimated, or shown beyond exactly what the snapshot contains - if DCS
+// doesn't report it, this map doesn't draw it either.
+// ----------------------------------------------------------------------
+let mapPollTimer = null;
+let leafletMap = null;
+let ownMarker = null;
+let bullseyeMarker = null;
+let dynamicLayer = null; // friendlies + detected + airbases, cleared/rebuilt each poll
+let ringsLayer = null; // distance rings, centered on own aircraft
+let hasCenteredOnce = false;
+let lastOwnLatLng = null; // so zoom/pan (no new data yet) can still redraw rings
+
+const METERS_PER_NM = 1852;
+const NICE_RING_NM = [1, 2, 5, 10, 20, 40, 80, 160, 320];
+
+// Standard great-circle destination formula (given a start point, bearing,
+// and distance) - plain spherical trig, not a DCS API, so no empirical
+// verification needed the way coord.LOtoLL() got. Used to place each
+// ring's distance label at its northern edge.
+function destinationPoint(lat, lon, bearingDeg, distanceM) {
+  const R = 6371000;
+  const brng = bearingDeg * Math.PI / 180;
+  const lat1 = lat * Math.PI / 180;
+  const lon1 = lon * Math.PI / 180;
+  const angDist = distanceM / R;
+  const lat2 = Math.asin(Math.sin(lat1) * Math.cos(angDist) + Math.cos(lat1) * Math.sin(angDist) * Math.cos(brng));
+  const lon2 = lon1 + Math.atan2(Math.sin(brng) * Math.sin(angDist) * Math.cos(lat1), Math.cos(angDist) - Math.sin(lat1) * Math.sin(lat2));
+  return [lat2 * 180 / Math.PI, lon2 * 180 / Math.PI];
+}
+
+// Rings are centered on the aircraft's real position (not wherever the
+// map's been panned to) - "how far is that from ME" should always answer
+// from where you actually are. Picks whichever "nice" NM values actually
+// fit the current view rather than a fixed preset, since Leaflet's zoom
+// is continuous, not discrete steps like the old canvas map's presets.
+function updateRangeRingsAndLabel(lat, lon) {
+  if (lat == null || lon == null) return;
+  lastOwnLatLng = [lat, lon];
+  if (!leafletMap) return;
+
+  const center = leafletMap.getCenter();
+  const bounds = leafletMap.getBounds();
+  const visibleRadiusM = center.distanceTo(L.latLng(center.lat, bounds.getEast()));
+  const visibleRadiusNm = visibleRadiusM / METERS_PER_NM;
+
+  mapRangeLabel.textContent = `${visibleRadiusNm < 1 ? visibleRadiusNm.toFixed(1) : Math.round(visibleRadiusNm)} NM`;
+
+  ringsLayer.clearLayers();
+  const candidates = NICE_RING_NM.filter((nm) => nm * METERS_PER_NM <= visibleRadiusM * 1.3);
+  const chosen = candidates.slice(-3); // the largest 3 that still fit
+  if (!chosen.length) chosen.push(NICE_RING_NM[0]);
+  chosen.forEach((nm) => {
+    const radiusM = nm * METERS_PER_NM;
+    L.circle([lat, lon], {
+      radius: radiusM, color: "#7B8794", weight: 1, opacity: 0.5, fill: false, interactive: false,
+    }).addTo(ringsLayer);
+    const [labelLat, labelLon] = destinationPoint(lat, lon, 0, radiusM);
+    L.marker([labelLat, labelLon], {
+      icon: L.divIcon({
+        html: `<span style="color:#B8C2CC;font-size:10px;font-family:var(--font-mono),monospace;text-shadow:0 0 3px #000,0 0 3px #000;">${nm} NM</span>`,
+        className: "ml-map-marker", iconSize: [40, 14], iconAnchor: [20, 7],
+      }),
+      interactive: false,
+    }).addTo(ringsLayer);
+  });
+}
+
+// category_label() strings from dcs_mission_hook.lua's unit_json().
+function shapeForCategory(category) {
+  if (category === "airplane" || category === "helicopter") return "triangle";
+  if (category === "ground_unit") return "square";
+  if (category === "ship") return "diamond";
+  return "circle";
+}
+
+// Small CSS-shaped div icon - color follows DCS's own coalition
+// convention (blue for your side, red for the opposing one) rather than
+// MachLink's own brand colors, so it reads the way a DCS pilot expects.
+function makeMapIcon(shape, color, headingDeg) {
+  let html;
+  if (shape === "triangle") {
+    // border-trick triangle points up (north) at heading 0, matching
+    // DCS's heading convention (0=north, clockwise) - CSS rotate() is
+    // also clockwise-positive, so no sign flip needed.
+    html = `<div style="width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:12px solid ${color};transform:rotate(${headingDeg || 0}deg);filter:drop-shadow(0 0 2px rgba(0,0,0,0.8));"></div>`;
+  } else if (shape === "square") {
+    html = `<div style="width:9px;height:9px;background:${color};border:1px solid rgba(0,0,0,0.6);"></div>`;
+  } else if (shape === "diamond") {
+    html = `<div style="width:9px;height:9px;background:${color};border:1px solid rgba(0,0,0,0.6);transform:rotate(45deg);"></div>`;
+  } else {
+    html = `<div style="width:9px;height:9px;border-radius:50%;background:${color};border:1px solid rgba(0,0,0,0.6);"></div>`;
+  }
+  return L.divIcon({ html, className: "ml-map-marker", iconSize: [16, 16], iconAnchor: [8, 8] });
+}
+
+// Esri's World Topo Map, not plain OSM tiles - real terrain relief/
+// contour shading (DCS's own maps are terrain-heavy, so this reads much
+// closer to "a real map" than a flat street layer), and its place names
+// are Esri's own standardized English labels rather than raw OSM `name`
+// tags, which for a region like the Caucasus are often local-script only.
+function ensureLeafletMap() {
+  if (leafletMap) return;
+  leafletMap = L.map(mapLeafletDiv, { center: [0, 0], zoom: 11 });
+  L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}", {
+    attribution: "Tiles &copy; Esri",
+    maxZoom: 19,
+  }).addTo(leafletMap);
+  dynamicLayer = L.layerGroup().addTo(leafletMap);
+  ringsLayer = L.layerGroup().addTo(leafletMap);
+  // Manual panning breaks the auto-follow-on-first-fix behavior - once
+  // you've touched the map, only RECENTER snaps it back, matching how
+  // DCS's own F10 map never fights your own panning either.
+  leafletMap.on("dragstart zoomstart", () => { hasCenteredOnce = true; });
+  // Rings/range label depend on the current view, not just fresh data -
+  // redraw them on zoom/pan even between poll ticks so they don't lag.
+  leafletMap.on("zoomend moveend", () => {
+    if (lastOwnLatLng) updateRangeRingsAndLabel(lastOwnLatLng[0], lastOwnLatLng[1]);
+  });
+}
+
+// Rebuilding the whole layer group every poll tick (below) would destroy
+// an open popup within ~1s of clicking a marker, before you could read
+// it - confirmed empirically (clicked a marker, screenshot a moment
+// later showed nothing). Each dynamic marker below reports whether its
+// own popup is open; while any is, the rebuild is skipped for that tick
+// so the popup you're actually looking at survives.
+let openDynamicPopupCount = 0;
+
+function addDynamicMarker(latlng, icon, popupHtml) {
+  const marker = L.marker(latlng, { icon });
+  if (popupHtml) {
+    marker.bindPopup(popupHtml);
+    marker.on("popupopen", () => { openDynamicPopupCount++; });
+    marker.on("popupclose", () => { openDynamicPopupCount = Math.max(0, openDynamicPopupCount - 1); });
+  }
+  return marker.addTo(dynamicLayer);
+}
+
+function updateMapMarkers(snapshot) {
+  if (!snapshot || !snapshot.available) {
+    mapEmptyState.hidden = false;
+    mapEmptyState.textContent = "NO LIVE MAP DATA — make sure DCS is running, Phase 2's mission hook is installed, and you're in control of a unit.";
+    return;
+  }
+  const data = snapshot.data || {};
+  const own = data.own;
+  if (!own || own.lat == null || own.lon == null) {
+    mapEmptyState.hidden = false;
+    mapEmptyState.textContent = "Waiting for your own aircraft's position...";
+    return;
+  }
+  mapEmptyState.hidden = true;
+
+  if (!ownMarker) {
+    ownMarker = L.marker([own.lat, own.lon], { icon: makeMapIcon("triangle", "#1E88E5", own.heading), zIndexOffset: 1000 }).addTo(leafletMap);
+  } else {
+    ownMarker.setLatLng([own.lat, own.lon]);
+    ownMarker.setIcon(makeMapIcon("triangle", "#1E88E5", own.heading));
+  }
+
+  if (!hasCenteredOnce) {
+    leafletMap.setView([own.lat, own.lon], leafletMap.getZoom());
+  }
+  updateRangeRingsAndLabel(own.lat, own.lon);
+
+  if (openDynamicPopupCount === 0) {
+    dynamicLayer.clearLayers();
+
+    (data.friendlies || []).forEach((u) => {
+      if (u.lat == null || u.lon == null) return;
+      addDynamicMarker([u.lat, u.lon], makeMapIcon(shapeForCategory(u.category), "#1E88E5", u.heading),
+        `${escapeHtml(u.name || "Friendly")}<br>${escapeHtml(u.type || "")}`);
+    });
+
+    // Detected contacts - only ever what DCS's own isTargetDetected() has
+    // confirmed for your coalition (see gather_detected() in the mission
+    // hook). Never a raw dump of every enemy unit in the mission.
+    (data.detected || []).forEach((u) => {
+      if (u.lat == null || u.lon == null) return;
+      addDynamicMarker([u.lat, u.lon], makeMapIcon(shapeForCategory(u.category), "#E53935", u.heading),
+        escapeHtml(u.type || "Contact"));
+    });
+
+    // Airbases - color by coalition (DCS convention: 0 neutral, 1 red, 2 blue).
+    (data.airbases || []).forEach((ab) => {
+      if (ab.lat == null || ab.lon == null) return;
+      const color = ab.coalition === 2 ? "#1E88E5" : ab.coalition === 1 ? "#E53935" : "#FF9900";
+      addDynamicMarker([ab.lat, ab.lon], makeMapIcon("square", color, 0), escapeHtml(ab.name || "Airbase"));
+    });
+  }
+
+  if (data.bullseye && data.bullseye.lat != null) {
+    if (!bullseyeMarker) {
+      bullseyeMarker = L.marker([data.bullseye.lat, data.bullseye.lon], {
+        icon: L.divIcon({
+          html: `<div style="width:14px;height:14px;border:2px solid #FF9900;border-radius:50%;box-sizing:border-box;"></div>`,
+          className: "ml-map-marker", iconSize: [14, 14], iconAnchor: [7, 7],
+        }),
+      }).bindPopup("BULLSEYE").addTo(leafletMap);
+    } else {
+      bullseyeMarker.setLatLng([data.bullseye.lat, data.bullseye.lon]);
+    }
+  }
+}
+
+async function pollMapData() {
+  try {
+    const res = await fetch("/api/map_data");
+    const data = await res.json();
+    updateMapMarkers(data);
+  } catch (e) {
+    updateMapMarkers(null);
+  }
+}
+
+function openMap() {
+  mapOverlay.hidden = false;
+  ensureLeafletMap();
+  // The map was sized 0x0 while its container was hidden - Leaflet needs
+  // to be told to re-measure now that it's actually visible.
+  setTimeout(() => leafletMap.invalidateSize(), 0);
+  pollMapData();
+  if (mapPollTimer) clearInterval(mapPollTimer);
+  mapPollTimer = setInterval(pollMapData, 1000);
+}
+
+function closeMap() {
+  mapOverlay.hidden = true;
+  if (mapPollTimer) {
+    clearInterval(mapPollTimer);
+    mapPollTimer = null;
+  }
+}
+
+liveMapBtn.addEventListener("click", openMap);
+mapClose.addEventListener("click", closeMap);
+mapOverlay.addEventListener("click", (e) => {
+  if (e.target === mapOverlay) closeMap();
+});
+mapRecenterBtn.addEventListener("click", () => {
+  hasCenteredOnce = false;
+  pollMapData();
+});
+document.addEventListener("keydown", (e) => {
+  if (mapOverlay.hidden) return;
+  if (e.key === "Escape") closeMap();
 });
 
 let lastBriefingSeq = null;
