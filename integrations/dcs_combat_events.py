@@ -82,8 +82,10 @@ def _dispatch(payload, flight_tracker):
     elif kind == "kill":
         flight_tracker.on_kill(
             target_name=payload.get("targetName"),
+            target_type=payload.get("targetType"),
             target_relation=payload.get("targetRelation"),
             target_category=payload.get("targetCategory"),
+            target_category_detail=payload.get("targetCategoryDetail"),
             weapon_type=payload.get("weaponType"),
         )
     elif kind == "shot":

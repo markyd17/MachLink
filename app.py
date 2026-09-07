@@ -26,6 +26,7 @@ from integrations.dcs_flight_tracker import (
     FlightTracker, FLIGHT_LOG_PATH, start_crash_watchdog, DEBRIEF_MIN_FLIGHT_SECONDS,
 )
 from integrations.dcs_combat_events import start_combat_event_listener
+from integrations.logbook_stats import compute_stats as compute_logbook_stats
 from integrations.dcs_kneeboard import (
     find_dcs_install,
     find_user_kneeboard_dir,
@@ -267,6 +268,24 @@ def api_flight_log():
         return jsonify(json.loads(FLIGHT_LOG_PATH.read_text(encoding="utf-8")))
     except (OSError, json.JSONDecodeError):
         return jsonify([])
+
+
+@app.route("/api/logbook")
+def api_logbook():
+    """Career-wide Logbook view: aggregate stats (logbook_stats.py) plus
+    the full flight history, newest first (nicest order for a scrollable
+    list - flight_log.json itself is oldest-first, since it's an append
+    log)."""
+    flights = []
+    if FLIGHT_LOG_PATH.exists():
+        try:
+            flights = json.loads(FLIGHT_LOG_PATH.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            flights = []
+    return jsonify({
+        "summary": compute_logbook_stats(flights),
+        "flights": list(reversed(flights)),
+    })
 
 
 def _kneeboard_context():

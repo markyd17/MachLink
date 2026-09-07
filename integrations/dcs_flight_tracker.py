@@ -428,23 +428,33 @@ class FlightTracker:
             )
             self._complete(now)
 
-    def on_kill(self, target_name=None, target_relation=None, target_category=None, weapon_type=None):
+    def on_kill(self, target_name=None, target_type=None, target_relation=None,
+                target_category=None, target_category_detail=None, weapon_type=None):
         """Called from the Phase 2 combat-event hook (S_EVENT_KILL) each
         time the player destroys another unit. Accumulates into the
         in-progress flight's kill list - unlike on_combat_loss, this never
-        completes or resets anything, since the flight continues."""
+        completes or resets anything, since the flight continues.
+        target_category is the coarse Unit.Category bucket (airplane/
+        helicopter/ground_unit/ship/other); target_category_detail is the
+        Logbook's finer sam/vehicle/soft_target breakdown where DCS's
+        attribute tags matched one (see dcs_mission_hook.lua's
+        kill_category_detail - not exhaustively verified yet, so this can
+        be None even for a real ground kill until the mapping is refined)."""
         with self.lock:
             if self.start_time is None:
                 return
             self.kills.append({
                 "target_name": target_name,
+                "target_type": target_type,
                 "target_relation": target_relation,  # "enemy" or "friendly" (teamkill)
                 "target_category": target_category,
+                "target_category_detail": target_category_detail,
                 "weapon_type": weapon_type,
             })
             _debug_log(
-                f"KILL target={target_name!r} relation={target_relation!r} "
-                f"category={target_category!r} weapon={weapon_type!r}"
+                f"KILL target={target_name!r} type={target_type!r} "
+                f"relation={target_relation!r} category={target_category!r} "
+                f"detail={target_category_detail!r} weapon={weapon_type!r}"
             )
 
     def on_hit(self, shooter_name=None, shooter_relation=None, shooter_category=None, weapon_type=None):

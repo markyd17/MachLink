@@ -104,6 +104,35 @@ local function is_player_unit(unit)
 	return safe_call(unit, "getPlayerName") ~= nil
 end
 
+-- Best-effort finer classification for the Logbook's "kills by type"
+-- breakdown, layered on top of category_label()'s coarse Unit.Category
+-- bucket. Uses DCS's own attribute tag system - the same one the Mission
+-- Editor's own unit filters use (hasAttribute()) - which two real unit
+-- database entries confirmed uses exactly these strings (Vehicles/SAM/
+-- 9P31 STRELA-1.lua: "SR SAM"/"IR Guided SAM"; Vehicles/IFV/BTR-60.lua:
+-- "APC"). NOT exhaustively verified against every unit type yet - expect
+-- this list to need adjusting once real kills across more unit types come
+-- in. Returns nil (falls back to the coarse category) when nothing matches.
+local SAM_ATTRIBUTES = {"SAM", "SR SAM", "MR SAM", "LR SAM", "IR Guided SAM", "AAA"}
+local VEHICLE_ATTRIBUTES = {"Armor", "Tanks", "APC", "IFV", "Artillery", "MLRS"}
+local SOFT_TARGET_ATTRIBUTES = {"Trucks", "Infantry", "Fortification"}
+
+local function has_any_attribute(unit, names)
+	for _, name in ipairs(names) do
+		local ok, result = pcall(function() return unit:hasAttribute(name) end)
+		if ok and result then return true end
+	end
+	return false
+end
+
+local function kill_category_detail(unit)
+	if not unit then return nil end
+	if has_any_attribute(unit, SAM_ATTRIBUTES) then return "sam" end
+	if has_any_attribute(unit, VEHICLE_ATTRIBUTES) then return "vehicle" end
+	if has_any_attribute(unit, SOFT_TARGET_ATTRIBUTES) then return "soft_target" end
+	return nil
+end
+
 local eventHandler = {}
 
 function eventHandler:onEvent(event)
@@ -183,7 +212,9 @@ function eventHandler:onKill(event)
 	local fields = {
 		{"type", "kill"},
 		{"targetName", safe_call(event.target, "getName")},
+		{"targetType", safe_call(event.target, "getTypeName")},
 		{"targetCategory", category_label(event.target)},
+		{"targetCategoryDetail", kill_category_detail(event.target)},
 	}
 	local myCoalition = safe_call(event.initiator, "getCoalition")
 	local targetCoalition = safe_call(event.target, "getCoalition")

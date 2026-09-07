@@ -161,6 +161,22 @@ header {
   50% { box-shadow: 0 0 0 4px rgba(0, 255, 102, 0.25); }
 }
 
+/* Always clickable, unlike Generate Debrief - browsing history doesn't
+   depend on a flight having just completed. */
+.logbook-btn {
+  background: transparent;
+  border: 1px solid var(--tactical-cyan);
+  color: var(--tactical-cyan);
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  padding: 8px 16px;
+  cursor: pointer;
+  border-radius: 0;
+}
+.logbook-btn:hover { background: rgba(0, 229, 255, 0.12); }
+
 /* ----------------------------------------------------------
    MAIN TWO-COLUMN GRID
    ---------------------------------------------------------- */
@@ -948,6 +964,85 @@ header {
 }
 #debrief-body .checklist-title:first-child { margin-top: 0; }
 #debrief-body h4.checklist-title { margin-top: 16px; }
+
+/* Logbook overlay - same full-window treatment as the debrief overlay,
+   just its own z-index-independent instance (both can be open at once:
+   clicking a past sortie opens the debrief panel on top of this one). */
+#logbook-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 115;
+  padding: 24px;
+}
+#logbook-overlay[hidden] { display: none; }
+#logbook-panel {
+  background: var(--panel-bg);
+  border: 1px solid var(--tactical-cyan);
+  width: min(900px, 92vw);
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
+}
+#logbook-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+}
+#logbook-panel-title {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  font-size: 1.1rem;
+  color: var(--tactical-cyan);
+}
+#logbook-close {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 26px;
+  line-height: 1;
+  padding: 0 4px;
+  cursor: pointer;
+}
+#logbook-close:hover { color: var(--hazard-red); }
+#logbook-body {
+  padding: 20px;
+  overflow-y: auto;
+}
+#logbook-body .checklist-title:first-child { margin-top: 0; }
+#logbook-body h4.checklist-title { margin-top: 16px; }
+
+#logbook-empty {
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  padding: 12px 0;
+}
+
+.logbook-flight-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid var(--border);
+  background: rgba(0, 0, 0, 0.15);
+  padding: 8px 12px;
+  margin-bottom: 6px;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+}
+.logbook-flight-row:hover { border-color: var(--tactical-cyan); }
+.logbook-flight-row-main { display: flex; flex-direction: column; gap: 2px; }
+.logbook-flight-row-title { color: var(--text-primary); font-weight: bold; }
+.logbook-flight-row-sub { color: var(--text-dim); font-size: 0.78rem; }
+.logbook-flight-row-outcome { font-weight: bold; white-space: nowrap; }
 .debrief-outcome {
   display: inline-block;
   margin-top: 10px;

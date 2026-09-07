@@ -19,6 +19,9 @@
          and-stopped-after-5+-minutes flight (see pollDebriefStatus in
          app.js) - lights up lime green and becomes clickable only then. -->
     <button type="button" id="debrief-btn" class="debrief-btn" disabled>GENERATE DEBRIEF</button>
+    <!-- Always enabled (unlike Generate Debrief) - browsing career history
+         doesn't depend on a flight having just completed. -->
+    <button type="button" id="logbook-btn" class="logbook-btn">LOGBOOK</button>
     <div id="status-bar" class="status-block idle mono">DETECTING...</div>
   </header>
 
@@ -119,6 +122,25 @@
         <button type="button" id="debrief-close" aria-label="Close">&times;</button>
       </div>
       <div id="debrief-body"></div>
+    </div>
+  </div>
+
+  <!-- Career history - same full-window treatment as the debrief overlay.
+       Stays open underneath when a past sortie is clicked (reopens the
+       debrief overlay on top of it, reusing the same rendering) so
+       closing that just returns to the list, no separate "back" button
+       needed. -->
+  <div id="logbook-overlay" hidden>
+    <div id="logbook-panel">
+      <div id="logbook-panel-header">
+        <span id="logbook-panel-title">LOGBOOK</span>
+        <button type="button" id="logbook-close" aria-label="Close">&times;</button>
+      </div>
+      <div id="logbook-body">
+        <div id="logbook-summary"></div>
+        <h4 class="checklist-title">SORTIE HISTORY</h4>
+        <div id="logbook-flight-list"></div>
+      </div>
     </div>
   </div>
 

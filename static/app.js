@@ -16,6 +16,11 @@ const debriefBtn = document.getElementById("debrief-btn");
 const debriefOverlay = document.getElementById("debrief-overlay");
 const debriefClose = document.getElementById("debrief-close");
 const debriefBody = document.getElementById("debrief-body");
+const logbookBtn = document.getElementById("logbook-btn");
+const logbookOverlay = document.getElementById("logbook-overlay");
+const logbookClose = document.getElementById("logbook-close");
+const logbookSummary = document.getElementById("logbook-summary");
+const logbookFlightList = document.getElementById("logbook-flight-list");
 const kneeboardTab = document.getElementById("kneeboard-tab");
 const kneeboardDrawer = document.getElementById("kneeboard-drawer");
 const kneeboardClose = document.getElementById("kneeboard-close");
@@ -431,8 +436,104 @@ debriefClose.addEventListener("click", () => {
 debriefOverlay.addEventListener("click", (e) => {
   if (e.target === debriefOverlay) debriefOverlay.hidden = true;
 });
+// Debrief takes priority - it can be open on top of the Logbook (see
+// openPastFlight below), so Escape should close whichever's topmost
+// rather than both at once.
 document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape" && !debriefOverlay.hidden) debriefOverlay.hidden = true;
+  if (e.key !== "Escape") return;
+  if (!debriefOverlay.hidden) { debriefOverlay.hidden = true; return; }
+  if (!logbookOverlay.hidden) { logbookOverlay.hidden = true; }
+});
+
+function formatFlightDate(unixSeconds) {
+  if (!unixSeconds) return "?";
+  return new Date(unixSeconds * 1000).toLocaleDateString([], { month: "short", day: "numeric" });
+}
+
+const LOSS_KIND_LABELS = {
+  dead: "Shot Down", crash: "Crashed", ejected: "Ejected", timeout: "Crashed (unconfirmed)",
+};
+
+function joinCounts(obj, labels) {
+  const entries = Object.entries(obj || {}).sort((a, b) => b[1] - a[1]);
+  if (!entries.length) return "None yet";
+  return entries.map(([key, count]) => `${count}x ${(labels && labels[key]) || key}`).join(", ");
+}
+
+function renderLogbookSummary(s) {
+  logbookSummary.innerHTML = `
+    <div class="data-grid mono">
+      <div class="data-cell"><div class="data-label">Total Sorties</div><div class="data-value">${s.total_sorties}</div></div>
+      <div class="data-cell"><div class="data-label">Total Flight Hours</div><div class="data-value">${s.total_flight_hours}</div></div>
+      <div class="data-cell"><div class="data-label">Total Kills</div><div class="data-value">${s.total_kills}</div></div>
+      <div class="data-cell"><div class="data-label">Avg Kills / Sortie</div><div class="data-value">${s.avg_kills_per_sortie}</div></div>
+      <div class="data-cell"><div class="data-label">Avg Landing Rate</div><div class="data-value">${s.avg_landing_rate_fpm != null ? s.avg_landing_rate_fpm + " ft/min" : "—"}</div></div>
+      <div class="data-cell"><div class="data-label">Best / Worst Landing</div><div class="data-value">${s.best_landing_rate_fpm ?? "—"} / ${s.worst_landing_rate_fpm ?? "—"} ft/min</div></div>
+      <div class="data-cell"><div class="data-label">Longest Sortie</div><div class="data-value">${s.longest_sortie_minutes ?? "—"} min</div></div>
+      <div class="data-cell"><div class="data-label">Most Kills (1 Sortie)</div><div class="data-value">${s.most_kills_in_one_sortie}</div></div>
+    </div>
+    <h4 class="checklist-title">KILLS BY TYPE</h4>
+    <div class="debrief-cause mono">${escapeHtml(joinCounts(s.kills_by_type))}${s.total_friendly_fire_kills ? ` — ${s.total_friendly_fire_kills} friendly fire` : ""}</div>
+    <h4 class="checklist-title">LOSSES</h4>
+    <div class="debrief-cause mono">${escapeHtml(joinCounts(s.losses_by_kind, LOSS_KIND_LABELS))}</div>
+    <h4 class="checklist-title">LANDING GRADES</h4>
+    <div class="debrief-cause mono">${escapeHtml(joinCounts(s.landing_grade_distribution))}</div>`;
+}
+
+// Reopens a past sortie's full detail on top of the Logbook, reusing the
+// exact same rendering as a fresh debrief - a logged flight record has
+// the identical shape latest_debrief() returns.
+function openPastFlight(flight) {
+  renderDebrief(flight);
+  debriefOverlay.hidden = false;
+}
+
+function renderLogbookFlightList(flights) {
+  if (!flights.length) {
+    logbookFlightList.innerHTML = `<div id="logbook-empty">No flights logged yet - fly a sortie past the minimum flight time and it'll show up here.</div>`;
+    return;
+  }
+  logbookFlightList.innerHTML = flights.map((f, i) => {
+    const badge = outcomeBadge(f);
+    const title = [f.aircraft, f.mission_name].filter(Boolean).join(" — ");
+    const killCount = (f.kills || []).length;
+    const sub = [
+      formatFlightDate(f.start_time),
+      `${f.duration_minutes ?? "?"} min`,
+      killCount ? `${killCount} kill${killCount === 1 ? "" : "s"}` : null,
+    ].filter(Boolean).join(" · ");
+    return `<div class="logbook-flight-row" data-index="${i}">
+      <div class="logbook-flight-row-main">
+        <div class="logbook-flight-row-title">${escapeHtml(title || "Flight")}</div>
+        <div class="logbook-flight-row-sub">${escapeHtml(sub)}</div>
+      </div>
+      <div class="logbook-flight-row-outcome ${badge.cls}">${escapeHtml(badge.text)}</div>
+    </div>`;
+  }).join("");
+
+  logbookFlightList.querySelectorAll(".logbook-flight-row").forEach((row) => {
+    row.addEventListener("click", () => openPastFlight(flights[Number(row.dataset.index)]));
+  });
+}
+
+async function openLogbook() {
+  try {
+    const res = await fetch("/api/logbook");
+    const data = await res.json();
+    renderLogbookSummary(data.summary);
+    renderLogbookFlightList(data.flights);
+    logbookOverlay.hidden = false;
+  } catch (e) {
+    // transient - leave the overlay closed, they can just click again
+  }
+}
+
+logbookBtn.addEventListener("click", openLogbook);
+logbookClose.addEventListener("click", () => {
+  logbookOverlay.hidden = true;
+});
+logbookOverlay.addEventListener("click", (e) => {
+  if (e.target === logbookOverlay) logbookOverlay.hidden = true;
 });
 
 let lastBriefingSeq = null;
