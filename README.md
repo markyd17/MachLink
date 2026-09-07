@@ -36,7 +36,7 @@ getting.
 - `integrations/dcs_listener.py` — receives that report over localhost UDP
 - `integrations/dcs_hook_guard.py` — keeps the hook above actually present in the live Export.lua, re-adding it if another tool overwrites the file
 - `integrations/dcs_flight_tracker.py` — the Debrief feature's flight state machine (landing/crash detection, the 5-minute minimum, the finished-flight log)
-- `integrations/dcs_mission_hook.lua` + `integrations/dcs_combat_events.py` — Phase 2 of Debrief: real combat events (shot down vs. crashed, by what/whom) — see "Debrief" below, this one needs an extra one-time setup step
+- `integrations/dcs_mission_hook.lua` + `integrations/dcs_combat_events.py` — Phase 2 of Debrief: real combat events (shot down vs. crashed vs. ejected, by what/whom), via a watched file rather than a socket — see "Debrief" below, this one needs an extra one-time setup step
 - `integrations/dcs_mission_briefing.py` — reads the real in-mission briefing (sortie/tasking) for the active DCS mission
 - `integrations/dcs_kneeboard.py` — surfaces each aircraft's real static kneeboard reference pages
 - `integrations/msfs_watcher.py` — polls MSFS via SimConnect for the active aircraft
@@ -105,14 +105,15 @@ the instant your aircraft is destroyed, so ~10 seconds of telemetry silence
 while airborne is read as a crash. This always works once the DCS hook
 above is installed, but can't say *what* destroyed you.
 
-**Phase 2 (real shoot-down/crash detection, one extra one-time step):**
-adds `integrations/dcs_mission_hook.lua`, which runs in DCS's Mission
-Scripting environment and reports actual combat events — who/what shot you
-down, whether it was a friendly or enemy aircraft or ground unit, and the
-weapon used, plus correctly handles respawning into a new life (even the
-same airframe type) without needing to quit the mission. Getting there
-requires DCS's Mission Scripting sandbox to be loosened, since by default
-it can't open a network socket at all:
+**Phase 2 (real shoot-down/crash/ejection detection, one extra one-time
+step):** adds `integrations/dcs_mission_hook.lua`, which runs in DCS's
+Mission Scripting environment and reports actual combat events — who/what
+shot you down, whether it was a friendly or enemy aircraft or ground unit,
+the weapon used, and whether you ejected — plus correctly handles
+respawning into a new life (even the same airframe type) without needing to
+quit the mission. Getting there requires DCS's Mission Scripting sandbox to
+be loosened, since by default it can't run much of anything useful for
+getting data out:
 
 1. Copy `integrations/dcs_mission_hook.lua` to
    `Saved Games\DCS\Scripts\MachLinkMissionHook.lua`.
@@ -122,7 +123,21 @@ it can't open a network socket at all:
    point), and add a few lines to `dofile()` the hook above if it's
    present. See the `MACHLINK_MISSION_HOOK` marker comment for the exact
    block — this step needs an elevated (Administrator) terminal, since
-   Windows protects `Program Files` from normal write access.
+   Windows protects `Program Files` from normal write access. **Write the
+   file as plain ASCII/UTF-8 *without* a BOM** — `Set-Content -Encoding
+   utf8` in Windows PowerShell adds one silently, which breaks Lua parsing
+   and (since this file runs before every mission) stops every mission
+   from loading at all until fixed. `Set-Content -Encoding ascii` avoids
+   this.
+3. MachLink then watches `Saved Games\DCS\Scripts\MachLinkCombatEvents.jsonl`
+   for events. **Note:** the hook reports events by *appending JSON lines
+   to that file*, not over a UDP socket like Export.lua's hook — confirmed
+   empirically that `require("socket")` does not work inside DCS's Mission
+   Scripting environment even with the sandbox loosened (dcs.log: `load
+   error ... error loading module 'socket'`); only Export.lua's separate
+   environment supports real sockets. `io.open`/`write`/`close` are plain
+   built-in Lua, unaffected by that limitation, so that's what this hook
+   uses instead.
 
 **Worth knowing:** step 2 loosens DCS's sandbox for *every* mission you
 fly, not just your own (a mission from a server or a friend could use the
@@ -130,7 +145,16 @@ same unlocked functions) — a common tradeoff for this kind of tool (MOOSE
 and similar mission-scripting frameworks require the same edit), but a real
 one. It also lives in DCS's install directory, so a DCS update can silently
 revert it — Phase 1 above is unaffected either way, so Debrief keeps
-working (just without shoot-down detail) until Phase 2 is reinstalled.
+working (just without shoot-down detail) until Phase 2 is reinstalled. This
+does **not** put you at risk with multiplayer integrity checks — those
+check textures/3D models and `Saved Games\DCS\Mods\`, not `Export.lua` or
+`MissionScripting.lua`, and this exact edit is the standard, widely-used
+requirement for running MOOSE-based missions on public servers.
+
+**Testing tip:** `dcs.debrief_min_flight_seconds` in `config.yaml` controls
+how long a flight must be airborne before Debrief will generate a report -
+300 (5 minutes) is the real spec, but lower it (e.g. 30) while actively
+testing Debrief itself so you don't need a full 5-minute sortie every time.
 
 ## Building out your aircraft library
 

@@ -7,10 +7,20 @@
 -- Scripts/MissionScripting.lua - see dcs_mission_hook_guard.py for how that
 -- gets installed/verified.
 --
--- Reports, over UDP to 127.0.0.1:39235 (separate from Export's 39234 so the
--- two streams never get confused), only things concerning the PLAYER'S OWN
--- unit(s) - never AI-vs-AI kills - since that's all the Debrief feature
--- needs:
+-- Reports events by APPENDING JSON LINES to a plain file (Saved
+-- Games\DCS\Scripts\MachLinkCombatEvents.jsonl, next to this script),
+-- which app.py's dcs_combat_events.py tails - NOT a UDP socket like
+-- Export.lua's hook uses. Confirmed empirically (dcs.log: "load error
+-- Scripts/MissionScripting.lua: error loading module 'socket'") that
+-- require("socket") does not work inside DCS's Mission Scripting
+-- environment even with the sandbox loosened - only Export.lua's separate
+-- environment supports it. io.open/write/close are plain built-in Lua,
+-- not a loadable C module, so they aren't affected by that limitation -
+-- this is the same file-based workaround DCS mission-scripting frameworks
+-- generally use to get data out of this specific environment.
+--
+-- Reports only things concerning the PLAYER'S OWN unit(s) - never AI-vs-AI
+-- kills - since that's all the Debrief feature needs:
 --   "birth"  - a player took control of a new unit (mission start, or a
 --              respawn - even into the same airframe type, this always
 --              means a genuinely new life, unlike Export.lua's aircraft-
@@ -20,14 +30,13 @@
 --              so a subsequent death/crash can report who/what did it
 --   "dead"   - a player's unit was destroyed by a weapon
 --   "crash"  - a player's unit crashed (terrain/water impact, no weapon)
+--   "ejected" - the pilot ejected
 --
 -- Every DCS API call is wrapped in pcall - a single bad/missing field must
 -- never take down the whole event handler for the rest of the mission.
 
 local MachLinkMission = {}
-MachLinkMission.socket = require("socket")
-MachLinkMission.udp = MachLinkMission.socket.udp()
-MachLinkMission.port = 39235
+MachLinkMission.eventsPath = lfs.writedir() .. [[Scripts\MachLinkCombatEvents.jsonl]]
 MachLinkMission.lastHit = {}  -- unitId -> {shooterName, shooterRelation, shooterCategory, weaponType}
 
 local function safe_call(obj, method, ...)
@@ -61,7 +70,11 @@ end
 
 local function ml_send(fields)
 	pcall(function()
-		MachLinkMission.udp:sendto(build_json(fields), "127.0.0.1", MachLinkMission.port)
+		local f = io.open(MachLinkMission.eventsPath, "a")
+		if f then
+			f:write(build_json(fields), "\n")
+			f:close()
+		end
 	end)
 end
 

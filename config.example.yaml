@@ -34,6 +34,17 @@ dcs:
   # then the server variants). Set this explicitly only if auto-detect
   # picks the wrong install, or DCS is installed in a non-standard place.
   export_lua_path: ""
+  # Leave blank to auto-detect (same Saved Games folder as export_lua_path).
+  # Only relevant if you've done Phase 2 Debrief setup (real shoot-down/
+  # crash-cause detection, see README) - this is the JSON-lines file
+  # dcs_mission_hook.lua appends events to, which MachLink tails. Set
+  # explicitly only if auto-detect picks the wrong install.
+  mission_events_path: ""
+  # How long (seconds) a flight must be airborne before Debrief will
+  # generate a report for it - 300 (5 minutes) matches the original spec.
+  # Lower this temporarily (e.g. 30) if you're actively testing Debrief
+  # itself and don't want to fly a real 5-minute sortie every time.
+  debrief_min_flight_seconds: 300
   # How often (seconds) MachLink re-checks Export.lua for its export
   # hook while running, and re-adds it if something else (e.g. a HOTAS/
   # panel tool like SimApp Pro) has overwritten it. 60s is a good default;

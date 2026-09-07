@@ -77,8 +77,9 @@ def _append_flight_log(record):
 
 
 class FlightTracker:
-    def __init__(self, now_fn=time.time):
+    def __init__(self, now_fn=time.time, min_flight_seconds=DEBRIEF_MIN_FLIGHT_SECONDS):
         self._now = now_fn
+        self.min_flight_seconds = min_flight_seconds
         self.lock = threading.Lock()
         self._reset_in_progress()
         self.debrief_ready = False
@@ -176,7 +177,7 @@ class FlightTracker:
         if (
             self.is_airborne
             or self.landings < 1
-            or self.airborne_seconds < DEBRIEF_MIN_FLIGHT_SECONDS
+            or self.airborne_seconds < self.min_flight_seconds
             or self._stopped_since is None
             or (now - self._stopped_since) < STOPPED_HOLD_SECONDS
         ):
@@ -244,7 +245,7 @@ class FlightTracker:
             self.airborne_seconds += gap
             self._last_update_time = now
 
-            if self.airborne_seconds < DEBRIEF_MIN_FLIGHT_SECONDS:
+            if self.airborne_seconds < self.min_flight_seconds:
                 _debug_log(
                     f"CRASH TIMEOUT ({gap:.1f}s silent) but only "
                     f"{self.airborne_seconds:.1f}s airborne - under the 5 "
@@ -322,7 +323,7 @@ class FlightTracker:
                 self.airborne_seconds += now - self._last_update_time
             self._last_update_time = now
 
-            if self.airborne_seconds < DEBRIEF_MIN_FLIGHT_SECONDS:
+            if self.airborne_seconds < self.min_flight_seconds:
                 _debug_log(
                     f"COMBAT LOSS ({kind}) but only "
                     f"{self.airborne_seconds:.1f}s airborne - under the 5 "

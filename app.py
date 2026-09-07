@@ -22,7 +22,9 @@ except ImportError:
 from integrations.dcs_listener import start_dcs_listener
 from integrations.dcs_hook_guard import start_hook_guard
 from integrations.dcs_mission_briefing import start_mission_briefing_watcher
-from integrations.dcs_flight_tracker import FlightTracker, FLIGHT_LOG_PATH, start_crash_watchdog
+from integrations.dcs_flight_tracker import (
+    FlightTracker, FLIGHT_LOG_PATH, start_crash_watchdog, DEBRIEF_MIN_FLIGHT_SECONDS,
+)
 from integrations.dcs_combat_events import start_combat_event_listener
 from integrations.dcs_kneeboard import (
     find_dcs_install,
@@ -61,7 +63,6 @@ class AppState:
 
 
 state = AppState()
-flight_tracker = FlightTracker()
 app = Flask(__name__)
 # Flask's jsonify() alphabetizes object keys by default. Checklist sections
 # (and their steps) must render in the guide's real authored order, not
@@ -80,6 +81,12 @@ def load_config():
 
 
 CONFIG = load_config()
+# Falls back to the real 5-minute spec unless config.yaml overrides it -
+# see dcs.debrief_min_flight_seconds there (currently set to 30 for fast
+# testing; put it back to 300, or just delete the line, once you're done).
+flight_tracker = FlightTracker(
+    min_flight_seconds=(CONFIG.get("dcs") or {}).get("debrief_min_flight_seconds", DEBRIEF_MIN_FLIGHT_SECONDS)
+)
 
 
 def load_aircraft_file(name, game=None):
@@ -368,7 +375,7 @@ if __name__ == "__main__":
     )
     start_dcs_listener(state, flight_tracker, port=dcs_cfg.get("udp_listen_port", 39234))
     start_crash_watchdog(flight_tracker)
-    start_combat_event_listener(flight_tracker, port=dcs_cfg.get("mission_udp_listen_port", 39235))
+    start_combat_event_listener(flight_tracker, explicit_path=dcs_cfg.get("mission_events_path") or None)
     start_mission_briefing_watcher(state, explicit_log_path=dcs_cfg.get("log_path") or None)
     start_msfs_watcher(state, poll_interval_seconds=msfs_cfg.get("poll_interval_seconds", 5))
 
