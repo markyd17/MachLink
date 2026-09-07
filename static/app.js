@@ -662,8 +662,11 @@ function updateRangeRingsAndLabel(lat, lon) {
     const [labelLat, labelLon] = destinationPoint(lat, lon, 0, radiusM);
     L.marker([labelLat, labelLon], {
       icon: L.divIcon({
-        html: `<span style="color:#B8C2CC;font-size:10px;font-family:var(--font-mono),monospace;text-shadow:0 0 3px #000,0 0 3px #000;">${nm} NM</span>`,
-        className: "ml-map-marker", iconSize: [40, 14], iconAnchor: [20, 7],
+        // Solid dark chip instead of bare text-shadow-on-terrain - a real
+        // topo map's colors vary too much for shadow alone to stay
+        // readable, and 10px was just too small to read at a glance.
+        html: `<span style="display:inline-block;color:#E8EDEF;font-size:13px;font-weight:bold;font-family:var(--font-mono),monospace;background:rgba(11,15,18,0.8);border:1px solid #00E5FF;padding:2px 7px;border-radius:2px;white-space:nowrap;">${nm} NM</span>`,
+        className: "ml-map-marker", iconSize: [64, 24], iconAnchor: [32, 12],
       }),
       interactive: false,
     }).addTo(ringsLayer);

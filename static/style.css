@@ -1195,10 +1195,22 @@ header {
   align-items: center;
   gap: 10px;
 }
+/* A live geodesic readout - same "trusted sourced data" cyan treatment as
+   .status-block, not plain dim text, so it doesn't get lost sitting right
+   next to the KEY/RECENTER/close buttons. margin-right (rather than just
+   relying on #map-panel-controls' gap) gives it a clear break from KEY
+   specifically, since it reads as a value, not another button. */
 #map-range-label {
-  color: var(--text-dim);
-  font-size: 0.8rem;
+  border: 1px solid var(--tactical-cyan);
+  color: var(--tactical-cyan);
+  background: rgba(0, 229, 255, 0.05);
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  font-weight: bold;
+  padding: 6px 12px;
+  letter-spacing: 0.02em;
   white-space: nowrap;
+  margin-right: 10px;
 }
 #map-recenter, #map-key-toggle, #map-close {
   background: none;
