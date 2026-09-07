@@ -404,6 +404,20 @@ if __name__ == "__main__":
     print(f"MachLink running at {url}")
 
     if HAS_WEBVIEW and server_cfg.get("native_window", True):
+        # Without this, Windows treats the running window as just another
+        # pythonw.exe instance - shared with every other Python GUI app on
+        # the machine - which is why "pin to taskbar" either refuses or
+        # produces a confusing, unstable pin. An explicit AppUserModelID
+        # gives MachLink its own distinct identity to pin, independent of
+        # the interpreter that happens to be running it. Windows-only API;
+        # harmless no-op attempt elsewhere, but guarded anyway.
+        if sys.platform == "win32":
+            try:
+                import ctypes
+                ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("MachLink.App")
+            except Exception:
+                pass
+
         # Flask has to run somewhere that isn't the main thread here, since
         # webview.start() below takes over the main thread for the native
         # window's own event loop (same reason a GUI toolkit's mainloop()
@@ -415,7 +429,13 @@ if __name__ == "__main__":
             daemon=True,
         ).start()
         webview.create_window("MachLink", url, width=1360, height=860, min_size=(900, 600))
-        webview.start()
+        # Without an explicit icon, pywebview's Windows backend falls back
+        # to extracting one from sys.executable - pythonw.exe itself - which
+        # is exactly the generic Python icon on the taskbar. This is the
+        # same logo already used for the desktop shortcut and the in-page
+        # header (see static/machlink_icon_512.png for how it was built).
+        icon_path = BASE_DIR / "static" / "machlink.ico"
+        webview.start(icon=str(icon_path) if icon_path.exists() else None)
     else:
         if server_cfg.get("open_browser", True):
             # Flask hasn't started listening yet at this point - give it a
