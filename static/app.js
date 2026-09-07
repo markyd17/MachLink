@@ -29,6 +29,14 @@ const logbookOverlay = document.getElementById("logbook-overlay");
 const logbookClose = document.getElementById("logbook-close");
 const logbookFlightList = document.getElementById("logbook-flight-list");
 const liveMapBtn = document.getElementById("live-map-btn");
+const opsSortieTimer = document.getElementById("ops-sortie-timer");
+const opsSortieTimeValue = document.getElementById("ops-sortie-time-value");
+const opsRadarSvg = document.getElementById("ops-radar");
+const opsRadarEmpty = document.getElementById("ops-radar-empty");
+const opsBullseyeCall = document.getElementById("ops-bullseye-call");
+const opsNearestAirbase = document.getElementById("ops-nearest-airbase");
+const opsContactSummary = document.getElementById("ops-contact-summary");
+const opsEventsList = document.getElementById("ops-events-list");
 const mapOverlay = document.getElementById("map-overlay");
 const mapClose = document.getElementById("map-close");
 const mapLeafletDiv = document.getElementById("map-leaflet");
@@ -264,16 +272,36 @@ async function pollStatus() {
 // Lights up (see .debrief-btn.ready) once dcs_flight_tracker.py detects a
 // real flight that landed, stopped, and flew more than 5 minutes - polled
 // alongside everything else DCS-specific rather than its own interval.
+// Also carries the live sortie timer's start time (FlightTracker.start_time,
+// only ever non-null while an actual flight is in progress) - reusing this
+// existing poll instead of a separate endpoint just for one timestamp.
+let sortieStartTime = null; // unix seconds, or null while not airborne
+
 async function pollDebriefStatus() {
   try {
     const res = await fetch("/api/debrief_status");
     const data = await res.json();
     debriefBtn.classList.toggle("ready", data.ready);
     debriefBtn.disabled = !data.ready;
+    sortieStartTime = data.sortie_start_time ?? null;
+    opsSortieTimer.hidden = sortieStartTime == null;
   } catch (e) {
-    // Transient - leave the button in whatever state it was already in.
+    // Transient - leave the button/timer in whatever state they were already in.
   }
 }
+
+// Ticks the sortie timer locally every second off the one timestamp above,
+// rather than re-fetching every second just to compute an elapsed time.
+function tickSortieTimer() {
+  if (sortieStartTime == null) return;
+  const elapsed = Math.max(0, Math.floor(Date.now() / 1000 - sortieStartTime));
+  const h = Math.floor(elapsed / 3600);
+  const m = Math.floor((elapsed % 3600) / 60);
+  const s = elapsed % 60;
+  const pad = (n) => String(n).padStart(2, "0");
+  opsSortieTimeValue.textContent = h > 0 ? `${h}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`;
+}
+setInterval(tickSortieTimer, 1000);
 
 debriefBtn.addEventListener("click", async () => {
   if (debriefBtn.disabled) return;
@@ -606,7 +634,6 @@ logbookOverlay.addEventListener("click", (e) => {
 // estimated, or shown beyond exactly what the snapshot contains - if DCS
 // doesn't report it, this map doesn't draw it either.
 // ----------------------------------------------------------------------
-let mapPollTimer = null;
 let leafletMap = null;
 let ownMarker = null;
 let bullseyeMarker = null;
@@ -631,6 +658,33 @@ function destinationPoint(lat, lon, bearingDeg, distanceM) {
   const lat2 = Math.asin(Math.sin(lat1) * Math.cos(angDist) + Math.cos(lat1) * Math.sin(angDist) * Math.cos(brng));
   const lon2 = lon1 + Math.atan2(Math.sin(brng) * Math.sin(angDist) * Math.cos(lat1), Math.cos(angDist) - Math.sin(lat1) * Math.sin(lat2));
   return [lat2 * 180 / Math.PI, lon2 * 180 / Math.PI];
+}
+
+// The inverse of destinationPoint() - initial bearing and great-circle
+// distance from point 1 to point 2. Same spherical-trig family (haversine
+// distance + standard initial-bearing formula), not a DCS API. Backs
+// Ops's bullseye call, nearest-divert-airbase, and radar-scope preview -
+// every one of those is "how far/which way from A to B" on two lat/lons
+// the map snapshot already provides.
+function bearingDistanceBetween(lat1, lon1, lat2, lon2) {
+  const R = 6371000;
+  const phi1 = lat1 * Math.PI / 180;
+  const phi2 = lat2 * Math.PI / 180;
+  const dPhi = (lat2 - lat1) * Math.PI / 180;
+  const dLambda = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dPhi / 2) ** 2 + Math.cos(phi1) * Math.cos(phi2) * Math.sin(dLambda / 2) ** 2;
+  const distanceM = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const y = Math.sin(dLambda) * Math.cos(phi2);
+  const x = Math.cos(phi1) * Math.sin(phi2) - Math.sin(phi1) * Math.cos(phi2) * Math.cos(dLambda);
+  const bearingDeg = (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
+  return { bearingDeg, distanceNm: distanceM / METERS_PER_NM };
+}
+
+// "270° / 42 NM" - shared format for every bearing/range readout in Ops.
+function formatBearingRange(bearingDeg, distanceNm) {
+  const bearing = String(Math.round(bearingDeg) % 360).padStart(3, "0");
+  const range = distanceNm < 10 ? distanceNm.toFixed(1) : Math.round(distanceNm);
+  return `${bearing}° / ${range} NM`;
 }
 
 // Rings are centered on the aircraft's real position (not wherever the
@@ -671,6 +725,19 @@ function updateRangeRingsAndLabel(lat, lon) {
       interactive: false,
     }).addTo(ringsLayer);
   });
+}
+
+// DCS coalition IDs are 0 (neutral), 1 (red), 2 (blue) - NOT "1=enemy,
+// 2=friendly". data.myCoalition (dcs_mission_hook.lua's write_map_snapshot)
+// is the player's own actual side, so this colors by real friend/foe
+// instead of assuming the player is always blue - a real bug an earlier
+// version of this map had, that would've shown a red-coalition player's
+// own airbases as hostile. Falls back to the old blue-assumption only if
+// an older mission hook (predating myCoalition) is still deployed.
+function airbaseColor(coalition, myCoalition) {
+  if (myCoalition == null) return coalition === 2 ? "#1E88E5" : coalition === 1 ? "#E53935" : "#FF9900";
+  if (coalition === 0) return "#FF9900";
+  return coalition === myCoalition ? "#1E88E5" : "#E53935";
 }
 
 // category_label()/categoryDetail strings from dcs_mission_hook.lua's
@@ -851,11 +918,10 @@ function updateMapMarkers(snapshot) {
         escapeHtml(u.type || "Contact"));
     });
 
-    // Airbases - color by coalition (DCS convention: 0 neutral, 1 red, 2 blue).
+    // Airbases - color by actual friend/foe (see airbaseColor() below).
     (data.airbases || []).forEach((ab) => {
       if (ab.lat == null || ab.lon == null) return;
-      const color = ab.coalition === 2 ? "#1E88E5" : ab.coalition === 1 ? "#E53935" : "#FF9900";
-      addDynamicMarker([ab.lat, ab.lon], makeMapIcon("square", color, 0), escapeHtml(ab.name || "Airbase"));
+      addDynamicMarker([ab.lat, ab.lon], makeMapIcon("square", airbaseColor(ab.coalition, data.myCoalition), 0), escapeHtml(ab.name || "Airbase"));
     });
   }
 
@@ -873,14 +939,25 @@ function updateMapMarkers(snapshot) {
   }
 }
 
+// Runs continuously from page load (see the bottom of this file) rather
+// than only while the full map overlay is open - Ops's situational-
+// awareness card needs this same snapshot any time it's visible, and
+// it's a cheap local read (the same 1-second snapshot dcs_mission_hook.lua
+// already writes for the full map), so one shared loop is simpler than
+// starting/stopping a timer on every tab switch and overlay open/close.
 async function pollMapData() {
+  let snapshot;
   try {
     const res = await fetch("/api/map_data");
-    const data = await res.json();
-    updateMapMarkers(data);
+    snapshot = await res.json();
   } catch (e) {
-    updateMapMarkers(null);
+    snapshot = null;
   }
+  // updateMapMarkers touches leafletMap/dynamicLayer/etc. directly, which
+  // only exist once the full map's been opened at least once - stays
+  // gated on that. updateOpsSituationalAwareness has no such dependency.
+  if (leafletMap) updateMapMarkers(snapshot);
+  updateOpsSituationalAwareness(snapshot);
 }
 
 function openMap() {
@@ -891,16 +968,132 @@ function openMap() {
   // to be told to re-measure now that it's actually visible.
   setTimeout(() => leafletMap.invalidateSize(), 0);
   pollMapData();
-  if (mapPollTimer) clearInterval(mapPollTimer);
-  mapPollTimer = setInterval(pollMapData, 1000);
 }
 
 function closeMap() {
   mapOverlay.hidden = true;
-  if (mapPollTimer) {
-    clearInterval(mapPollTimer);
-    mapPollTimer = null;
+}
+
+// ----------------------------------------------------------------------
+// OPS SITUATIONAL AWARENESS - a compact, always-current summary of the
+// exact same snapshot the full Live Map draws, for a glance without
+// opening the overlay: a bullseye call for your own position, the
+// nearest friendly divert airbase, a contact-type breakdown, and a
+// relative-position radar-scope preview. Every number here comes straight
+// from data.own/data.airbases/data.detected/data.bullseye - nothing
+// computed here is a guess, just bearing/distance math on real positions.
+// ----------------------------------------------------------------------
+const OPS_RADAR_RANGE_NM = 40; // fixed preview range - OPEN LIVE MAP is the place for anything farther out or a real geo background
+const OPS_RADAR_SIZE = 160;
+const OPS_RADAR_CENTER = OPS_RADAR_SIZE / 2;
+const OPS_RADAR_MAX_R = OPS_RADAR_CENTER - 12;
+
+// bearing/distance from own position -> (lat, lon), converted to an (x, y)
+// point on the radar's fixed-range, north-up SVG. Returns null if outside
+// OPS_RADAR_RANGE_NM - contacts beyond the preview's range are omitted
+// entirely rather than clamped to the edge, so the scope never implies a
+// distant contact is closer than it actually is.
+function opsRadarPoint(ownLat, ownLon, lat, lon) {
+  const { bearingDeg, distanceNm } = bearingDistanceBetween(ownLat, ownLon, lat, lon);
+  if (distanceNm > OPS_RADAR_RANGE_NM) return null;
+  const r = (distanceNm / OPS_RADAR_RANGE_NM) * OPS_RADAR_MAX_R;
+  const rad = bearingDeg * Math.PI / 180;
+  return [OPS_RADAR_CENTER + r * Math.sin(rad), OPS_RADAR_CENTER - r * Math.cos(rad)];
+}
+
+function renderOpsRadar(own, data) {
+  const parts = [];
+  [1 / 3, 2 / 3, 1].forEach((f) => {
+    parts.push(`<circle cx="${OPS_RADAR_CENTER}" cy="${OPS_RADAR_CENTER}" r="${(OPS_RADAR_MAX_R * f).toFixed(1)}" fill="none" stroke="#1F2933" stroke-width="1"/>`);
+  });
+
+  const plot = (lat, lon, color, shape) => {
+    if (lat == null || lon == null) return;
+    const point = opsRadarPoint(own.lat, own.lon, lat, lon);
+    if (!point) return;
+    const [x, y] = point;
+    if (shape === "square") {
+      parts.push(`<rect x="${(x - 3).toFixed(1)}" y="${(y - 3).toFixed(1)}" width="6" height="6" fill="${color}"/>`);
+    } else if (shape === "ring") {
+      parts.push(`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="5" fill="none" stroke="${color}" stroke-width="2"/>`);
+    } else {
+      parts.push(`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3" fill="${color}"/>`);
+    }
+  };
+
+  (data.friendlies || []).forEach((u) => plot(u.lat, u.lon, "#1E88E5", "dot"));
+  (data.detected || []).forEach((u) => plot(u.lat, u.lon, "#E53935", "dot"));
+  (data.airbases || []).forEach((ab) => plot(ab.lat, ab.lon, airbaseColor(ab.coalition, data.myCoalition), "square"));
+  if (data.bullseye) plot(data.bullseye.lat, data.bullseye.lon, "#FF9900", "ring");
+
+  // Own aircraft last, on top of everything else, at dead center - a
+  // triangle rotated to heading, same "0=north, clockwise" convention as
+  // the full map's own-aircraft icon.
+  parts.push(`<g transform="rotate(${own.heading || 0} ${OPS_RADAR_CENTER} ${OPS_RADAR_CENTER})"><polygon points="${OPS_RADAR_CENTER},${OPS_RADAR_CENTER - 7} ${OPS_RADAR_CENTER - 5},${OPS_RADAR_CENTER + 6} ${OPS_RADAR_CENTER + 5},${OPS_RADAR_CENTER + 6}" fill="#1E88E5"/></g>`);
+
+  opsRadarSvg.innerHTML = parts.join("");
+}
+
+// Nearest airbase belonging to the player's OWN coalition (data.myCoalition -
+// see write_map_snapshot() in dcs_mission_hook.lua) - null if that field
+// isn't present yet (an older mission hook still deployed) rather than
+// guessing at a "friendly" side.
+function findNearestFriendlyAirbase(own, airbases, myCoalition) {
+  if (myCoalition == null) return null;
+  let best = null;
+  (airbases || []).forEach((ab) => {
+    if (ab.lat == null || ab.coalition !== myCoalition) return;
+    const { bearingDeg, distanceNm } = bearingDistanceBetween(own.lat, own.lon, ab.lat, ab.lon);
+    if (!best || distanceNm < best.distanceNm) best = { name: ab.name || "Airbase", bearingDeg, distanceNm };
+  });
+  return best;
+}
+
+const CONTACT_SUMMARY_LABELS = {
+  airplane: "AIRCRAFT", helicopter: "HELICOPTER", ship: "SHIP",
+  sam: "SAM", vehicle: "VEHICLE", soft_target: "SOLDIER",
+};
+
+// "1 SAM, 2 VEHICLE" from the same category/categoryDetail fields the map's
+// icons use - see shapeForUnit() above for what each combination means.
+function summarizeContacts(detected) {
+  const counts = {};
+  (detected || []).forEach((u) => {
+    const key = u.category === "ground_unit" ? (u.categoryDetail || "vehicle") : u.category;
+    const label = CONTACT_SUMMARY_LABELS[key] || "OTHER";
+    counts[label] = (counts[label] || 0) + 1;
+  });
+  return Object.entries(counts).sort((a, b) => b[1] - a[1]).map(([label, n]) => `${n} ${label}`).join(", ");
+}
+
+function updateOpsSituationalAwareness(snapshot) {
+  const data = snapshot && snapshot.available ? (snapshot.data || {}) : null;
+  const own = data && data.own && data.own.lat != null ? data.own : null;
+
+  if (!own) {
+    opsRadarEmpty.hidden = false;
+    opsRadarSvg.innerHTML = "";
+    opsBullseyeCall.textContent = "—";
+    opsNearestAirbase.textContent = "—";
+    opsContactSummary.textContent = "—";
+    return;
   }
+  opsRadarEmpty.hidden = true;
+  renderOpsRadar(own, data);
+
+  if (data.bullseye && data.bullseye.lat != null) {
+    const { bearingDeg, distanceNm } = bearingDistanceBetween(data.bullseye.lat, data.bullseye.lon, own.lat, own.lon);
+    opsBullseyeCall.textContent = formatBearingRange(bearingDeg, distanceNm);
+  } else {
+    opsBullseyeCall.textContent = "NO BULLSEYE";
+  }
+
+  const nearest = findNearestFriendlyAirbase(own, data.airbases, data.myCoalition);
+  opsNearestAirbase.textContent = nearest
+    ? `${nearest.name} ${formatBearingRange(nearest.bearingDeg, nearest.distanceNm)}`
+    : (data.myCoalition == null ? "UNAVAILABLE" : "NONE FOUND");
+
+  opsContactSummary.textContent = summarizeContacts(data.detected) || "NONE DETECTED";
 }
 
 liveMapBtn.addEventListener("click", openMap);
@@ -1557,3 +1750,8 @@ function escapeHtml(str) {
 
 pollStatus();
 setInterval(pollStatus, 3000);
+
+// Always-on, regardless of which primary tab is active or whether the
+// full map overlay is open - see the comment on pollMapData() itself.
+pollMapData();
+setInterval(pollMapData, 1000);

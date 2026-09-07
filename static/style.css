@@ -291,7 +291,45 @@ header {
    fills it. */
 .simbrief-panel { flex: 1; }
 
-/* Ops's two columns: planning/briefing on the left, the Live Map launcher
+/* Sortie timer - a thin strip above the grid, not another grid cell,
+   since it's relevant regardless of what's in the two columns below. */
+.ops-top-strip {
+  flex: 0 0 auto;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding: 10px 14px;
+}
+.ops-top-strip[hidden] { display: none; }
+
+/* A live readout row, shared by the sortie timer strip and the
+   situational-awareness card below (bullseye/divert/contacts). */
+.ops-readout-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 5px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+.ops-readout-row:last-of-type { border-bottom: none; }
+.ops-readout-label {
+  font-size: 0.68rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+.ops-readout-value {
+  font-size: 0.85rem;
+  font-weight: bold;
+  color: var(--tactical-cyan);
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+/* Ops's two columns: planning/briefing on the left, situational awareness
    on the right - same 60/40 proportions the old main-container used, just
    scoped to this one section now instead of the whole screen. */
 .ops-grid {
@@ -301,13 +339,60 @@ header {
   flex: 1;
   min-height: 0;
 }
-.ops-map-launcher {
+.ops-sitaware {
+  gap: 4px;
+  overflow-y: auto;
+}
+.ops-sitaware .logbook-btn { margin-top: 10px; width: 100%; text-align: center; }
+
+.ops-radar-wrap {
+  position: relative;
+  align-self: center;
+  width: 160px;
+  height: 160px;
+  margin-bottom: 10px;
+}
+#ops-radar { width: 100%; height: 100%; }
+.ops-radar-empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
   align-items: center;
   justify-content: center;
+  color: var(--text-dim);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
   text-align: center;
-  gap: 16px;
+  padding: 10px;
 }
-.ops-map-launcher .panel-title { align-self: stretch; }
+.ops-radar-empty[hidden] { display: none; }
+
+/* Live combat-event ticker - a fixed height with its own scroll rather
+   than growing with the grid above, so a busy sortie's event list can't
+   push the rest of Ops off-balance. */
+.ops-events-panel {
+  flex: 0 0 150px;
+  margin-top: 12px;
+}
+#ops-events-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+}
+.ops-events-empty { color: var(--text-dim); }
+.ops-event-row {
+  display: flex;
+  gap: 10px;
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+.ops-event-row:last-child { border-bottom: none; }
+.ops-event-time { color: var(--text-dim); flex: 0 0 auto; }
+.ops-event-kill { color: var(--mfd-green); }
+.ops-event-hit, .ops-event-loss { color: var(--hazard-red); }
+.ops-event-shot { color: var(--tactical-cyan); }
 
 /* Hangar's single content column - was #pilot-summary-body's overlay
    padding, now the section's own scroll container since it's persistent
@@ -1354,6 +1439,8 @@ header {
   body { display: block; overflow-y: auto; }
   #primary-content, .primary-section { display: block; height: auto; }
   .ops-grid { grid-template-columns: 1fr; }
+  .ops-events-panel { flex-basis: auto; height: auto; }
+  #ops-events-list { overflow-y: visible; }
   .hangar-panel { height: auto; overflow-y: visible; }
   header { flex-direction: column; align-items: flex-start; }
 }

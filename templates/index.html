@@ -48,6 +48,14 @@
          live in-flight tracking (Live Map), together: "what's happening
          this sortie." Default landing section. -->
     <section class="primary-section" id="section-ops">
+      <!-- Live sortie timer - hidden until dcs_flight_tracker.py reports an
+           actual in-progress (airborne) flight; see pollDebriefStatus()/
+           tickSortieTimer() in app.js. -->
+      <div class="sub-panel ops-top-strip" id="ops-sortie-timer" hidden>
+        <span class="ops-readout-label">SORTIE TIME</span>
+        <span class="ops-readout-value mono" id="ops-sortie-time-value">00:00</span>
+      </div>
+
       <div class="ops-grid">
         <div class="right-panel">
           <!-- SimBrief has no DCS-mission equivalent - a real DCS mission
@@ -67,13 +75,49 @@
           </section>
         </div>
 
-        <section class="sub-panel ops-map-launcher">
-          <h2 class="panel-title">Live Map</h2>
+        <!-- Situational awareness - a compact, always-updating summary of
+             the exact same snapshot the full Live Map draws (see
+             pollMapData/updateOpsSituationalAwareness in app.js), for a
+             glance without opening the full overlay. The radar-scope
+             preview (relative bearing/range, north-up, fixed 40NM range)
+             is deliberately NOT a real geo map - that's what OPEN LIVE MAP
+             is for; this is the quick-glance abstraction the very first
+             from-scratch map prototype used, kept here as a lightweight
+             preview now that the full map is real terrain. -->
+        <section class="sub-panel ops-sitaware">
+          <h2 class="panel-title">Situational Awareness</h2>
+          <div class="ops-radar-wrap">
+            <svg id="ops-radar" viewBox="0 0 160 160"></svg>
+            <div class="ops-radar-empty" id="ops-radar-empty">NO DATA</div>
+          </div>
+          <div class="ops-readout-row">
+            <span class="ops-readout-label">BULLSEYE</span>
+            <span class="ops-readout-value mono" id="ops-bullseye-call">&mdash;</span>
+          </div>
+          <div class="ops-readout-row">
+            <span class="ops-readout-label">NEAREST DIVERT</span>
+            <span class="ops-readout-value mono" id="ops-nearest-airbase">&mdash;</span>
+          </div>
+          <div class="ops-readout-row">
+            <span class="ops-readout-label">CONTACTS</span>
+            <span class="ops-readout-value mono" id="ops-contact-summary">&mdash;</span>
+          </div>
           <!-- Always enabled - openMap() shows its own "no data yet"
                placeholder rather than gating the button itself. -->
           <button type="button" id="live-map-btn" class="logbook-btn">OPEN LIVE MAP</button>
         </section>
       </div>
+
+      <!-- Live combat-event ticker for THIS sortie - the same hit/shot/
+           kill events dcs_combat_events.py already tails for the Debrief
+           report, just surfaced as they happen instead of only after
+           landing. See pollLiveEvents() in app.js. -->
+      <section class="sub-panel ops-events-panel">
+        <h2 class="panel-title">Recent Events</h2>
+        <div id="ops-events-list">
+          <div class="ops-events-empty">No events yet this sortie.</div>
+        </div>
+      </section>
     </section>
 
     <!-- HANGAR - pilot performance record. Was a header button opening a

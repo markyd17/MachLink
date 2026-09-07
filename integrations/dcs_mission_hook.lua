@@ -551,6 +551,14 @@ local function write_map_snapshot()
 		{"airbases", build_json_array(gather_airbases())},
 		{"detected", build_json_array(detectedItems)},
 	}
+	-- Lets the frontend color/classify airbases (and anything else) by
+	-- actual friend/foe instead of assuming the player is always blue
+	-- (coalition 2) - a real bug found while building the Ops situational
+	-- awareness card: a red-coalition player would've seen their own
+	-- airbases drawn as hostile red.
+	if myCoalition ~= nil then
+		fields[#fields + 1] = {"myCoalition", myCoalition}
+	end
 	local bullseyeJson = gather_bullseye(myCoalition)
 	if bullseyeJson then
 		fields[#fields + 1] = {"bullseye", bullseyeJson}

@@ -518,6 +518,12 @@ class FlightTracker:
             return {
                 "ready": self.debrief_ready,
                 "aircraft": self.pending_debrief["aircraft"] if self.pending_debrief else None,
+                # Powers Ops's live sortie timer - start_time is already
+                # tracked for the Debrief duration calc, just never exposed
+                # for a live flight before it's finished. None whenever
+                # there's no in-progress flight to time (aircraft not
+                # airborne, or no aircraft detected at all).
+                "sortie_start_time": self.start_time if self.is_airborne else None,
             }
 
     def latest_debrief(self):
