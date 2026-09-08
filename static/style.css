@@ -285,47 +285,72 @@ header {
 #primary-nav {
   flex: 0 0 auto;
   display: flex;
+  align-items: flex-end;
+  gap: 8px;
   background: var(--bg);
-  border-bottom: 1px solid var(--border);
-  padding: 0 20px;
+  border-bottom: 2px solid var(--border);
+  padding: 10px 20px 0;
   /* A recessed channel the tabs sit in, like a physical rocker-switch
      panel rather than a flat row of text links. */
   box-shadow: inset 0 6px 10px -8px rgba(0, 0, 0, 0.7);
 }
+/* Real physical tabs now, not underlined links - each is a bordered
+   block (every side but the bottom, left open so the active tab can
+   fuse visually with the content beneath it) sitting in the recessed
+   channel above. align-items:flex-end on the nav plus a taller active
+   tab (more top/bottom padding - see .active below) makes the selected
+   one visibly pop up above its neighbors, like a switch pulled forward,
+   instead of just an underline sliding between flat labels. Font bumped
+   substantially (0.82rem -> 1.05rem) for readability per direct
+   feedback that the old size was too small. */
 .primary-nav-btn {
-  background: none;
-  border: none;
-  border-bottom: 3px solid transparent;
-  padding: 14px 26px;
+  background: var(--panel-raised);
+  border: 1px solid var(--border);
+  border-bottom: none;
+  padding: 13px 30px;
   color: var(--text-dim);
   font-family: var(--font-display);
   font-weight: 800;
-  letter-spacing: 0.08em;
-  font-size: 0.82rem;
+  letter-spacing: 0.04em;
+  font-size: 1.05rem;
   text-transform: uppercase;
   cursor: pointer;
-  transition: color 0.15s ease, text-shadow 0.15s ease;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 -2px 4px rgba(0, 0, 0, 0.3);
+  transition: color 0.15s ease, background 0.15s ease, text-shadow 0.15s ease;
 }
-.primary-nav-btn:hover { color: var(--text-primary); }
+.primary-nav-btn:hover { color: var(--text-primary); background: var(--panel-bg); }
 /* Active tab gets the same "lit annunciator" glow language as the
    debrief button/hero text/dash readouts elsewhere in the app, in that
-   tab's own identity color, instead of just a flat color swap. */
+   tab's own identity color, instead of just a flat color swap. Taller
+   padding plus a negative margin-bottom that overlaps the nav's own
+   border-bottom by exactly its own width (both 2px) is what makes the
+   tab "pop up and fuse with the content below" rather than just
+   changing color in place. */
+.primary-nav-btn.active {
+  padding: 17px 30px 15px;
+  margin-bottom: -2px;
+  position: relative;
+  z-index: 1;
+}
 .primary-nav-btn.active[data-section="ops"] {
   color: var(--tactical-cyan);
-  border-bottom-color: var(--tactical-cyan);
-  background: rgba(0, 229, 255, 0.06);
+  border-color: var(--tactical-cyan);
+  border-top-width: 3px;
+  background: rgba(0, 229, 255, 0.08);
   text-shadow: 0 0 8px rgba(0, 229, 255, 0.5);
 }
 .primary-nav-btn.active[data-section="hangar"] {
   color: var(--hangar-violet);
-  border-bottom-color: var(--hangar-violet);
-  background: rgba(192, 132, 252, 0.08);
+  border-color: var(--hangar-violet);
+  border-top-width: 3px;
+  background: rgba(192, 132, 252, 0.1);
   text-shadow: 0 0 8px rgba(192, 132, 252, 0.5);
 }
 .primary-nav-btn.active[data-section="flightschool"] {
   color: var(--mfd-green);
-  border-bottom-color: var(--mfd-green);
-  background: rgba(0, 255, 102, 0.06);
+  border-color: var(--mfd-green);
+  border-top-width: 3px;
+  background: rgba(0, 255, 102, 0.08);
   text-shadow: 0 0 8px rgba(0, 255, 102, 0.5);
 }
 
@@ -1681,8 +1706,14 @@ header {
    (outside this box) toggles it. */
 #map-legend {
   position: absolute;
-  left: 24px;
-  bottom: 24px;
+  /* clamp()'d to viewport width (not a fixed px) so the whole key scales
+     up/down as the app window is resized, instead of staying a constant
+     size that's cramped in a small window and disproportionately tiny in
+     a large one - min/preferred/max keeps it from ever going illegibly
+     small or absurdly large at the extremes. */
+  left: clamp(12px, 1.6vw, 24px);
+  bottom: clamp(12px, 1.6vw, 24px);
+  max-width: 42vw;
   /* Nothing between #map-viewport and the document root sets both
      position and z-index (.ops-map-home, #map-viewport, the Leaflet
      container itself are all position:relative/static with no z-index of
@@ -1697,9 +1728,9 @@ header {
   z-index: 1100;
   background: rgba(11, 15, 18, 0.85);
   border: 1px solid var(--border);
-  padding: 8px 10px;
+  padding: clamp(6px, 0.7vw, 10px) clamp(8px, 0.9vw, 12px);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: clamp(9px, 0.85vw, 12px);
   color: var(--text-dim);
   pointer-events: none;
 }
@@ -1709,27 +1740,31 @@ header {
   color: var(--tactical-cyan);
   font-weight: 700;
   letter-spacing: 0.08em;
-  margin-bottom: 6px;
+  margin-bottom: clamp(4px, 0.5vw, 6px);
 }
 .map-legend-row {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 4px;
+  gap: clamp(6px, 0.6vw, 8px);
+  margin-bottom: clamp(3px, 0.35vw, 4px);
 }
 .map-legend-row:last-child { margin-bottom: 0; }
-.map-legend-color-row { margin-top: 6px; }
+.map-legend-color-row { margin-top: clamp(4px, 0.5vw, 6px); }
+/* Swatch box scales with the legend; the tiny shapes drawn inside it
+   (makeMapIcon() in app.js) stay their fixed small px size - shared code
+   with the actual live map markers, and legible at any swatch size
+   anyway, so there's no need to touch it for this. */
 .map-legend-swatch {
-  width: 16px;
-  height: 16px;
+  width: clamp(13px, 1.1vw, 18px);
+  height: clamp(13px, 1.1vw, 18px);
   flex: none;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 .map-legend-color-dot {
-  width: 9px;
-  height: 9px;
+  width: clamp(7px, 0.55vw, 10px);
+  height: clamp(7px, 0.55vw, 10px);
   border-radius: 50%;
   display: inline-block;
 }
