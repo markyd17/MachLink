@@ -14,6 +14,7 @@ const cockpitConfigSelect = document.getElementById("cockpit-config-select");
 const askForm = document.getElementById("ask-form");
 const askInput = document.getElementById("ask-input");
 const askBarResult = document.getElementById("ask-bar-result");
+const opsBriefingPlaceholder = document.getElementById("ops-briefing-placeholder");
 const simbriefPanel = document.getElementById("simbrief-panel");
 const simbriefBtn = document.getElementById("simbrief-refresh");
 const simbriefContent = document.getElementById("simbrief-content");
@@ -293,10 +294,13 @@ async function pollStatus() {
 
     // SimBrief has no DCS-mission equivalent - a real DCS mission already
     // carries its own authored briefing, so that's what fills this slot
-    // instead when the detected sim is DCS. Neither shows if nothing's
-    // detected yet.
+    // instead when the detected sim is DCS. The placeholder card takes
+    // over whenever NEITHER applies (no sim detected yet, or a sim's
+    // detected but you're not in a mission/aircraft) - without it this
+    // whole column just goes empty instead of showing anything.
     simbriefPanel.hidden = data.game !== "msfs";
     dcsBriefingPanel.hidden = data.game !== "dcs";
+    opsBriefingPlaceholder.hidden = data.game === "msfs" || data.game === "dcs";
     if (data.game === "dcs") {
       pollDcsBriefing();
       loadKneeboard();

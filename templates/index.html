@@ -121,6 +121,18 @@
                fills this slot instead when the detected sim is DCS (see
                pollStatus in app.js). MSFS gets its own dedicated layout
                later; for now this panel just stays hidden under DCS. -->
+          <!-- Shown only while neither panel below has anything to show yet
+               (no sim detected, or sim detected but you're not in a
+               mission/aircraft) - see pollStatus() in app.js. Without
+               this, this whole column goes empty pre-mission instead of
+               showing a card - a real "nothing yet" status, not fabricated
+               data, same pattern as Flight School's "Waiting for aircraft
+               detection..." and the map's own empty state. -->
+          <section class="sub-panel simbrief-panel" id="ops-briefing-placeholder">
+            <h2 class="panel-title">Mission Briefing</h2>
+            <div class="checklist-subnote">Waiting for a sim to be detected and a mission to load...</div>
+          </section>
+
           <section class="sub-panel simbrief-panel" id="simbrief-panel" hidden>
             <h2 class="panel-title">SimBrief</h2>
             <button id="simbrief-refresh" class="simbrief-btn">Pull Latest OFP</button>
