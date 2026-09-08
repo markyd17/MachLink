@@ -21,6 +21,7 @@ except ImportError:
 
 from integrations.dcs_listener import start_dcs_listener
 from integrations.dcs_hook_guard import start_hook_guard
+from integrations.dcs_mission_hook_guard import start_mission_hook_guard
 from integrations.dcs_mission_briefing import start_mission_briefing_watcher
 from integrations.dcs_flight_tracker import (
     FlightTracker, FLIGHT_LOG_PATH, start_crash_watchdog, DEBRIEF_MIN_FLIGHT_SECONDS,
@@ -56,6 +57,7 @@ class AppState:
         self.msfs_available = False
         self.msfs_error = None
         self.dcs_hook = None
+        self.dcs_mission_hook = None
         self.dcs_mission_briefing = None
         # Bumped every time a new mission-load is detected, even if the
         # resolved .miz path is unchanged - Quick Mission Builder reuses the
@@ -136,6 +138,7 @@ def api_status():
         game, aircraft = state.game, state.aircraft
         msfs_available, msfs_error = state.msfs_available, state.msfs_error
         dcs_hook = state.dcs_hook
+        dcs_mission_hook = state.dcs_mission_hook
 
     aircraft_data = load_aircraft_file(aircraft, game) if aircraft else None
     return jsonify({
@@ -144,6 +147,7 @@ def api_status():
         "aircraft_data_loaded": aircraft_data is not None,
         "msfs_connection": {"available": msfs_available, "error": msfs_error},
         "dcs_hook": dcs_hook,
+        "dcs_mission_hook": dcs_mission_hook,
     })
 
 
@@ -410,6 +414,11 @@ if __name__ == "__main__":
 
     start_hook_guard(
         explicit_path=dcs_cfg.get("export_lua_path") or None,
+        interval_seconds=dcs_cfg.get("hook_check_interval_seconds", 60),
+        state=state,
+    )
+    start_mission_hook_guard(
+        explicit_path=dcs_cfg.get("mission_hook_path") or None,
         interval_seconds=dcs_cfg.get("hook_check_interval_seconds", 60),
         state=state,
     )

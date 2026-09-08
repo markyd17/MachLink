@@ -40,6 +40,15 @@ dcs:
   # dcs_mission_hook.lua appends events to, which MachLink tails. Set
   # explicitly only if auto-detect picks the wrong install.
   mission_events_path: ""
+  # Leave blank to auto-detect (same Saved Games folder as export_lua_path).
+  # Where dcs_mission_hook_guard.py keeps MachLinkMissionHook.lua in sync
+  # with integrations/dcs_mission_hook.lua - re-copies it in automatically
+  # (same hook_check_interval_seconds cadence as the Export.lua guard
+  # below) whenever the deployed copy is missing or out of date, so a
+  # MachLink update doesn't silently leave DCS running stale mission-hook
+  # code until someone remembers to redo the one-time manual copy. Set
+  # explicitly only if auto-detect picks the wrong install.
+  mission_hook_path: ""
   # How long (seconds) a flight must be airborne before Debrief will
   # generate a report for it - 300 (5 minutes) matches the original spec.
   # Lower this temporarily (e.g. 30) if you're actively testing Debrief

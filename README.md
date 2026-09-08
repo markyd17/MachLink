@@ -116,7 +116,13 @@ be loosened, since by default it can't run much of anything useful for
 getting data out:
 
 1. Copy `integrations/dcs_mission_hook.lua` to
-   `Saved Games\DCS\Scripts\MachLinkMissionHook.lua`.
+   `Saved Games\DCS\Scripts\MachLinkMissionHook.lua`. You only need to do this
+   once — `dcs_mission_hook_guard.py` checks that copy against the repo's
+   version every time MachLink starts (and every `hook_check_interval_seconds`
+   while it runs) and re-copies it automatically if it's ever missing or out
+   of date, the same way `dcs_hook_guard.py` already keeps `Export.lua`'s
+   hook in sync. A future MachLink update that changes this file no longer
+   needs a manual re-copy — just restart the app.
 2. Back up `<your DCS install>\Scripts\MissionScripting.lua`, then edit it:
    comment out the `sanitizeModule`/`require`/`loadlib`/`package` block
    (the file's own comments already say this is a supported customization
