@@ -323,9 +323,15 @@ header {
 .ops-flight-status {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 6px 20px;
+  /* No gap - grid lines come from each tile's own border below instead,
+     sitting flush against its neighbors so the lines actually run between
+     tiles rather than through empty gap space. Padding also moves onto
+     each tile (was on this container) so text still gets breathing room
+     without the border hugging it. */
+  gap: 0;
   margin-bottom: 12px;
-  padding: 16px 20px;
+  /* .sub-panel already gives this its own outer border/background -
+     these lines are the interior dividers on top of that frame. */
 }
 .ops-flight-status[hidden] { display: none; }
 .ops-flight-tile {
@@ -333,6 +339,9 @@ header {
   flex-direction: column;
   gap: 2px;
   min-width: 0;
+  padding: 14px 18px;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
 }
 /* Small caption above a big number, same relationship a real instrument
    cluster uses ("MPH" tiny above/below a huge speed digit) - the label
