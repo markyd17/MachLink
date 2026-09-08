@@ -64,6 +64,28 @@ getting.
    to opening http://localhost:5000 in your default browser instead. Leave
    the console window running in the background while you fly either way.
 
+## Desktop shortcut / taskbar pin (optional, Windows)
+
+`app.py` already calls `SetCurrentProcessExplicitAppUserModelID("MachLink.App")`
+before opening its window, so the taskbar shows MachLink's own icon
+instead of the generic Python one. That alone is **not** enough for
+pinning: Windows only merges a running window into a pinned tile when
+their AppUserModelIDs match, and a plain shortcut (Desktop or a taskbar
+pin) doesn't carry one on its own - without it, launching MachLink from
+the pin shows up as a *second*, separate icon next to the pin instead of
+docking into it.
+
+If you hit that, run:
+```
+powershell -ExecutionPolicy Bypass -File tools\fix_taskbar_pin.ps1
+```
+It stamps `System.AppUserModel.ID = MachLink.App` onto whichever of your
+Desktop shortcut / Start Menu shortcut / taskbar pin it finds (backing
+each one up first as `<name>.lnk.bak`), then close and relaunch MachLink
+from the shortcut. Re-run it any time you recreate the shortcut/pin - a
+freshly made one never has this property set, so the mismatch (and the
+duplicate icon) comes right back.
+
 ## Wiring up the game hooks
 
 ### DCS
