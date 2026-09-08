@@ -23,7 +23,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=VT323&family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='machlink_aviation_v3.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='machlink_aviation_v4.css') }}">
 </head>
 <body>
   <header>
@@ -34,43 +34,96 @@
       </span>
       <span class="brand-sub">// SIMULATOR COMPANION</span>
     </h1>
-    <!-- Dim/disabled until dcs_flight_tracker.py detects a real landed-
-         and-stopped-after-5+-minutes flight (see pollDebriefStatus in
-         app.js) - lights up lime green and becomes clickable only then.
-         Stays in the header (not tucked inside a tab) since it's
-         time-critical - you want it glanceable the moment you land,
-         whichever tab you're on. -->
-    <button type="button" id="debrief-btn" class="debrief-btn" disabled>GENERATE DEBRIEF</button>
-    <!-- Two separate indicators, not one combined string - DCS/MSFS
-         detection and airframe detection are genuinely different signals
-         (you can have a sim detected with no airframe yet, e.g. sitting
-         at a menu in MSFS), and collapsing them into one line made it
-         easy to misread stale data as current. See
-         updateDetectionIndicators() in app.js - both only ever show what
-         /api/status reports right now (already staleness-checked
-         server-side), never a guess or a leftover value. -->
+    <!-- Six separate indicators, not one combined string - each is a
+         genuinely different real signal, never a guess or a leftover
+         value (see updateDetectionIndicators()/pollDebriefStatus() in
+         app.js, all driven by data already fetched for other reasons -
+         no new backend calls):
+           SIM       - data.game ("dcs"/"msfs"/none)
+           AIRCRAFT  - data.aircraft (was labeled AIRFRAME)
+           MISSION   - derived from sortie_start_time != null (airborne)
+           SIMBRIEF  - derived from whether a pull has actually populated
+                       simbriefContent (MSFS-only, like the panel itself)
+           DATA LINK - derived from altitude_ft/speed_kt being non-null
+                       (real telemetry presence, already fetched for the
+                       Ops flight-status strip)
+         DEBRIEF is separate and clickable - replaces the old standalone
+         "GENERATE DEBRIEF" button, same disabled-until-ready behavior,
+         now also the way in to the Debrief section. -->
     <div id="detection-status">
       <div class="detection-indicator">
         <span class="detection-label">SIM</span>
         <span id="sim-detected-value" class="status-block idle mono">DETECTING...</span>
       </div>
       <div class="detection-indicator">
-        <span class="detection-label">AIRFRAME</span>
+        <span class="detection-label">AIRCRAFT</span>
         <span id="airframe-detected-value" class="status-block idle mono">DETECTING...</span>
       </div>
+      <div class="detection-indicator">
+        <span class="detection-label">MISSION</span>
+        <span id="mission-status-value" class="status-block idle mono">—</span>
+      </div>
+      <div class="detection-indicator">
+        <span class="detection-label">SIMBRIEF</span>
+        <span id="simbrief-status-value" class="status-block idle mono">—</span>
+      </div>
+      <div class="detection-indicator">
+        <span class="detection-label">DATA LINK</span>
+        <span id="datalink-status-value" class="status-block idle mono">—</span>
+      </div>
+      <button type="button" id="debrief-pill" class="detection-indicator status-pill-btn">
+        <span class="detection-label">DEBRIEF</span>
+        <span id="debrief-status-value" class="status-block idle mono">NOT READY</span>
+      </button>
     </div>
+    <button type="button" id="settings-btn" class="header-icon-btn" data-section="settings" aria-label="Settings">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3"/><path d="M19.4 13a7.7 7.7 0 0 0 0-2l2-1.5-2-3.4-2.3.9a7.6 7.6 0 0 0-1.7-1L15 3.5h-4l-.4 2.5a7.6 7.6 0 0 0-1.7 1l-2.3-.9-2 3.4L6.6 11a7.7 7.7 0 0 0 0 2l-2 1.5 2 3.4 2.3-.9c.5.4 1.1.75 1.7 1l.4 2.5h4l.4-2.5c.6-.25 1.2-.6 1.7-1l2.3.9 2-3.4-2-1.5Z"/></svg>
+    </button>
   </header>
 
-  <!-- Primary nav - Ops / Hangar / Flight School. Ops first (pre-flight
-       planning + live tracking is what you check the moment you open the
-       app), Flight School last (procedures you flip to as needed, not the
-       landing view). Pilot Summary and Live Map used to be header buttons
-       opening full-window overlays; they're now native content inside
-       Hangar and Ops respectively - see switchPrimarySection() in app.js. -->
+  <!-- Primary nav - Ops / Hangar / Flight School / Debrief / Kneeboard /
+       Settings. Ops first (pre-flight planning + live tracking is what
+       you check the moment you open the app). Debrief and Kneeboard used
+       to be a header button + overlay and a slide-out drawer,
+       respectively; both are now native sections here too, same real
+       data/behavior, just reached the same way as everything else - see
+       switchPrimarySection() in app.js. Debrief is always visible (same
+       as Hangar/Flight School - the section itself shows an idle state
+       when nothing's ready, exactly like the old button was always
+       visible but disabled). Kneeboard alone still hides itself under
+       the same real condition its old pull-tab did (not DCS, or no
+       pages for the detected aircraft). -->
   <nav id="primary-nav">
-    <button type="button" class="primary-nav-btn active" data-section="ops">Ops</button>
-    <button type="button" class="primary-nav-btn" data-section="hangar">Hangar</button>
-    <button type="button" class="primary-nav-btn" data-section="flightschool">Flight School</button>
+    <button type="button" class="primary-nav-btn active" data-section="ops">
+      <svg class="nav-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>
+      <span>Ops</span>
+    </button>
+    <button type="button" class="primary-nav-btn" data-section="hangar">
+      <svg class="nav-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 16l20-6-2-3-8 2-5-5-2 1 3 6-6 2z"/></svg>
+      <span>Hangar</span>
+    </button>
+    <button type="button" class="primary-nav-btn" data-section="flightschool">
+      <svg class="nav-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M8 9l2.5 2.5L16 6"/></svg>
+      <span>Flight School</span>
+    </button>
+    <button type="button" class="primary-nav-btn" data-section="debrief">
+      <svg class="nav-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
+      <span>Debrief</span>
+    </button>
+    <button type="button" class="primary-nav-btn" data-section="kneeboard" id="kneeboard-nav-btn" hidden>
+      <svg class="nav-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4M9 12h7M9 16h7"/></svg>
+      <span>Kneeboard</span>
+    </button>
+    <button type="button" class="primary-nav-btn" data-section="settings">
+      <svg class="nav-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3"/><path d="M19.4 13a7.7 7.7 0 0 0 0-2l2-1.5-2-3.4-2.3.9a7.6 7.6 0 0 0-1.7-1L15 3.5h-4l-.4 2.5a7.6 7.6 0 0 0-1.7 1l-2.3-.9-2 3.4L6.6 11a7.7 7.7 0 0 0 0 2l-2 1.5 2 3.4 2.3-.9c.5.4 1.1.75 1.7 1l.4 2.5h4l.4-2.5c.6-.25 1.2-.6 1.7-1l2.3.9 2-3.4-2-1.5Z"/></svg>
+      <span>Settings</span>
+    </button>
+    <!-- Pure flavor, no functionality - the mockup's equivalent bottom
+         badge. -->
+    <div id="nav-motto-badge">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M12 3l2.5 4.5L19 9l-3.5 3 1 5L12 15l-4.5 2 1-5L5 9l4.5-1.5z"/></svg>
+      <span>PLAN<br>TRAIN<br>FLY<br>DEBRIEF<br>IMPROVE</span>
+    </div>
   </nav>
 
   <div id="primary-content">
@@ -120,7 +173,29 @@
         </div>
       </div>
 
-      <div class="ops-grid">
+      <!-- Sub-navigation within Ops itself, matching the mockup's tab
+           strip under the map. Real destinations only - every tab either
+           shows real data (reusing the exact same /api/map_data-derived
+           values the old single-page layout already computed, just
+           split/relabeled) or, for WEATHER (MachLink has no weather data
+           source anywhere in the codebase), an honest empty state rather
+           than invented numbers. See switchOpsTab() in app.js - same
+           show-one-hide-the-rest pattern as switchPrimarySection(). -->
+      <div class="ops-tabs" id="ops-tabs">
+        <button type="button" class="ops-tab-btn active" data-ops-tab="mission">Mission</button>
+        <button type="button" class="ops-tab-btn" data-ops-tab="route">Route</button>
+        <button type="button" class="ops-tab-btn" data-ops-tab="threats">Threats</button>
+        <button type="button" class="ops-tab-btn" data-ops-tab="weather">Weather</button>
+        <button type="button" class="ops-tab-btn" data-ops-tab="airfields">Airfields</button>
+        <button type="button" class="ops-tab-btn" data-ops-tab="bullseye">Bullseye</button>
+        <button type="button" class="ops-tab-btn" data-ops-tab="kneeboard">Kneeboard</button>
+      </div>
+
+      <!-- MISSION - pre-flight briefing content (SimBrief OFP / DCS's own
+           mission briefing / current loadout), unchanged from before the
+           tab split, just its own destination now instead of always
+           sharing the screen with the map. -->
+      <div class="ops-tab-panel" id="ops-tab-mission">
         <div class="right-panel">
           <!-- SimBrief has no DCS-mission equivalent - a real DCS mission
                already carries its own authored briefing, so that's what
@@ -162,45 +237,15 @@
             <div id="ops-loadout-content" class="simbrief-content"></div>
           </section>
         </div>
+      </div>
 
-        <!-- Situational awareness - the real Leaflet map lives permanently
-             here (no full-screen/expand mode - one home, always visible),
-             plus the readouts a visual map can't give you as clean text
-             (an exact bullseye call, nearest-divert bearing/range, a
-             contact-type count). -->
+      <!-- ROUTE - the real Leaflet map, moved here from always sharing
+           the screen with Situational Awareness. Same map/KEY/RECENTER,
+           unchanged - see switchOpsTab()'s leafletMap.invalidateSize()
+           call for the same hidden-container gotcha primary-section
+           switching already handles. -->
+      <div class="ops-tab-panel" id="ops-tab-route" hidden>
         <section class="sub-panel ops-sitaware">
-          <h2 class="panel-title">Situational Awareness</h2>
-          <!-- Distance-only, deliberately not a fabricated engagement-range
-               ring - DCS's API doesn't expose a real per-SAM-type
-               engagement envelope, and this app never asserts a number it
-               can't back with real data (see the rest of the map/Debrief
-               work). Every detected SAM, nearest first, with its actual
-               computed distance - you make the call on how close is too
-               close. -->
-          <div class="ops-threat-alert" id="ops-threat-alert" hidden>
-            <span>&#9888;</span>
-            <span id="ops-threat-text"></span>
-          </div>
-          <div class="ops-readout-row">
-            <span class="ops-readout-label">BULLSEYE</span>
-            <span class="ops-readout-value mono" id="ops-bullseye-call">&mdash;</span>
-          </div>
-          <div class="ops-readout-row">
-            <span class="ops-readout-label">NEAREST DIVERT</span>
-            <span class="ops-readout-value mono" id="ops-nearest-airbase">&mdash;</span>
-          </div>
-          <div class="ops-readout-row">
-            <span class="ops-readout-label">CONTACTS</span>
-            <span class="ops-readout-value mono" id="ops-contact-summary">&mdash;</span>
-          </div>
-          <!-- Best-effort match on friendly unit type names against known
-               tanker/AWACS aircraft - see SUPPORT_TYPE_KEYWORDS in app.js.
-               Not exhaustive; a support type this list doesn't know about
-               just won't show up here. -->
-          <div class="ops-readout-row">
-            <span class="ops-readout-label">SUPPORT</span>
-            <span class="ops-readout-value mono" id="ops-nearest-support">&mdash;</span>
-          </div>
           <div class="ops-map-home" id="ops-map-home">
             <div id="map-controls-bar">
               <!-- Live radius-to-edge of the current view, from actual
@@ -238,6 +283,86 @@
               <div id="map-legend"></div>
             </div>
           </div>
+        </section>
+      </div>
+
+      <!-- THREATS - the SAM alert banner plus a real per-contact list,
+           nearest-first, built by renderThreatsList() in app.js from the
+           exact same findSamThreats() result the banner already used -
+           no new endpoint, no fabricated range rings (see the comment on
+           findSamThreats() itself for why). -->
+      <div class="ops-tab-panel" id="ops-tab-threats" hidden>
+        <section class="sub-panel">
+          <h2 class="panel-title">Threats</h2>
+          <div class="ops-threat-alert" id="ops-threat-alert" hidden>
+            <span>&#9888;</span>
+            <span id="ops-threat-text"></span>
+          </div>
+          <div class="ops-readout-row">
+            <span class="ops-readout-label">CONTACTS</span>
+            <span class="ops-readout-value mono" id="ops-contact-summary">&mdash;</span>
+          </div>
+          <div id="ops-threats-list"></div>
+        </section>
+      </div>
+
+      <!-- WEATHER - genuinely no data source for this anywhere in
+           MachLink today. A real, present, clickable destination (not
+           omitted) with an honest empty state, rather than inventing
+           numbers to fill it. -->
+      <div class="ops-tab-panel" id="ops-tab-weather" hidden>
+        <section class="sub-panel">
+          <h2 class="panel-title">Weather</h2>
+          <div class="ops-empty-note">No weather data source configured.</div>
+        </section>
+      </div>
+
+      <!-- AIRFIELDS - nearest-divert readout (unchanged) plus a real full
+           list of every airbase in data.airbases, built by
+           renderAirfieldsList() in app.js from the same bearing/distance
+           math findNearestFriendlyAirbase() already does for the single
+           nearest one. SUPPORT (nearest tanker/AWACS) lives here too -
+           a friendly resource you'd divert/refuel toward, same spirit as
+           the rest of this tab. -->
+      <div class="ops-tab-panel" id="ops-tab-airfields" hidden>
+        <section class="sub-panel">
+          <h2 class="panel-title">Airfields</h2>
+          <div class="ops-readout-row">
+            <span class="ops-readout-label">NEAREST DIVERT</span>
+            <span class="ops-readout-value mono" id="ops-nearest-airbase">&mdash;</span>
+          </div>
+          <!-- Best-effort match on friendly unit type names against known
+               tanker/AWACS aircraft - see SUPPORT_TYPE_KEYWORDS in app.js.
+               Not exhaustive; a support type this list doesn't know about
+               just won't show up here. -->
+          <div class="ops-readout-row">
+            <span class="ops-readout-label">SUPPORT</span>
+            <span class="ops-readout-value mono" id="ops-nearest-support">&mdash;</span>
+          </div>
+          <div id="ops-airfields-list"></div>
+        </section>
+      </div>
+
+      <!-- BULLSEYE - the same real bullseye call, given its own
+           destination. -->
+      <div class="ops-tab-panel" id="ops-tab-bullseye" hidden>
+        <section class="sub-panel">
+          <h2 class="panel-title">Bullseye</h2>
+          <div class="ops-readout-row">
+            <span class="ops-readout-label">BULLSEYE</span>
+            <span class="ops-readout-value mono" id="ops-bullseye-call">&mdash;</span>
+          </div>
+        </section>
+      </div>
+
+      <!-- KNEEBOARD - a shortcut into the real section-kneeboard rather
+           than a second live copy of the same stateful image viewer. -->
+      <div class="ops-tab-panel" id="ops-tab-kneeboard" hidden>
+        <section class="sub-panel">
+          <h2 class="panel-title">Kneeboard</h2>
+          <p>The Kneeboard has its own dedicated section, reachable from
+             the left rail or the button below.</p>
+          <button type="button" id="ops-kneeboard-shortcut" class="logbook-btn">Open Kneeboard</button>
         </section>
       </div>
 
@@ -286,48 +411,80 @@
         <button type="submit" class="ask-btn">Search</button>
       </form>
       <div id="ask-bar-result" hidden></div>
-      <div class="panel-controls">
-        <label class="binding-toggle">
-          <input type="checkbox" id="binding-toggle">
-          Show physical bindings (my HOTAS)
-        </label>
-        <label class="cockpit-config-picker">
-          Cockpit config:
-          <select id="cockpit-config-select"><option value="">Loading...</option></select>
-        </label>
-      </div>
       <div class="tab-content-wrapper" id="tab-content">Waiting for aircraft detection...</div>
       <div class="citation-line" id="citation-line" hidden></div>
     </section>
-  </div>
 
-  <!-- A kneeboard is a physical accessory strapped to the leg, not part of
-       the instrument panel - so it gets its own pull-tab on the screen
-       edge rather than another MFD OSB button, and slides out over the
-       page instead of replacing a panel. -->
-  <button type="button" id="kneeboard-tab" hidden>K<br>N<br>E<br>E<br>B<br>O<br>A<br>R<br>D</button>
-  <div id="kneeboard-drawer" hidden>
-    <div id="kneeboard-clip"></div>
-    <div id="kneeboard-header">
-      <span id="kneeboard-page-label"></span>
-      <div id="kneeboard-header-controls">
-        <button type="button" id="kneeboard-zoom-out" aria-label="Zoom out">&minus;</button>
-        <button type="button" id="kneeboard-zoom-reset">100%</button>
-        <button type="button" id="kneeboard-zoom-in" aria-label="Zoom in">&plus;</button>
-        <button type="button" id="kneeboard-close" aria-label="Stow kneeboard">&times;</button>
+    <!-- DEBRIEF - today's latest completed sortie, native content here
+         instead of the old header-button-triggered overlay. Reuses the
+         exact same renderDebrief()/`/api/debrief/latest` flow, just
+         targeting this section's body instead of the overlay's - see
+         loadLatestDebrief() in app.js, called on nav-in same as Hangar's
+         loadPilotSummary(). Opening one specific PAST flight from the
+         Logbook still uses #debrief-overlay below - that's a genuine
+         drill-into-history action, distinct from "look at today's
+         debrief". -->
+    <section class="primary-section" id="section-debrief" hidden>
+      <div class="sub-panel">
+        <h2 class="panel-title">Debrief</h2>
+        <div id="debrief-section-idle">No completed sortie yet this session.</div>
+        <div id="debrief-section-body" hidden></div>
       </div>
-    </div>
-    <div id="kneeboard-page-area">
-      <img id="kneeboard-image" alt="Kneeboard page">
-    </div>
-    <div id="kneeboard-nav">
-      <button type="button" id="kneeboard-prev">&lsaquo; PREV</button>
-      <span id="kneeboard-goto" class="mono">
-        <input type="number" id="kneeboard-page-input" min="1" aria-label="Go to page">
-        / <span id="kneeboard-total"></span>
-      </span>
-      <button type="button" id="kneeboard-next">NEXT &rsaquo;</button>
-    </div>
+    </section>
+
+    <!-- KNEEBOARD - native section instead of the old edge pull-tab +
+         slide-out drawer. Same real image-viewer/page-nav (loadKneeboard()/
+         renderKneeboardPage() in app.js, unchanged), just always in normal
+         page flow instead of overlaying the map. Nav button hides itself
+         under the same real conditions the old pull-tab did: not DCS, or
+         no pages for the detected aircraft. -->
+    <section class="primary-section" id="section-kneeboard" hidden>
+      <div class="sub-panel">
+        <h2 class="panel-title">Kneeboard</h2>
+        <div id="kneeboard-header">
+          <span id="kneeboard-page-label"></span>
+          <div id="kneeboard-header-controls">
+            <button type="button" id="kneeboard-zoom-out" aria-label="Zoom out">&minus;</button>
+            <button type="button" id="kneeboard-zoom-reset">100%</button>
+            <button type="button" id="kneeboard-zoom-in" aria-label="Zoom in">&plus;</button>
+          </div>
+        </div>
+        <div id="kneeboard-page-area">
+          <img id="kneeboard-image" alt="Kneeboard page">
+        </div>
+        <div id="kneeboard-nav">
+          <button type="button" id="kneeboard-prev">&lsaquo; PREV</button>
+          <span id="kneeboard-goto" class="mono">
+            <input type="number" id="kneeboard-page-input" min="1" aria-label="Go to page">
+            / <span id="kneeboard-total"></span>
+          </span>
+          <button type="button" id="kneeboard-next">NEXT &rsaquo;</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- SETTINGS - relocated from Flight School's old .panel-controls:
+         both are global/user-level preferences with no dependency on the
+         currently-detected aircraft (which physical cockpit is wired up
+         today; whether to overlay real binding labels), so they belong
+         here rather than crammed alongside the aircraft-specific
+         checklist UI. app.js reads both by element id, not DOM position,
+         so relocating them is behavior-neutral. -->
+    <section class="primary-section" id="section-settings" hidden>
+      <div class="sub-panel">
+        <h2 class="panel-title">Settings</h2>
+        <div class="panel-controls">
+          <label class="binding-toggle">
+            <input type="checkbox" id="binding-toggle">
+            Show physical bindings (my HOTAS)
+          </label>
+          <label class="cockpit-config-picker">
+            Cockpit config:
+            <select id="cockpit-config-select"><option value="">Loading...</option></select>
+          </label>
+        </div>
+      </div>
+    </section>
   </div>
 
   <div id="device-modal-backdrop" hidden>
@@ -345,11 +502,13 @@
     </div>
   </div>
 
-  <!-- Covers the whole window with a semi-transparent background (per
-       spec) rather than a small centered dialog like the device-diagram
-       modal - an after-action report is the main thing you're looking at
-       for a moment, not a quick reference glanced at alongside the rest
-       of the app. -->
+  <!-- Only used now for drilling into one specific PAST flight from the
+       Logbook (openPastFlight() in app.js) - "today's" debrief lives in
+       section-debrief above instead. Covers the whole window with a
+       semi-transparent background rather than a small centered dialog
+       like the device-diagram modal, since it's the main thing you're
+       looking at for a moment, not a quick reference glanced at
+       alongside the rest of the app. -->
   <div id="debrief-overlay" hidden>
     <div id="debrief-panel">
       <div id="debrief-panel-header">

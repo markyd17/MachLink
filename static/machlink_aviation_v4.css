@@ -1,0 +1,711 @@
+/* MachLink Aviation UI v4
+   Supersedes v3 entirely (v3 file removed, not layered under this one).
+   Companion visual system for the CURRENT MachLink DOM, now with real
+   Debrief/Kneeboard/Settings left-rail sections and an Ops sub-tab strip
+   (Mission/Route/Threats/Weather/Airfields/Bullseye/Kneeboard) added
+   alongside the CSS - see templates/index.html and app.js for the
+   structural changes this stylesheet assumes. No JavaScript dependencies
+   beyond what app.js already does. No backend changes.
+*/
+:root {
+  --ml-bg: #080b0b;
+  --ml-panel: #101413;
+  --ml-panel-2: #151a18;
+  --ml-panel-3: #1b211e;
+  --ml-line: #343b36;
+  --ml-line-bright: #59635b;
+  --ml-text: #e7ebe7;
+  --ml-dim: #8e9890;
+  --ml-darker: #626b64;
+  --ml-green: #39ff88;
+  --ml-green-soft: rgba(57,255,136,.12);
+  --ml-cyan: #4ed8ff;
+  --ml-cyan-soft: rgba(78,216,255,.11);
+  --ml-amber: #ffb84d;
+  --ml-amber-soft: rgba(255,184,77,.11);
+  --ml-red: #ff5c58;
+  --ml-red-soft: rgba(255,92,88,.11);
+  /* Debrief/Kneeboard/Settings - 3 new nav identities, picked to avoid
+     colliding with Ops-green/Hangar-cyan/Flight School-amber and with
+     style.css's own reserved meanings (amber = unverified AI fallback,
+     red = hazard). */
+  --ml-violet: #b98cff;
+  --ml-violet-soft: rgba(185,140,255,.12);
+  --ml-steel: #7fb2c9;
+  --ml-steel-soft: rgba(127,178,201,.12);
+  --ml-neutral: #c7cdc9;
+  --ml-neutral-soft: rgba(199,205,201,.10);
+  --ml-shadow: 0 14px 34px rgba(0,0,0,.46), 0 2px 8px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.035);
+  /* Softer than v3's 3px flat "hardware" radius - closer to the mockup's
+     less hard-edged panel look, still sharp enough to read as instrument
+     panel rather than generic consumer app chrome. */
+  --ml-radius: 7px;
+  --ml-display: "Oswald", "Bahnschrift", "Arial Narrow", sans-serif;
+  /* Clean modern monospace, not v3's VT323 - the mockup's flight-data
+     numerals are crisp/geometric, not a retro pixel-terminal face. */
+  --ml-mono: "SF Mono", Consolas, "Roboto Mono", "SFMono-Regular", monospace;
+}
+
+html, body { min-height: 100%; }
+body {
+  background:
+    radial-gradient(circle at 50% -20%, rgba(255,255,255,.035), transparent 34%),
+    linear-gradient(rgba(255,255,255,.012) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.008) 1px, transparent 1px),
+    var(--ml-bg) !important;
+  background-size: auto, 6px 6px, 6px 6px, auto !important;
+  color: var(--ml-text) !important;
+  font-family: var(--ml-display) !important;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  border: 1px solid rgba(255,255,255,.035);
+  box-shadow: inset 0 0 90px rgba(0,0,0,.52);
+  z-index: 9999;
+}
+
+/* ---------- Header: avionics status rail ---------- */
+header {
+  min-height: 74px !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: stretch !important;
+  gap: 0 !important;
+  background: linear-gradient(180deg, #171c19, #0d1110) !important;
+  border-bottom: 2px solid #242a26 !important;
+  box-shadow: 0 4px 18px rgba(0,0,0,.5) !important;
+}
+
+.brand {
+  min-width: 0 !important;
+  flex: 0 0 auto !important;
+  padding: 10px 18px !important;
+  border-right: 1px solid var(--ml-line) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  justify-content: center !important;
+  gap: 1px !important;
+}
+.brand-mark { line-height: .9 !important; }
+.brand-sub {
+  font-size: 9px !important;
+  letter-spacing: .18em !important;
+  color: var(--ml-dim) !important;
+}
+.brand-mach, .brand-link { text-shadow: 0 0 12px rgba(255,255,255,.06); }
+
+/* Dot + two-line-label status pill, matching the mockup - replaces v3's
+   solid-color-block look. Each pill is real backend-derived data, never
+   fabricated - see the comment above #detection-status in index.html for
+   exactly which signal drives each one. */
+#detection-status {
+  display: flex !important;
+  /* style.css's own #detection-status rule sets flex-wrap:wrap (fine for
+     its original 2-pill layout) - v4 never touched that property, so it
+     kept winning and was wrapping 6 pills into a garbled multi-row mess
+     at narrow widths instead of the intended single scrollable row. */
+  flex-wrap: nowrap !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  align-items: stretch !important;
+  overflow-x: auto !important;
+}
+.detection-indicator, .status-pill-btn {
+  flex: 1 1 0 !important;
+  min-width: 96px !important;
+  padding: 9px 14px !important;
+  border-right: 1px solid var(--ml-line) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  gap: 4px !important;
+  position: relative !important;
+}
+.status-pill-btn {
+  background: none !important;
+  border-top: 0 !important;
+  border-bottom: 0 !important;
+  border-left: 0 !important;
+  cursor: pointer !important;
+  font: inherit !important;
+  text-align: left !important;
+  color: inherit !important;
+}
+.status-pill-btn:hover { background: rgba(255,255,255,.03) !important; }
+.detection-label, .ops-readout-label, .data-label {
+  color: var(--ml-dim) !important;
+  text-transform: uppercase !important;
+  letter-spacing: .14em !important;
+  font-size: 9px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+}
+/* The actual dot - a pseudo-element on the label so no extra markup was
+   needed in index.html. Off/idle gray by default; lit states below. */
+.detection-label::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ml-darker);
+  flex: none;
+  box-shadow: none;
+}
+.detection-indicator:has(.status-block.dcs) .detection-label::before,
+.status-pill-btn.ready .detection-label::before {
+  background: var(--ml-green);
+  box-shadow: 0 0 6px rgba(57,255,136,.7);
+}
+.detection-indicator:has(.status-block.alarm) .detection-label::before {
+  background: var(--ml-red);
+  box-shadow: 0 0 6px rgba(255,92,88,.7);
+}
+.status-block {
+  font-family: var(--ml-mono) !important;
+  font-size: 15px !important;
+  letter-spacing: .04em !important;
+  line-height: 1.05 !important;
+  color: var(--ml-green) !important;
+  text-shadow: 0 0 9px rgba(57,255,136,.24) !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+.status-block.idle { color: var(--ml-dim) !important; text-shadow: none !important; }
+.status-block.alarm { color: var(--ml-red) !important; }
+
+.header-icon-btn {
+  flex: 0 0 auto !important;
+  width: 52px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: #0c100e !important;
+  border: 0 !important;
+  border-left: 1px solid var(--ml-line) !important;
+  color: var(--ml-dim) !important;
+  cursor: pointer !important;
+}
+.header-icon-btn:hover { color: var(--ml-neutral) !important; background: rgba(255,255,255,.03) !important; }
+
+/* ---------- Desktop shell: left mission nav + work area ---------- */
+#primary-nav {
+  position: fixed !important;
+  top: 74px !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  width: 188px !important;
+  padding: 14px 10px 20px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+  border-right: 1px solid var(--ml-line) !important;
+  background: linear-gradient(180deg, #101412, #090c0b) !important;
+  z-index: 1000 !important;
+  overflow-y: auto !important;
+}
+.primary-nav-btn {
+  width: 100% !important;
+  min-height: 46px !important;
+  padding: 0 12px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  text-align: left !important;
+  border: 1px solid var(--ml-line) !important;
+  border-left: 3px solid transparent !important;
+  border-radius: var(--ml-radius) !important;
+  background: linear-gradient(180deg, #171c19, #0f1311) !important;
+  color: var(--ml-dim) !important;
+  box-shadow: var(--ml-shadow) !important;
+  letter-spacing: .1em !important;
+  font-family: var(--ml-display) !important;
+  font-size: .8rem !important;
+}
+.primary-nav-btn .nav-icon { flex: none !important; opacity: .85; }
+.primary-nav-btn[hidden] { display: none !important; }
+.primary-nav-btn:hover { color: var(--ml-text) !important; transform: translateX(1px); }
+.primary-nav-btn.active[data-section="ops"] {
+  color: var(--ml-green) !important;
+  border-color: #3d6b50 !important;
+  border-left-color: var(--ml-green) !important;
+  background: linear-gradient(90deg, rgba(57,255,136,.13), rgba(57,255,136,.025)) !important;
+  box-shadow: inset 0 0 18px rgba(57,255,136,.035), 0 0 14px rgba(57,255,136,.045) !important;
+  text-shadow: 0 0 8px rgba(57,255,136,.2) !important;
+}
+.primary-nav-btn.active[data-section="hangar"] {
+  color: var(--ml-cyan) !important;
+  border-left-color: var(--ml-cyan) !important;
+  border-color: #355869 !important;
+  background: linear-gradient(90deg, rgba(78,216,255,.10), rgba(78,216,255,.025)) !important;
+}
+.primary-nav-btn.active[data-section="flightschool"] {
+  color: var(--ml-amber) !important;
+  border-left-color: var(--ml-amber) !important;
+  border-color: #66502f !important;
+  background: linear-gradient(90deg, rgba(255,184,77,.10), rgba(255,184,77,.025)) !important;
+}
+.primary-nav-btn.active[data-section="debrief"] {
+  color: var(--ml-violet) !important;
+  border-left-color: var(--ml-violet) !important;
+  border-color: #5a4a75 !important;
+  background: linear-gradient(90deg, var(--ml-violet-soft), rgba(185,140,255,.025)) !important;
+}
+.primary-nav-btn.active[data-section="kneeboard"] {
+  color: var(--ml-steel) !important;
+  border-left-color: var(--ml-steel) !important;
+  border-color: #3d5865 !important;
+  background: linear-gradient(90deg, var(--ml-steel-soft), rgba(127,178,201,.025)) !important;
+}
+.primary-nav-btn.active[data-section="settings"] {
+  color: var(--ml-neutral) !important;
+  border-left-color: var(--ml-neutral) !important;
+  border-color: #4b4f4c !important;
+  background: linear-gradient(90deg, var(--ml-neutral-soft), rgba(199,205,201,.025)) !important;
+}
+
+/* Pure flavor - no functionality. */
+#nav-motto-badge {
+  margin-top: auto !important;
+  padding: 12px 10px !important;
+  border: 1px solid var(--ml-line) !important;
+  border-radius: var(--ml-radius) !important;
+  background: linear-gradient(180deg, #12100a, #0b0a07) !important;
+  color: var(--ml-amber) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 6px !important;
+  text-align: center !important;
+}
+#nav-motto-badge svg { opacity: .85; }
+#nav-motto-badge span {
+  font-family: var(--ml-display) !important;
+  font-size: 9px !important;
+  font-weight: 700 !important;
+  letter-spacing: .16em !important;
+  line-height: 1.7 !important;
+  color: var(--ml-dim) !important;
+}
+
+#primary-content {
+  margin-left: 188px !important;
+  min-width: 0 !important;
+  min-height: calc(100vh - 74px) !important;
+  display: block !important;
+  padding: 14px 16px 18px !important;
+  background: transparent !important;
+}
+
+.primary-section { min-height: calc(100vh - 110px) !important; }
+/* Without this, #section-ops's own unconditional display:grid below
+   outranks the browser's [hidden]{display:none} UA rule (an ID+attribute
+   selector beats a plain attribute one even before !important), so
+   switching to Hangar/Flight School left Ops's content on screen
+   underneath instead of actually hiding it - app.js was toggling the
+   hidden attribute correctly the whole time. Real bug found building
+   this, not a hypothetical. */
+#section-ops[hidden] { display: none !important; }
+
+/* ---------- Shared cockpit panels ---------- */
+.sub-panel, .panel {
+  border: 1px solid var(--ml-line) !important;
+  border-radius: var(--ml-radius) !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.02), transparent 22%),
+    var(--ml-panel) !important;
+  box-shadow: var(--ml-shadow) !important;
+}
+.panel-title {
+  margin: 0 0 10px !important;
+  font-family: var(--ml-display) !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  letter-spacing: .16em !important;
+  text-transform: uppercase !important;
+  color: #d3d9d3 !important;
+}
+
+/* ---------- OPS ---------- */
+#section-ops {
+  display: grid !important;
+  grid-template-rows: auto auto auto minmax(430px, 1fr) auto !important;
+  gap: 10px !important;
+}
+
+.ops-flight-status {
+  order: 1 !important;
+  display: grid !important;
+  grid-template-columns: repeat(5, minmax(0,1fr)) !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  background: linear-gradient(180deg, #151a17, #0d1110) !important;
+}
+/* Same real bug pattern as #section-ops/#ops-tab-route above - confirmed
+   actually manifesting (this strip was showing at page load with no
+   position data at all, when it should stay hidden until own.lat exists
+   - see updateOpsSituationalAwareness in app.js). */
+.ops-flight-status[hidden] { display: none !important; }
+.ops-flight-tile {
+  min-height: 74px !important;
+  padding: 10px 14px !important;
+  border-right: 1px solid var(--ml-line) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+}
+.ops-flight-tile:last-child { border-right: 0 !important; }
+.ops-readout-value {
+  font-family: var(--ml-mono) !important;
+  font-size: 24px !important;
+  line-height: 1 !important;
+  color: var(--ml-green) !important;
+  text-shadow: 0 0 8px rgba(57,255,136,.17) !important;
+}
+.ops-readout-row {
+  min-height: 31px !important;
+  border-bottom: 1px solid #27302a !important;
+}
+
+/* Ops sub-nav strip - Mission/Route/Threats/Weather/Airfields/Bullseye/
+   Kneeboard. Same tab-button look as .mfd-tabs in Flight School, kept
+   visually distinct as its own row since it governs the whole Ops
+   content area, not just one card. */
+.ops-tabs {
+  order: 2 !important;
+  display: flex !important;
+  gap: 5px !important;
+  flex-wrap: wrap !important;
+}
+.ops-tab-btn {
+  border: 1px solid var(--ml-line) !important;
+  border-radius: var(--ml-radius) !important;
+  background: #121714 !important;
+  color: var(--ml-dim) !important;
+  font-family: var(--ml-display) !important;
+  letter-spacing: .1em !important;
+  font-size: .72rem !important;
+  padding: 8px 14px !important;
+  cursor: pointer !important;
+}
+.ops-tab-btn:hover { color: var(--ml-text) !important; }
+.ops-tab-btn.active {
+  color: var(--ml-green) !important;
+  border-color: var(--ml-green) !important;
+  background: var(--ml-green-soft) !important;
+}
+
+.ops-tab-panel { order: 3 !important; min-height: 0 !important; }
+/* Every non-Route tab is one plain panel of readouts, sized by content -
+   only Route needs to fill the remaining Ops height for the map.
+   [hidden] variants MUST come after the unqualified rule and win on
+   specificity (id+attribute beats id alone) - same real bug already
+   found once on #section-ops: an unconditional display:<value> here
+   would outrank the browser's own [hidden]{display:none} UA rule and
+   the tab would never actually hide, just switchOpsTab() toggling an
+   attribute nothing was reading. */
+#ops-tab-route { display: flex !important; flex-direction: column !important; }
+#ops-tab-route[hidden] { display: none !important; }
+.ops-tab-panel[hidden] { display: none !important; }
+#ops-tab-route .ops-sitaware { flex: 1 1 auto !important; display: flex !important; flex-direction: column !important; }
+
+.ops-empty-note {
+  color: var(--ml-dim) !important;
+  font-family: var(--ml-mono) !important;
+  font-size: .85rem !important;
+  padding: 8px 0 !important;
+}
+
+/* Turn the existing briefing/map arrangement into a tactical composition. */
+.right-panel { display: flex !important; flex-direction: column !important; gap: 10px !important; height: 100% !important; }
+.right-panel .simbrief-panel { flex: 1 1 auto !important; min-height: 0 !important; }
+
+/* Make the map visually dominant without changing the map element itself. */
+.ops-map-home {
+  flex: 1 1 auto !important;
+  min-height: 380px !important;
+  border: 1px solid #2b3630 !important;
+  background: #060908 !important;
+}
+#map-controls-bar {
+  background: rgba(9,13,11,.94) !important;
+  border-bottom: 1px solid #2e3831 !important;
+  padding: 6px 8px !important;
+}
+#map-controls-bar button {
+  background: #141a17 !important;
+  border: 1px solid #475148 !important;
+  color: var(--ml-text) !important;
+  font-family: var(--ml-display) !important;
+  letter-spacing: .1em !important;
+  font-size: 10px !important;
+}
+#map-controls-bar button.active { color: var(--ml-green) !important; border-color: var(--ml-green) !important; }
+#map-viewport { min-height: 0 !important; }
+#map-leaflet { filter: saturate(.68) contrast(1.04) brightness(.74) !important; }
+#map-legend {
+  background: rgba(7,10,9,.88) !important;
+  border: 1px solid #364039 !important;
+  color: var(--ml-text) !important;
+}
+
+.ops-threat-alert {
+  border: 1px solid rgba(255,92,88,.4) !important;
+  background: var(--ml-red-soft) !important;
+  color: var(--ml-red) !important;
+  font-family: var(--ml-mono) !important;
+}
+
+/* Make briefing content read like a mission card. */
+.simbrief-panel {
+  padding: 12px !important;
+}
+.simbrief-btn, .logbook-btn, .ask-btn {
+  border: 1px solid #526058 !important;
+  background: linear-gradient(180deg,#1c2420,#101512) !important;
+  color: var(--ml-text) !important;
+  font-family: var(--ml-display) !important;
+  letter-spacing: .08em !important;
+}
+.simbrief-btn:hover, .logbook-btn:hover, .ask-btn:hover {
+  border-color: var(--ml-green) !important;
+  color: var(--ml-green) !important;
+}
+
+.ops-events-panel {
+  order: 4 !important;
+  min-height: 95px !important;
+  padding: 11px 12px !important;
+}
+#ops-events-list {
+  max-height: 120px !important;
+  overflow: auto !important;
+}
+
+/* Hook warning/cautions become avionics annunciators. */
+.placeholder-warning {
+  border: 1px solid rgba(255,184,77,.4) !important;
+  background: var(--ml-amber-soft) !important;
+  color: #ffd08a !important;
+}
+
+/* ---------- Hangar ---------- */
+#section-hangar {
+  padding: 0 !important;
+}
+.hangar-panel {
+  min-height: calc(100vh - 110px) !important;
+  padding: 14px !important;
+}
+#pilot-summary-stats {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0,1fr)) !important;
+  gap: 8px !important;
+  margin-bottom: 14px !important;
+}
+#pilot-summary-stats > * {
+  border: 1px solid var(--ml-line) !important;
+  background: #0d1210 !important;
+}
+
+/* ---------- Flight School ---------- */
+#section-flightschool {
+  padding: 0 !important;
+}
+.mfd-tabs {
+  display: flex !important;
+  gap: 5px !important;
+  margin-bottom: 8px !important;
+}
+.mfd-tabs > * {
+  border: 1px solid var(--ml-line) !important;
+  background: #121714 !important;
+  color: var(--ml-dim) !important;
+  font-family: var(--ml-display) !important;
+  letter-spacing: .1em !important;
+}
+.mfd-tabs > *.active {
+  color: var(--ml-green) !important;
+  border-color: var(--ml-green) !important;
+  background: var(--ml-green-soft) !important;
+}
+.ask-input-container {
+  border: 1px solid var(--ml-line) !important;
+  background: #0d1210 !important;
+}
+.ask-input, .cockpit-config-picker select {
+  background: #090d0b !important;
+  border-color: #374039 !important;
+  color: var(--ml-text) !important;
+}
+.tab-content-wrapper {
+  border: 1px solid var(--ml-line) !important;
+  background: #0d1210 !important;
+  min-height: 500px !important;
+}
+.checklist-item {
+  border-color: #2a332d !important;
+  background: linear-gradient(90deg, rgba(255,255,255,.015), transparent) !important;
+}
+.checklist-item.done { color: #a9b5ad !important; }
+
+/* ---------- Debrief (today's latest sortie - see loadLatestDebrief() in
+   app.js) ---------- */
+#section-debrief .sub-panel { padding: 14px !important; }
+#debrief-section-idle {
+  color: var(--ml-dim) !important;
+  font-family: var(--ml-mono) !important;
+  font-size: .9rem !important;
+}
+#debrief-section-body[hidden] { display: none !important; }
+/* Parity with #debrief-body's own first-child/h4 spacing tweaks in
+   style.css, which are scoped to that id and don't reach this one -
+   .debrief-outcome/.data-grid/.data-cell etc. are generic classes and
+   already apply here unchanged. */
+#debrief-section-body .checklist-title:first-child { margin-top: 0 !important; }
+#debrief-section-body h4.checklist-title { margin-top: 16px !important; }
+
+/* ---------- Kneeboard (native section now, not a slide-out drawer -
+   dropped the old paper/clipboard palette entirely per "textures should
+   match everywhere": reads as another dark MFD panel like the rest of
+   the app instead of a deliberately different accessory) ---------- */
+#section-kneeboard .sub-panel {
+  padding: 14px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  min-height: 70vh !important;
+}
+#kneeboard-header {
+  padding: 0 0 10px !important;
+  border-bottom: 1px solid var(--ml-line) !important;
+  margin-bottom: 10px !important;
+}
+#kneeboard-page-label { color: var(--ml-steel) !important; font-family: var(--ml-display) !important; }
+#kneeboard-header-controls button {
+  background: #121714 !important;
+  border: 1px solid var(--ml-line) !important;
+  color: var(--ml-dim) !important;
+}
+#kneeboard-header-controls button:hover { border-color: var(--ml-steel) !important; color: var(--ml-steel) !important; }
+#kneeboard-page-area {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  background: #06090a !important;
+  background-image: none !important;
+  border: 1px solid var(--ml-line) !important;
+  border-radius: var(--ml-radius) !important;
+  box-shadow: none !important;
+}
+#kneeboard-nav { padding: 10px 0 0 !important; }
+#kneeboard-nav button {
+  border: 1px solid var(--ml-steel) !important;
+  color: var(--ml-steel) !important;
+  font-family: var(--ml-display) !important;
+}
+#kneeboard-nav button:hover:not(:disabled) { background: var(--ml-steel-soft) !important; }
+#kneeboard-nav button:disabled {
+  border-color: var(--ml-line) !important;
+  color: var(--ml-darker) !important;
+}
+
+/* ---------- Settings (relocated cockpit-config/HOTAS controls from
+   Flight School - see index.html comment on section-settings) ---------- */
+#section-settings .sub-panel { padding: 14px !important; }
+#section-settings .panel-controls {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 14px !important;
+  padding: 0 !important;
+  border: 0 !important;
+}
+#section-settings .binding-toggle,
+#section-settings .cockpit-config-picker {
+  color: var(--ml-dim) !important;
+  font-family: var(--ml-display) !important;
+  letter-spacing: .04em !important;
+}
+
+/* ---------- Overlays (Logbook drill-down + one specific past flight's
+   Debrief detail - see the comment on #debrief-overlay in index.html) ---------- */
+#debrief-overlay, #logbook-overlay {
+  background: rgba(2,4,3,.82) !important;
+  backdrop-filter: blur(2px);
+}
+
+/* ---------- Responsive: tablet ---------- */
+@media (max-width: 1050px) {
+  #primary-nav { width: 154px !important; }
+  #primary-content { margin-left: 154px !important; }
+  .right-panel { flex-direction: column !important; }
+  /* 6 header pills + a 7-tab Ops strip both scrolling horizontally in a
+     narrower width read as one illegible smashed-together row (the two
+     don't actually overlap - header stays a clean 74px per
+     #primary-nav's fixed `top`, confirmed via computed layout - it's a
+     pure legibility problem: too much crammed pill text at this width).
+     Shrinking both rather than letting either wrap, since wrapping the
+     header would grow it past the 74px #primary-nav/#primary-content
+     assume elsewhere in this file. */
+  .detection-indicator, .status-pill-btn { min-width: 74px !important; padding: 8px 8px !important; }
+  .detection-label { font-size: 8px !important; letter-spacing: .08em !important; }
+  .status-block { font-size: 12px !important; }
+  .ops-tab-btn { padding: 6px 10px !important; font-size: .66rem !important; }
+}
+
+/* ---------- Responsive: phone = electronic kneeboard ---------- */
+@media (max-width: 720px) {
+  body { overflow: auto !important; }
+  body::before { border: 0; box-shadow: inset 0 0 35px rgba(0,0,0,.5); }
+  header {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 1100 !important;
+    min-height: 62px !important;
+    flex-wrap: wrap !important;
+  }
+  .brand { border-right: 1px solid var(--ml-line) !important; padding: 8px 12px !important; }
+  .brand-sub { font-size: 7px !important; }
+  .detection-indicator, .status-pill-btn { min-width: 78px !important; padding: 7px 10px !important; }
+  #primary-nav {
+    position: sticky !important;
+    top: 62px !important;
+    width: auto !important;
+    height: auto !important;
+    padding: 6px !important;
+    flex-direction: row !important;
+    overflow-x: auto !important;
+    border-right: 0 !important;
+    border-bottom: 1px solid var(--ml-line) !important;
+    background: #0c100e !important;
+  }
+  /* width:auto overrides the base rule's width:100% (never touched by
+     the desktop-only rule above, so it kept winning here too - same
+     leak pattern as #detection-status's flex-wrap right above). Without
+     it every button stretched to fill the whole scrollable row on its
+     own instead of sitting side-by-side. */
+  .primary-nav-btn { width: auto !important; flex: 0 0 auto !important; min-width: 108px !important; min-height: 42px !important; }
+  .primary-nav-btn span:last-child { white-space: nowrap !important; }
+  /* Decorative badge doesn't earn its keep on a narrow phone strip -
+     dropped rather than squeezed illegibly small. */
+  #nav-motto-badge { display: none !important; }
+  #primary-content { margin-left: 0 !important; padding: 8px !important; min-height: auto !important; }
+  .primary-section { min-height: auto !important; }
+  #section-ops { display: block !important; }
+  .ops-flight-status { margin-bottom: 8px !important; grid-template-columns: repeat(5, minmax(90px,1fr)) !important; overflow-x: auto !important; }
+  .ops-flight-tile { min-width: 90px !important; min-height: 63px !important; padding: 8px !important; }
+  .ops-readout-value { font-size: 19px !important; }
+  .ops-tabs { overflow-x: auto !important; flex-wrap: nowrap !important; margin-bottom: 8px !important; }
+  .ops-tab-btn { flex: 0 0 auto !important; white-space: nowrap !important; }
+  #ops-tab-route { min-height: 54vh !important; }
+  .ops-map-home { min-height: 50vh !important; }
+  .ops-events-panel { margin-top: 8px !important; }
+  #pilot-summary-stats { grid-template-columns: repeat(2, minmax(0,1fr)) !important; }
+  .mfd-tabs { overflow-x: auto !important; }
+  .mfd-tabs > * { white-space: nowrap !important; }
+  #section-kneeboard .sub-panel { min-height: 60vh !important; }
+}
