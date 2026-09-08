@@ -84,8 +84,8 @@ html, body { height: 100%; }
 body {
   margin: 0;
   background:
-    radial-gradient(ellipse 1400px 800px at 50% -120px, rgba(255, 255, 255, 0.035), transparent 60%),
-    radial-gradient(ellipse 1600px 900px at 50% 120%, rgba(0, 0, 0, 0.5), transparent 55%),
+    radial-gradient(ellipse 1400px 800px at 50% -120px, rgba(255, 255, 255, 0.045), transparent 60%),
+    radial-gradient(ellipse 1600px 900px at 50% 120%, rgba(0, 0, 0, 0.65), transparent 55%),
     var(--bg);
   color: var(--text-primary);
   font-family: var(--font-display);
@@ -351,21 +351,55 @@ header {
    setting `display` beats the browser's own [hidden] default. */
 .primary-section[hidden] { display: none; }
 
-/* Shared "physical instrument panel" surface treatment - brushed-metal
-   grain, a top-lit/bottom-shadowed bevel, and two brass rivet dots on the
-   top corners - applied to both .panel and .sub-panel via one rule so the
-   two can never drift apart, then finished off below by the corner-
-   bracket pseudo-elements (::before/::after), which need their own
-   selector list since pseudo-elements can't be comma-joined into a
-   property-only rule like this one without repeating it anyway. */
+/* Shared "physical instrument gauge" surface treatment - every card reads
+   as an actual bolted-down cockpit gauge/MFD bezel that's flown some real
+   sorties, not a flat CSS rectangle. Layered back-to-front (first listed
+   paints on top):
+     1. glass sheen      - a soft highlight top-left, like light off a
+                            curved gauge cover
+     2-4. scuff marks     - 3 individual off-angle scratches, not a
+                            uniform hairline pattern - real wear is uneven
+     5. guilloche swirl   - the concentric engine-turned texture actually
+                            machined into real gauge faces/bezels
+     6. brushed grain     - fine directional metal brushing underneath
+     7-8. paint-chip flecks - small lighter specks where the matte coating
+                            has worn through to bare metal at an edge
+     9-12. corner screws   - 4 domed rivet/screw heads (brass hardware
+                            tone, not a data color) actually holding the
+                            "panel" to the "airframe"
+     13-14. grime buildup  - uneven dark buildup pooled in two corners
+                            (asymmetric on purpose - real grime never
+                            pools evenly), not just a symmetric vignette
+     15. base bevel        - top-lit/bottom-shadowed panel bevel
+   Applied to both .panel and .sub-panel via one rule so the two can never
+   drift apart; finished off below by the corner-bracket pseudo-elements
+   (::before/::after), which need their own selector list since
+   pseudo-elements can't be comma-joined into a property-only rule like
+   this one without repeating it anyway. */
 .panel, .sub-panel {
   background-color: var(--panel-bg);
   background-image:
-    radial-gradient(circle 3px at 11px 11px, var(--hardware-warm-dim), transparent 70%),
-    radial-gradient(circle 3px at calc(100% - 11px) 11px, var(--hardware-warm-dim), transparent 70%),
-    repeating-linear-gradient(100deg, rgba(255, 255, 255, 0.015) 0px, rgba(255, 255, 255, 0.015) 1px, transparent 1px, transparent 4px),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.025) 0%, transparent 25%, rgba(0, 0, 0, 0.14) 100%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), inset 0 -1px 0 rgba(0, 0, 0, 0.35);
+    radial-gradient(ellipse 70% 45% at 18% -8%, rgba(255, 255, 255, 0.05), transparent 60%),
+    /* Fixed px repeat distances (not %), so scratch spacing stays the same
+       real-world scale on a small tile and a huge card alike - a % -based
+       single line here would stretch into one giant "crack" that looks
+       identical on every panel regardless of its size, the opposite of
+       authentic scattered wear. */
+    repeating-linear-gradient(107deg, rgba(255, 255, 255, 0.05) 0px, rgba(255, 255, 255, 0.05) 1px, transparent 1px, transparent 165px),
+    repeating-linear-gradient(74deg, rgba(255, 255, 255, 0.032) 0px, rgba(255, 255, 255, 0.032) 1px, transparent 1px, transparent 215px),
+    repeating-linear-gradient(126deg, rgba(0, 0, 0, 0.22) 0px, rgba(0, 0, 0, 0.22) 1px, transparent 1px, transparent 255px),
+    repeating-radial-gradient(circle at 50% 38%, rgba(255, 255, 255, 0.015) 0px, rgba(255, 255, 255, 0.015) 1px, transparent 1px, transparent 3px),
+    repeating-linear-gradient(100deg, rgba(255, 255, 255, 0.02) 0px, rgba(255, 255, 255, 0.02) 1px, transparent 1px, transparent 4px),
+    radial-gradient(circle 5px at 94% 7%, rgba(195, 195, 195, 0.14), transparent 70%),
+    radial-gradient(circle 4px at 5% 90%, rgba(195, 195, 195, 0.1), transparent 70%),
+    radial-gradient(circle 4px at 11px 11px, rgba(255, 255, 255, 0.55), var(--hardware-warm) 45%, rgba(0, 0, 0, 0.75) 88%),
+    radial-gradient(circle 4px at calc(100% - 11px) 11px, rgba(255, 255, 255, 0.55), var(--hardware-warm) 45%, rgba(0, 0, 0, 0.75) 88%),
+    radial-gradient(circle 4px at 11px calc(100% - 11px), rgba(255, 255, 255, 0.55), var(--hardware-warm) 45%, rgba(0, 0, 0, 0.75) 88%),
+    radial-gradient(circle 4px at calc(100% - 11px) calc(100% - 11px), rgba(255, 255, 255, 0.55), var(--hardware-warm) 45%, rgba(0, 0, 0, 0.75) 88%),
+    radial-gradient(ellipse 240px 170px at 6% 108%, rgba(0, 0, 0, 0.4), transparent 65%),
+    radial-gradient(ellipse 280px 190px at 102% 102%, rgba(0, 0, 0, 0.32), transparent 60%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, transparent 22%, rgba(0, 0, 0, 0.22) 100%);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05), inset 0 -2px 0 rgba(0, 0, 0, 0.4), inset 0 0 46px rgba(0, 0, 0, 0.3);
 }
 .panel {
   border: 1px solid var(--border);
@@ -415,7 +449,7 @@ header {
   width: 11px;
   height: 11px;
   border: 2px solid var(--hardware-warm);
-  opacity: 0.55;
+  opacity: 0.75;
   pointer-events: none;
 }
 .sub-panel::before, .panel::before,
