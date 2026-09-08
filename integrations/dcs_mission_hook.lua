@@ -76,12 +76,23 @@ end
 
 -- fields: ordered list of {key, value} pairs. nil values are omitted so the
 -- Python side can use straightforward .get(key) with no special-casing.
+-- A value wrapped as {raw = "..."} is inserted verbatim (already valid
+-- JSON text - e.g. a nested array/object built by build_json_array() or
+-- build_json() itself elsewhere) instead of being escaped as a plain
+-- string. Needed for extraFields like unit_json()'s loadout: without
+-- this, a real bug found live (a real snapshot showed
+-- "loadout":"[{\"name\":...}]" - a STRING containing escaped JSON text,
+-- not an actual JSON array) - build_json()'s ordinary string branch below
+-- has no way to tell "this string IS the field's plain value" from "this
+-- string IS pre-built JSON to splice in verbatim" without this marker.
 local function build_json(fields)
 	local parts = {}
 	for _, kv in ipairs(fields) do
 		local k, v = kv[1], kv[2]
 		if v ~= nil then
-			if type(v) == "string" then
+			if type(v) == "table" and v.raw ~= nil then
+				parts[#parts + 1] = '"' .. k .. '":' .. v.raw
+			elseif type(v) == "string" then
 				parts[#parts + 1] = '"' .. k .. '":"' .. json_escape(v) .. '"'
 			else
 				parts[#parts + 1] = '"' .. k .. '":' .. tostring(v)
@@ -620,7 +631,7 @@ local function write_map_snapshot()
 	local ownExtra = {}
 	local fuel = get_fuel(playerUnit)
 	if fuel ~= nil then ownExtra[#ownExtra + 1] = {"fuel", fuel} end
-	ownExtra[#ownExtra + 1] = {"loadout", build_json_array(get_loadout(playerUnit))}
+	ownExtra[#ownExtra + 1] = {"loadout", {raw = build_json_array(get_loadout(playerUnit))}}
 
 	local fields = {
 		{"hookVersion", MAP_HOOK_VERSION},

@@ -10,6 +10,13 @@
      every entity's position to real lat/lon via DCS's own coord.LOtoLL(),
      so this is an actually-accurate background, not a decorative one. -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<!-- Digital-clock look for Ops's flight-status numbers (sortie time, fuel,
+     altitude, speed, heading) - a real 7-segment font isn't on Google
+     Fonts, so this is the closest practical match: a genuine blocky
+     LED/LCD-display face, not a fake CSS effect on a normal font. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
@@ -119,14 +126,11 @@
           </section>
         </div>
 
-        <!-- Situational awareness - the exact same real Leaflet map the
-             full overlay uses (see #map-viewport below), reparented in
-             here as its home so it's visible by default without an extra
-             click, plus the readouts a visual map can't give you as clean
-             text (an exact bullseye call, nearest-divert bearing/range, a
-             contact-type count). EXPAND moves #map-viewport into the full-
-             screen overlay for panning/zooming/popups without this card's
-             space constraints - see openMap()/closeMap() in app.js. -->
+        <!-- Situational awareness - the real Leaflet map lives permanently
+             here (no full-screen/expand mode - one home, always visible),
+             plus the readouts a visual map can't give you as clean text
+             (an exact bullseye call, nearest-divert bearing/range, a
+             contact-type count). -->
         <section class="sub-panel ops-sitaware">
           <h2 class="panel-title">Situational Awareness</h2>
           <!-- Distance-only, deliberately not a fabricated engagement-range
@@ -160,22 +164,26 @@
             <span class="ops-readout-label">SUPPORT</span>
             <span class="ops-readout-value mono" id="ops-nearest-support">&mdash;</span>
           </div>
-          <!-- #map-viewport (the real map) lives here by default - JS
-               moves it into #map-body instead when EXPAND/CLOSE is
-               clicked. Always enabled - openMap() shows its own "no data
-               yet" placeholder rather than gating the button itself. -->
           <div class="ops-map-home" id="ops-map-home">
-            <button type="button" id="live-map-btn" class="ops-map-expand-btn">&#10530; EXPAND</button>
-            <!-- Shown only while #map-viewport is out being displayed
-                 full-screen instead - see openMap()/closeMap() in app.js. -->
-            <div class="ops-map-home-placeholder" id="ops-map-home-placeholder" hidden>Map expanded — see full-screen view</div>
-            <!-- Moves between here (its home) and #map-body - see
-                 openMap()/closeMap() in app.js. Everything drawn on it
-                 comes straight from /api/map_data (dcs_mission_hook.lua's
-                 own snapshot) - own position, friendlies, airbases,
-                 bullseye, and only whatever DCS itself has confirmed
-                 detected. Nothing here is computed or guessed client-side;
-                 if DCS doesn't report a contact, it doesn't appear. -->
+            <div id="map-controls-bar">
+              <!-- Live radius-to-edge of the current view, from actual
+                   geodesic distance - updates on zoom/pan and every data
+                   poll. -->
+              <span id="map-range-label" class="mono"></span>
+              <!-- Leaflet's own zoom control (scroll wheel + on-map +/-)
+                   handles zoom - RECENTER just snaps back to your own
+                   position after you've panned away, since the map
+                   doesn't auto-follow every tick (that would fight manual
+                   panning). -->
+              <button type="button" id="map-key-toggle" class="active">KEY</button>
+              <button type="button" id="map-recenter">RECENTER</button>
+            </div>
+            <!-- Everything drawn here comes straight from /api/map_data
+                 (dcs_mission_hook.lua's own snapshot) - own position,
+                 friendlies, airbases, bullseye, and only whatever DCS
+                 itself has confirmed detected. Nothing here is computed
+                 or guessed client-side; if DCS doesn't report a contact,
+                 it doesn't appear. -->
             <div id="map-viewport">
               <div id="map-empty-state" hidden></div>
               <!-- hook_outdated flag also drives Ops's own warning above
@@ -326,40 +334,6 @@
       </div>
       <div id="logbook-body">
         <div id="logbook-flight-list"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Live F10-style map - same full-window overlay treatment as the other
-       panels. Everything drawn on the canvas comes straight from
-       /api/map_data (dcs_mission_hook.lua's own snapshot) - own position,
-       friendlies, airbases, bullseye, and only whatever DCS itself has
-       confirmed detected. Nothing here is computed or guessed client-side;
-       if DCS doesn't report a contact, it doesn't appear. -->
-  <div id="map-overlay" hidden>
-    <div id="map-panel">
-      <div id="map-panel-header">
-        <span id="map-panel-title">LIVE MAP</span>
-        <div id="map-panel-controls">
-          <!-- Live radius-to-edge of the current view, from actual
-               geodesic distance (not a fixed preset like the old canvas
-               map) - updates on zoom/pan and every data poll. -->
-          <span id="map-range-label" class="mono"></span>
-          <!-- Leaflet's own zoom control (scroll wheel + on-map +/-)
-               handles zoom - RECENTER just snaps back to your own
-               position after you've panned away, since the map no longer
-               auto-follows every tick (that would fight manual panning). -->
-          <button type="button" id="map-key-toggle" class="active">KEY</button>
-          <button type="button" id="map-recenter">RECENTER</button>
-          <button type="button" id="map-close" aria-label="Close">&times;</button>
-        </div>
-      </div>
-      <!-- Empty on load - #map-viewport (below, currently living inside
-           Ops's situational awareness card by default) gets moved in here
-           by openMap() and back out by closeMap(), rather than this
-           overlay and the Ops card each keeping their own separate
-           Leaflet instance/markers/rings to stay in sync. -->
-      <div id="map-body"></div>
       </div>
     </div>
   </div>

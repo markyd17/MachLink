@@ -236,8 +236,8 @@ header {
 /* ----------------------------------------------------------
    PRIMARY CONTENT - one of the three sections below is visible at a time
    (switchPrimarySection() in app.js toggles [hidden]); everything else on
-   the page (kneeboard, debrief/logbook/map overlays) sits outside this
-   and stays reachable regardless of which section is active.
+   the page (kneeboard, debrief/logbook overlays) sits outside this and
+   stays reachable regardless of which section is active.
    ---------------------------------------------------------- */
 #primary-content {
   flex: 1 1 auto;
@@ -300,21 +300,38 @@ header {
   flex: 0 0 auto;
   flex-direction: row;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: 8px;
   margin-bottom: 12px;
-  padding: 10px 14px;
+  padding: 14px 18px;
 }
 .ops-flight-status[hidden] { display: none; }
 .ops-flight-tile {
-  flex: 1 1 100px;
+  flex: 1 1 110px;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
 }
-/* .ops-readout-value defaults to right-aligned for the label-left/value-
-   right readout ROWS elsewhere in Ops - these are stacked tiles instead,
-   where left-aligned reads correctly under a left-aligned label. */
-.ops-flight-tile .ops-readout-value { text-align: left; }
+.ops-flight-tile .ops-readout-label { font-size: 0.72rem; }
+/* Digital-clock look, not just "bigger text" - VT323 (loaded in
+   templates/index.html) is a genuine blocky LED/LCD-display face, the
+   closest practical match to a real 7-segment font (not on Google Fonts).
+   font-weight left at normal - VT323 ships one weight, and browsers
+   synthetically "fake bold" a font that has none, which blurs a pixel-
+   style face like this rather than making it read as bolder. The glow
+   (text-shadow) does the "prominent" work instead, same as a real LED
+   display's own bloom. .ops-readout-value defaults to right-aligned/bold/
+   small for the label-left/value-right readout ROWS elsewhere in Ops -
+   these are stacked tiles instead, where left-aligned reads correctly
+   under a left-aligned label. */
+.ops-flight-tile .ops-readout-value {
+  font-family: "VT323", var(--font-mono);
+  font-size: 2.1rem;
+  line-height: 1;
+  font-weight: normal;
+  letter-spacing: 0.04em;
+  text-align: left;
+  text-shadow: 0 0 8px rgba(0, 229, 255, 0.6), 0 0 2px rgba(0, 229, 255, 0.85);
+}
 
 /* A live readout row, shared by the sortie timer strip and the
    situational-awareness card below (bullseye/divert/contacts). */
@@ -374,56 +391,45 @@ header {
 }
 .ops-threat-alert[hidden] { display: none; }
 
-/* The real map's home within this card - fills whatever's left below the
-   readout rows above, instead of the small fixed-size radar-scope preview
-   this replaced. position:relative so the EXPAND button and #map-viewport
-   itself (with its own empty-state/warning/legend overlays) can be
-   positioned against it regardless of which of its two homes it's
-   currently in (see #map-body below for the other one). */
+/* The real map's permanent home within this card (no expand/full-screen
+   mode) - fills whatever's left below the readout rows above, instead of
+   the small fixed-size radar-scope preview this replaced.
+   isolation:isolate is load-bearing here, not decoration: the map now
+   lives in normal page flow rather than inside its own position:fixed
+   overlay, so without a stacking context of its own, Leaflet's internal
+   panes/controls (up to z-index 1000) and #map-legend/
+   #map-hook-outdated-warning (1100) would resolve in the SAME root-level
+   stacking context as other position:fixed page chrome - a real bug this
+   surfaced: the map was painting over the kneeboard drawer (z-index 95)
+   whenever both were open, since 1100 > 95 in that shared context.
+   isolation:isolate contains all of that internal z-index entirely within
+   this box, so nothing inside it can ever outrank page-level UI outside
+   it, no matter how high those internal values go. */
 .ops-map-home {
-  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
   flex: 1;
   min-height: 240px;
   margin-top: 6px;
   border: 1px solid var(--border);
   overflow: hidden;
 }
-#map-viewport { position: relative; width: 100%; height: 100%; }
-.ops-map-home-placeholder {
-  position: absolute;
-  inset: 0;
+/* Same controls Live Map always had (range readout/KEY/RECENTER), just
+   living here permanently now instead of only in a full-screen overlay -
+   see #map-range-label/#map-key-toggle/#map-recenter below for the
+   button styling, shared with when this was the overlay's header. */
+#map-controls-bar {
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
-  justify-content: center;
-  color: var(--text-dim);
-  font-size: 0.8rem;
-  text-align: center;
-  padding: 20px;
-}
-.ops-map-home-placeholder[hidden] { display: none; }
-/* Same stacking-context reasoning as #map-legend/#map-hook-outdated-warning
-   below (see their comments) - #map-viewport's nearest real ancestor
-   stacking context while it's living here is the document root itself
-   (nothing between this button and it sets position+z-index), which is
-   also where Leaflet's own panes/controls (up to z-index 1000) resolve -
-   needs to clear that, same 1100 used everywhere else on this map. */
-.ops-map-expand-btn {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  z-index: 1100;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 8px 10px;
   background: var(--bg);
-  border: 1px solid var(--tactical-cyan);
-  color: var(--tactical-cyan);
-  font-family: var(--font-display);
-  font-size: 0.7rem;
-  font-weight: bold;
-  letter-spacing: 0.05em;
-  padding: 5px 10px;
-  cursor: pointer;
+  border-bottom: 1px solid var(--border);
 }
-.ops-map-expand-btn:hover { background: rgba(0, 229, 255, 0.12); }
-.ops-map-expand-btn[hidden] { display: none; }
+#map-viewport { position: relative; flex: 1; min-height: 0; }
 
 /* Live combat-event ticker - a fixed height with its own scroll rather
    than growing with the grid above, so a busy sortie's event list can't
@@ -1309,74 +1315,27 @@ header {
 .debrief-outcome-unconfirmed { color: var(--caution-amber); }
 
 /* ----------------------------------------------------------
-   LIVE MAP - same full-window overlay treatment as the Logbook, its own
-   z-index band (116, below Logbook's 117/Debrief's 120) since it's opened
-   from the Ops tab, independently of either.
+   LIVE MAP - permanently embedded in Ops (#ops-map-home above), not a
+   full-screen overlay - one home, no expand/collapse.
    ---------------------------------------------------------- */
-#map-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.55);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 116;
-  padding: 24px;
-}
-#map-overlay[hidden] { display: none; }
-#map-panel {
-  background: var(--panel-bg);
-  border: 1px solid var(--tactical-cyan);
-  width: min(720px, 92vw);
-  /* height, not max-height - unlike the other overlays (debrief/logbook),
-     which shrink-to-fit variable text content, a map always wants to fill
-     whatever room it's given. A definite height here (rather than "auto,
-     capped") is also what lets #map-body use flex:1 and #map-viewport/
-     #map-leaflet resolve height:100% against something real, instead of
-     collapsing to 0 the way percentage heights do inside an auto-sized
-     ancestor. */
-  height: 90vh;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
-}
-#map-panel-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 20px;
-  border-bottom: 1px solid var(--border);
-}
-#map-panel-title {
-  font-family: var(--font-display);
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  font-size: 1.1rem;
-  color: var(--tactical-cyan);
-}
-#map-panel-controls {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
 /* A live geodesic readout - same "trusted sourced data" cyan treatment as
    .status-block, not plain dim text, so it doesn't get lost sitting right
-   next to the KEY/RECENTER/close buttons. margin-right (rather than just
-   relying on #map-panel-controls' gap) gives it a clear break from KEY
+   next to the KEY/RECENTER buttons. margin-right (rather than just
+   relying on #map-controls-bar's gap) gives it a clear break from KEY
    specifically, since it reads as a value, not another button. */
 #map-range-label {
   border: 1px solid var(--tactical-cyan);
   color: var(--tactical-cyan);
   background: rgba(0, 229, 255, 0.05);
   font-family: var(--font-mono);
-  font-size: 0.95rem;
+  font-size: 0.85rem;
   font-weight: bold;
-  padding: 6px 12px;
+  padding: 5px 10px;
   letter-spacing: 0.02em;
   white-space: nowrap;
-  margin-right: 10px;
+  margin-right: auto;
 }
-#map-recenter, #map-key-toggle, #map-close {
+#map-recenter, #map-key-toggle {
   background: none;
   border: 1px solid var(--border);
   color: var(--text-dim);
@@ -1387,25 +1346,12 @@ header {
   cursor: pointer;
   font-family: var(--font-mono);
 }
-#map-close { border: none; font-size: 26px; padding: 0 4px; }
 #map-recenter:hover, #map-key-toggle:hover { border-color: var(--tactical-cyan); color: var(--tactical-cyan); }
 #map-key-toggle.active { border-color: var(--tactical-cyan); color: var(--tactical-cyan); }
-#map-close:hover { color: var(--hazard-red); }
-#map-body {
-  padding: 16px 20px 20px;
-  position: relative;
-  flex: 1;
-  min-height: 0;
-}
-/* #map-viewport (the moved-between-homes wrapper - see the HTML comment on
-   it) already provides its own 100%/100% box; #map-leaflet just fills
-   that, same rule whichever of its two homes (here, or Ops's
-   #ops-map-home) it's currently sitting in. */
 #map-leaflet {
   width: 100%;
   height: 100%;
   background: #0B0F12;
-  border: 1px solid var(--border);
 }
 /* Leaflet ships its own default marker/popup look tuned for a light
    basemap sitting in a full-page context - override just enough to fit
@@ -1457,17 +1403,17 @@ header {
   position: absolute;
   left: 24px;
   bottom: 24px;
-  /* #map-overlay (z-index 116, position:fixed) is the nearest ancestor
-     that actually establishes a stacking context - #map-panel/#map-body/
-     the Leaflet container itself all sit at position:relative with no
-     z-index of their own, so they don't start a new one. That means this
-     box's z-index is compared directly against Leaflet's OWN pane
-     z-indexes (tile pane 200, marker pane 600, popup pane 700) and its
-     zoom/attribution controls (1000) in that same shared context, not
-     just against other things inside #map-body. Below ~1000 here, the
-     map tiles paint over this box every frame regardless of `hidden` -
-     it looked like the KEY toggle did nothing because the legend was
-     always covered, on or off. */
+  /* Nothing between #map-viewport and the document root sets both
+     position and z-index (.ops-map-home, #map-viewport, the Leaflet
+     container itself are all position:relative/static with no z-index of
+     their own), so this box's z-index is compared directly against
+     Leaflet's OWN pane z-indexes (tile pane 200, marker pane 600, popup
+     pane 700) and its zoom/attribution controls (1000) in that same
+     shared root-level context - not just against other things inside
+     #ops-map-home. Below ~1000 here, the map tiles paint over this box
+     every frame regardless of `hidden` - a real bug found this way once
+     already (the KEY toggle looked broken because the legend was always
+     covered, on or off). */
   z-index: 1100;
   background: rgba(11, 15, 18, 0.85);
   border: 1px solid var(--border);

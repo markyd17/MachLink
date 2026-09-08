@@ -28,7 +28,6 @@ const viewFullLogbookBtn = document.getElementById("view-full-logbook-btn");
 const logbookOverlay = document.getElementById("logbook-overlay");
 const logbookClose = document.getElementById("logbook-close");
 const logbookFlightList = document.getElementById("logbook-flight-list");
-const liveMapBtn = document.getElementById("live-map-btn");
 const opsHookOutdatedWarning = document.getElementById("ops-hook-outdated-warning");
 const opsFlightStatus = document.getElementById("ops-flight-status");
 const opsSortieTimeValue = document.getElementById("ops-sortie-time-value");
@@ -45,12 +44,6 @@ const opsNearestSupport = document.getElementById("ops-nearest-support");
 const opsLoadoutPanel = document.getElementById("ops-loadout-panel");
 const opsLoadoutContent = document.getElementById("ops-loadout-content");
 const opsEventsList = document.getElementById("ops-events-list");
-const opsMapHome = document.getElementById("ops-map-home");
-const opsMapHomePlaceholder = document.getElementById("ops-map-home-placeholder");
-const mapViewport = document.getElementById("map-viewport");
-const mapOverlay = document.getElementById("map-overlay");
-const mapClose = document.getElementById("map-close");
-const mapBody = document.getElementById("map-body");
 const mapLeafletDiv = document.getElementById("map-leaflet");
 const mapEmptyState = document.getElementById("map-empty-state");
 const mapHookOutdatedWarning = document.getElementById("map-hook-outdated-warning");
@@ -82,8 +75,8 @@ const deviceZoomReset = document.getElementById("device-zoom-reset");
 // ----------------------------------------------------------------------
 // PRIMARY NAV - Ops / Hangar / Flight School. Only one of the three
 // sections is visible at a time; everything else (kneeboard, debrief/
-// logbook/map overlays) lives outside this and stays reachable regardless
-// of which section is active. Sections that already poll/render in the
+// logbook overlays) lives outside this and stays reachable regardless of
+// which section is active. Sections that already poll/render in the
 // background (checklist, DCS briefing) keep doing so while hidden, so
 // switching to them always shows current data with no extra fetch here -
 // Hangar is the one exception, since its data was previously only ever
@@ -97,9 +90,9 @@ function switchPrimarySection(id) {
     btn.classList.toggle("active", btn.dataset.section === id);
   });
   if (id === "hangar") loadPilotSummary();
-  // The embedded map was sized 0x0 while its #ops-map-home ancestor was
-  // hidden (display:none doesn't just hide, Leaflet's cached container
-  // size goes stale) - same re-measure openMap() does for the overlay.
+  // The map was sized 0x0 while its #ops-map-home ancestor was hidden
+  // (display:none doesn't just hide, Leaflet's cached container size goes
+  // stale) - tell it to re-measure now that it's visible again.
   if (id === "ops" && leafletMap) setTimeout(() => leafletMap.invalidateSize(), 0);
 }
 primaryNavBtns.forEach((btn) => {
@@ -1044,11 +1037,9 @@ function updateMapMarkers(snapshot) {
 }
 
 // Runs continuously from page load (see the bottom of this file) rather
-// than only while the full map overlay is open - Ops's situational-
-// awareness card needs this same snapshot any time it's visible, and
-// it's a cheap local read (the same 1-second snapshot dcs_mission_hook.lua
-// already writes for the full map), so one shared loop is simpler than
-// starting/stopping a timer on every tab switch and overlay open/close.
+// than only while the Ops tab is active - it's a cheap local read (the
+// same 1-second snapshot dcs_mission_hook.lua already writes), so one
+// always-on loop is simpler than starting/stopping a timer per tab switch.
 async function pollMapData() {
   let snapshot;
   try {
@@ -1064,43 +1055,13 @@ async function pollMapData() {
   updateOpsSituationalAwareness(snapshot);
 }
 
-// #map-viewport lives in Ops's #ops-map-home by default (visible there
-// without any click needed) and moves into the overlay's #map-body and
-// back, rather than each keeping its own separate Leaflet instance/
-// markers/rings to stay in sync - one map, two homes.
-function openMap() {
-  mapBody.appendChild(mapViewport);
-  opsMapHomePlaceholder.hidden = false;
-  liveMapBtn.hidden = true;
-  mapOverlay.hidden = false;
-  ensureLeafletMap();
-  buildMapLegend();
-  // The KEY legend takes real corner space Ops's small embedded view can't
-  // spare - stays hidden there regardless of the toggle's own remembered
-  // state, which only applies once actually expanded here.
-  mapLegend.hidden = !mapKeyToggle.classList.contains("active");
-  // The map was sized 0x0 while its container was hidden - Leaflet needs
-  // to be told to re-measure now that it's actually visible.
-  setTimeout(() => leafletMap.invalidateSize(), 0);
-  pollMapData();
-}
-
-function closeMap() {
-  mapOverlay.hidden = true;
-  opsMapHome.appendChild(mapViewport);
-  opsMapHomePlaceholder.hidden = true;
-  liveMapBtn.hidden = false;
-  mapLegend.hidden = true;
-  if (leafletMap) setTimeout(() => leafletMap.invalidateSize(), 0);
-}
-
 // ----------------------------------------------------------------------
 // OPS SITUATIONAL AWARENESS - a bullseye call for your own position, the
 // nearest friendly divert airbase, and a contact-type breakdown, next to
-// the real map itself (#map-viewport lives in #ops-map-home by default -
-// see openMap()/closeMap()). Every number here comes straight from
-// data.own/data.airbases/data.detected/data.bullseye - nothing computed
-// here is a guess, just bearing/distance math on real positions.
+// the real map itself (permanently in #ops-map-home - no expand/full-
+// screen mode). Every number here comes straight from data.own/
+// data.airbases/data.detected/data.bullseye - nothing computed here is a
+// guess, just bearing/distance math on real positions.
 // ----------------------------------------------------------------------
 
 // Nearest airbase belonging to the player's OWN coalition (data.myCoalition -
@@ -1283,11 +1244,6 @@ function updateOpsSituationalAwareness(snapshot) {
     : "NONE FOUND";
 }
 
-liveMapBtn.addEventListener("click", openMap);
-mapClose.addEventListener("click", closeMap);
-mapOverlay.addEventListener("click", (e) => {
-  if (e.target === mapOverlay) closeMap();
-});
 mapRecenterBtn.addEventListener("click", () => {
   hasCenteredOnce = false;
   pollMapData();
@@ -1295,10 +1251,6 @@ mapRecenterBtn.addEventListener("click", () => {
 mapKeyToggle.addEventListener("click", () => {
   mapLegend.hidden = !mapLegend.hidden;
   mapKeyToggle.classList.toggle("active", !mapLegend.hidden);
-});
-document.addEventListener("keydown", (e) => {
-  if (mapOverlay.hidden) return;
-  if (e.key === "Escape") closeMap();
 });
 
 let lastBriefingSeq = null;
@@ -1939,12 +1891,13 @@ function escapeHtml(str) {
 pollStatus();
 setInterval(pollStatus, 3000);
 
-// The map lives in Ops's #ops-map-home by default (see openMap()/
-// closeMap()) - build it up front instead of waiting for a click, since
-// Ops is the default landing tab and the map should just be there.
+// The map lives permanently in Ops's #ops-map-home - no expand/full-screen
+// mode, just one map, one home - so it's built up front instead of
+// waiting for a click, since Ops is the default landing tab.
 ensureLeafletMap();
+buildMapLegend();
 
-// Always-on, regardless of which primary tab is active or whether the
-// full map overlay is open - see the comment on pollMapData() itself.
+// Always-on, regardless of which primary tab is active.
+// See the comment on pollMapData() itself.
 pollMapData();
 setInterval(pollMapData, 1000);
