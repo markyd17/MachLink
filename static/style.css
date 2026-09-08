@@ -291,46 +291,62 @@ header {
    fills it. */
 .simbrief-panel { flex: 1; }
 
-/* Live flight status - a thin strip of tiles above the grid, not another
-   grid cell, since it's relevant regardless of what's in the two columns
-   below. Row of evenly-spaced tiles rather than stacked readout rows -
-   five short values (time/fuel/alt/speed/heading) read better side by
-   side than as a tall stack eating into the map's space below. */
+/* Live flight status - a car-dash-style instrument cluster above the
+   grid, not another grid cell, since it's relevant regardless of what's
+   in the two columns below. Grid rather than flex-wrap: at these type
+   sizes each tile's actual width varies a lot (SORTIE TIME's "1:02:34"
+   vs FUEL's "62%"), and auto-fit columns wrap cleanly at any width
+   instead of flex-basis fighting the content. */
 .ops-flight-status {
-  flex: 0 0 auto;
-  flex-direction: row;
-  flex-wrap: wrap;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 6px 20px;
   margin-bottom: 12px;
-  padding: 14px 18px;
+  padding: 16px 20px;
 }
 .ops-flight-status[hidden] { display: none; }
 .ops-flight-tile {
-  flex: 1 1 110px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
+  min-width: 0;
 }
-.ops-flight-tile .ops-readout-label { font-size: 0.72rem; }
-/* Digital-clock look, not just "bigger text" - VT323 (loaded in
+/* Small caption above a big number, same relationship a real instrument
+   cluster uses ("MPH" tiny above/below a huge speed digit) - the label
+   stays deliberately small and dim so it never competes with the number. */
+.ops-flight-tile .ops-readout-label { font-size: 0.62rem; letter-spacing: 0.1em; }
+/* Digital-dash look, not just "bigger text" - VT323 (loaded in
    templates/index.html) is a genuine blocky LED/LCD-display face, the
-   closest practical match to a real 7-segment font (not on Google Fonts).
-   font-weight left at normal - VT323 ships one weight, and browsers
-   synthetically "fake bold" a font that has none, which blurs a pixel-
-   style face like this rather than making it read as bolder. The glow
-   (text-shadow) does the "prominent" work instead, same as a real LED
-   display's own bloom. .ops-readout-value defaults to right-aligned/bold/
-   small for the label-left/value-right readout ROWS elsewhere in Ops -
-   these are stacked tiles instead, where left-aligned reads correctly
-   under a left-aligned label. */
+   closest practical match to a real 7-segment/dash-cluster font (not on
+   Google Fonts). font-weight left at normal - VT323 ships one weight,
+   and browsers synthetically "fake bold" a font that has none, which
+   blurs a pixel-style face like this rather than making it read as
+   bolder; size and glow do the "prominent" work instead, same as a real
+   instrument cluster's own bloom. .ops-readout-value defaults to right-
+   aligned/small for the label-left/value-right readout ROWS elsewhere in
+   Ops - these are stacked tiles instead, left-aligned under a left-
+   aligned label. */
 .ops-flight-tile .ops-readout-value {
   font-family: "VT323", var(--font-mono);
-  font-size: 2.1rem;
-  line-height: 1;
+  font-size: 3.6rem;
+  line-height: 0.95;
   font-weight: normal;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.02em;
   text-align: left;
-  text-shadow: 0 0 8px rgba(0, 229, 255, 0.6), 0 0 2px rgba(0, 229, 255, 0.85);
+  text-shadow: 0 0 12px rgba(0, 229, 255, 0.7), 0 0 3px rgba(0, 229, 255, 0.95);
+  white-space: nowrap;
+}
+/* The unit riding beside the big number ("FT", "KT", "%") - a real
+   instrument cluster always sizes these down hard rather than spelling
+   "4,921 FT" in one uniform size the way the plain readout rows below do. */
+.ops-value-unit {
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
+  font-weight: bold;
+  letter-spacing: 0.02em;
+  margin-left: 4px;
+  color: var(--text-dim);
+  text-shadow: none;
 }
 
 /* A live readout row, shared by the sortie timer strip and the

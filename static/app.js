@@ -290,6 +290,17 @@ async function pollStatus() {
 // Overall strip visibility is NOT decided here - updateOpsSituationalAwareness
 // gates that on the map snapshot's own own/lat, since that's the more
 // reliable "are we actually in a controlled unit" signal.
+// Car-dash style: a big digit-only number with a small unit label riding
+// beside it, not one uniformly-sized string ("4,921" huge + "FT" small,
+// the way a speedometer shows "62" huge next to a small "mph" rather than
+// spelling "62 mph" in one size). num/unit are always internally computed
+// from trusted numeric data (never raw user/DCS text), so plain
+// interpolation into innerHTML is safe here, same as other trusted-numeric
+// template strings elsewhere in this file (e.g. the range-ring label).
+function setDialValue(el, num, unit) {
+  el.innerHTML = unit ? `${num}<span class="ops-value-unit">${unit}</span>` : num;
+}
+
 let sortieStartTime = null; // unix seconds, or null while not airborne
 
 async function pollDebriefStatus() {
@@ -299,8 +310,10 @@ async function pollDebriefStatus() {
     debriefBtn.classList.toggle("ready", data.ready);
     debriefBtn.disabled = !data.ready;
     sortieStartTime = data.sortie_start_time ?? null;
-    opsAltitudeValue.textContent = data.altitude_ft != null ? `${data.altitude_ft.toLocaleString()} FT` : "—";
-    opsSpeedValue.textContent = data.speed_kt != null ? `${data.speed_kt} KT` : "—";
+    if (data.altitude_ft != null) setDialValue(opsAltitudeValue, data.altitude_ft.toLocaleString(), "FT");
+    else opsAltitudeValue.textContent = "—";
+    if (data.speed_kt != null) setDialValue(opsSpeedValue, data.speed_kt, "KT");
+    else opsSpeedValue.textContent = "—";
   } catch (e) {
     // Transient - leave the readouts in whatever state they were already in.
   }
@@ -1200,8 +1213,10 @@ function updateOpsSituationalAwareness(snapshot) {
     return;
   }
 
-  opsFuelValue.textContent = own.fuel != null ? `${Math.round(own.fuel * 100)}%` : "—";
-  opsHeadingValue.textContent = own.heading != null ? `${Math.round(own.heading) % 360}°` : "—";
+  if (own.fuel != null) setDialValue(opsFuelValue, Math.round(own.fuel * 100), "%");
+  else opsFuelValue.textContent = "—";
+  if (own.heading != null) setDialValue(opsHeadingValue, String(Math.round(own.heading) % 360).padStart(3, "0"), "°");
+  else opsHeadingValue.textContent = "—";
   renderLoadout(own.loadout);
 
   const threats = findSamThreats(own, data.detected);
