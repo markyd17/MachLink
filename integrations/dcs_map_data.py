@@ -59,10 +59,20 @@ class MapDataStore:
         self._data = None
         self._updated_at = None
 
-    def set(self, data):
+    def set(self, data, source_mtime=None):
         with self.lock:
             self._data = data
-            self._updated_at = time.time()
+            # The file's own mtime (when DCS/the Lua hook actually wrote
+            # it), not time.time() (when this process happened to read
+            # it) - a real bug found live: on a fresh app start, the very
+            # first read of an already-stale file (DCS/the aircraft long
+            # gone) was stamped as "just happened," so a genuinely
+            # minutes-old snapshot read as fresh for the first ~5s after
+            # every restart - showing a dead aircraft's last-known fuel/
+            # heading/etc. as if live, then correctly blanking once that
+            # borrowed window ran out. Falls back to time.time() only if
+            # no mtime was given (defensive - every real caller passes one).
+            self._updated_at = source_mtime if source_mtime is not None else time.time()
 
     def get(self):
         with self.lock:
@@ -101,7 +111,7 @@ def start_map_data_watcher(store, explicit_path=None, poll_interval_seconds=0.5)
                     continue
                 text = map_path.read_text(encoding="utf-8")
                 data = json.loads(text)
-                store.set(data)
+                store.set(data, source_mtime=mtime)
                 last_mtime = mtime
             except (OSError, json.JSONDecodeError):
                 # Best-effort - a read racing the Lua hook's own write (it

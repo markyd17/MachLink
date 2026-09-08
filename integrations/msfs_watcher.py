@@ -39,6 +39,25 @@ def start_msfs_watcher(state, poll_interval_seconds=5):
                         state.game = "msfs"
                         state.aircraft = title.strip()
                         state.last_game_signal_at = time.time()
+                else:
+                    # aq.get() returning None/empty does NOT always mean
+                    # "just no title yet" - confirmed live, MSFS fully
+                    # closed and this kept returning falsy WITHOUT ever
+                    # raising, so sm/aq (and msfs_available) never got
+                    # reset: msfs_connection.available stayed True
+                    # indefinitely (queried directly via /api/status),
+                    # which fed straight into the sim-detected indicator
+                    # incorrectly claiming "MSFS DETECTED" while flying
+                    # DCS the whole time. Force a fresh SimConnect() next
+                    # tick instead of trusting an object that just
+                    # returned nothing - a real reconnect attempt will
+                    # throw its own real exception if MSFS genuinely isn't
+                    # there, which the except block below already handles.
+                    sm = None
+                    aq = None
+                    with state.lock:
+                        state.msfs_available = False
+                        state.msfs_error = "No response from MSFS (connection may be stale)"
             except Exception as e:
                 # SimConnect throws if MSFS isn't running yet - just retry
                 sm = None

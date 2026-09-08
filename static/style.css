@@ -136,6 +136,13 @@ header {
   color: var(--text-dim);
   background: transparent;
 }
+/* DCS gets its own lime-green identity on the SIM indicator - MSFS keeps
+   the plain .status-block default (cyan/"blue"). */
+.status-block.dcs {
+  border-color: var(--mfd-green);
+  color: var(--mfd-green);
+  background: rgba(0, 255, 102, 0.05);
+}
 .status-block.alarm {
   border-color: var(--hazard-red);
   color: var(--hazard-red);
@@ -313,6 +320,40 @@ header {
    DCS Briefing is the only thing left in Ops's left column, so it just
    fills it. */
 .simbrief-panel { flex: 1; }
+
+/* "Begin Mission to Fetch Data" fills this whole card while it's the only
+   thing showing (see .simbrief-panel's flex:1 above) rather than sitting
+   as a small top-aligned line. */
+.ops-briefing-placeholder {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+/* Same stroke/fill treatment as "LINK" in the header logo (.brand-link) -
+   dark fill, lime-green outline, Bahnschrift/uppercase/800 weight from
+   .brand's own rules - so this reads as the same wordmark language, just
+   scaled up to fill the card. text-shadow (not -webkit-text-stroke) does
+   the requested glow/depth, since stroke is already spoken for as the
+   outline itself; clamp() keeps it "fills the space" at any card width
+   without ever getting large enough to actually overflow it. */
+.ops-hero-text {
+  font-family: "Bahnschrift", system-ui, "Segoe UI", sans-serif;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  font-size: clamp(1.6rem, 4vw, 3rem);
+  line-height: 1.25;
+  color: var(--logo-dark-grey);
+  -webkit-text-stroke: 1.5px var(--mfd-green);
+  paint-order: stroke fill;
+  animation: ops-hero-pulse 2.4s ease-in-out infinite;
+}
+@keyframes ops-hero-pulse {
+  /* Subtle range on purpose - "depth, not distracting" - the low end
+     still reads as a soft glow rather than fading to nothing. */
+  0%, 100% { text-shadow: 0 0 10px rgba(0, 255, 102, 0.3), 0 0 3px rgba(0, 255, 102, 0.45); }
+  50% { text-shadow: 0 0 20px rgba(0, 255, 102, 0.55), 0 0 6px rgba(0, 255, 102, 0.7); }
+}
 
 /* Live flight status - a car-dash-style instrument cluster above the
    grid, not another grid cell, since it's relevant regardless of what's

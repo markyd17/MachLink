@@ -253,10 +253,10 @@ function updateDetectionIndicators(data) {
   let simText, simCls;
   if (data.game === "dcs") {
     simText = "DCS DETECTED";
-    simCls = "status-block mono";
+    simCls = "status-block dcs mono"; // lime green - see .status-block.dcs
   } else if (data.game === "msfs" || (data.msfs_connection && data.msfs_connection.available)) {
     simText = "MSFS DETECTED";
-    simCls = "status-block mono";
+    simCls = "status-block mono"; // stays the default cyan/blue treatment
   } else {
     simText = "NO SIM DETECTED";
     simCls = "status-block idle mono";

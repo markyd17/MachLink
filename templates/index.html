@@ -127,10 +127,12 @@
                this, this whole column goes empty pre-mission instead of
                showing a card - a real "nothing yet" status, not fabricated
                data, same pattern as Flight School's "Waiting for aircraft
-               detection..." and the map's own empty state. -->
-          <section class="sub-panel simbrief-panel" id="ops-briefing-placeholder">
-            <h2 class="panel-title">Mission Briefing</h2>
-            <div class="checklist-subnote">Waiting for a sim to be detected and a mission to load...</div>
+               detection..." and the map's own empty state. Styled as a
+               big call to action (same stroke/fill treatment as "LINK" in
+               the header logo) rather than a small subtitle line, since
+               this fills the whole card while it's the only thing showing. -->
+          <section class="sub-panel simbrief-panel ops-briefing-placeholder" id="ops-briefing-placeholder">
+            <div class="ops-hero-text">Begin Mission<br>to Fetch Data</div>
           </section>
 
           <section class="sub-panel simbrief-panel" id="simbrief-panel" hidden>
