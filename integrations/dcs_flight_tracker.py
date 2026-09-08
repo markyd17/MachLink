@@ -118,6 +118,13 @@ class FlightTracker:
         self._reset_in_progress()
         self.debrief_ready = False
         self.pending_debrief = None  # the most recently completed flight's record, until acknowledged
+        # Latest raw telemetry from dcs_export_hook.lua - powers Ops's live
+        # flight-instruments readout. Deliberately NOT reset by
+        # _reset_in_progress() (an aircraft change doesn't make your
+        # current altitude/speed a moment ago stop being real); None only
+        # until the first telemetry packet ever arrives.
+        self.last_agl = None
+        self.last_vel = None
 
     def _reset_in_progress(self):
         self.aircraft = None
@@ -161,6 +168,11 @@ class FlightTracker:
         """Called on every export tick carrying flight-state telemetry."""
         with self.lock:
             now = self._now()
+            # Captured unconditionally, before any branch below - real
+            # right now regardless of whether this tick also happens to be
+            # a takeoff/landing/aircraft-change.
+            self.last_agl = agl
+            self.last_vel = vel
 
             if aircraft != self.aircraft:
                 # A genuinely new flight - first detection, or the aircraft
@@ -515,6 +527,14 @@ class FlightTracker:
 
     def status(self):
         with self.lock:
+            # Ready-to-render units (feet/knots), same "convert once here"
+            # pattern dcs_mission_briefing.py's weather extraction uses,
+            # rather than the frontend re-deriving unit conversions. Shown
+            # any time real telemetry exists at all (including on the
+            # ramp before takeoff), unlike sortie_start_time below which is
+            # deliberately airborne-only.
+            altitude_ft = round(self.last_agl * 3.28084) if self.last_agl is not None else None
+            speed_kt = round(self.last_vel * 1.94384) if self.last_vel is not None else None
             return {
                 "ready": self.debrief_ready,
                 "aircraft": self.pending_debrief["aircraft"] if self.pending_debrief else None,
@@ -524,6 +544,12 @@ class FlightTracker:
                 # there's no in-progress flight to time (aircraft not
                 # airborne, or no aircraft detected at all).
                 "sortie_start_time": self.start_time if self.is_airborne else None,
+                "altitude_ft": altitude_ft,
+                # "speed" - LoGetVectorVelocity()'s magnitude is world-frame
+                # (ground-relative) velocity, not indicated airspeed - DCS's
+                # Export API has no IAS call. Labeled plainly as speed on
+                # the frontend rather than claimed as IAS/TAS.
+                "speed_kt": speed_kt,
             }
 
     def latest_debrief(self):

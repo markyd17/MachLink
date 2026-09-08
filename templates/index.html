@@ -60,12 +60,34 @@
         Re-copy <code class="mono">integrations/dcs_mission_hook.lua</code> to <code class="mono">Saved Games\DCS\Scripts\MachLinkMissionHook.lua</code>, then reload the mission.
       </div>
 
-      <!-- Live sortie timer - hidden until dcs_flight_tracker.py reports an
-           actual in-progress (airborne) flight; see pollDebriefStatus()/
-           tickSortieTimer() in app.js. -->
-      <div class="sub-panel ops-top-strip" id="ops-sortie-timer" hidden>
-        <span class="ops-readout-label">SORTIE TIME</span>
-        <span class="ops-readout-value mono" id="ops-sortie-time-value">00:00</span>
+      <!-- Live flight status - hidden until the map snapshot reports your
+           own position (see updateOpsSituationalAwareness in app.js).
+           SORTIE TIME comes from dcs_flight_tracker.py (airborne-gated,
+           ticked locally - see tickSortieTimer()); FUEL/HEADING come from
+           the same /api/map_data snapshot as the rest of Ops; ALT/SPEED
+           come from dcs_export_hook.lua's telemetry (already captured for
+           Debrief's landing-rate calc, now also surfaced live). -->
+      <div class="sub-panel ops-flight-status" id="ops-flight-status" hidden>
+        <div class="ops-flight-tile">
+          <span class="ops-readout-label">SORTIE TIME</span>
+          <span class="ops-readout-value mono" id="ops-sortie-time-value">&mdash;</span>
+        </div>
+        <div class="ops-flight-tile">
+          <span class="ops-readout-label">FUEL</span>
+          <span class="ops-readout-value mono" id="ops-fuel-value">&mdash;</span>
+        </div>
+        <div class="ops-flight-tile">
+          <span class="ops-readout-label">ALT AGL</span>
+          <span class="ops-readout-value mono" id="ops-altitude-value">&mdash;</span>
+        </div>
+        <div class="ops-flight-tile">
+          <span class="ops-readout-label">SPEED</span>
+          <span class="ops-readout-value mono" id="ops-speed-value">&mdash;</span>
+        </div>
+        <div class="ops-flight-tile">
+          <span class="ops-readout-label">HEADING</span>
+          <span class="ops-readout-value mono" id="ops-heading-value">&mdash;</span>
+        </div>
       </div>
 
       <div class="ops-grid">
@@ -84,6 +106,16 @@
           <section class="sub-panel simbrief-panel" id="dcs-briefing-panel" hidden>
             <h2 class="panel-title">DCS Mission Briefing</h2>
             <div id="dcs-briefing-content" class="simbrief-content"></div>
+          </section>
+
+          <!-- Your actual current ordnance (Unit:getAmmo()), not the
+               static reference loadout data Flight School shows - what's
+               really still on the jet right now. Hidden whenever there's
+               nothing to report (no own unit, or a genuinely empty/
+               unarmed loadout). -->
+          <section class="sub-panel simbrief-panel" id="ops-loadout-panel" hidden>
+            <h2 class="panel-title">Current Loadout</h2>
+            <div id="ops-loadout-content" class="simbrief-content"></div>
           </section>
         </div>
 
@@ -119,6 +151,14 @@
           <div class="ops-readout-row">
             <span class="ops-readout-label">CONTACTS</span>
             <span class="ops-readout-value mono" id="ops-contact-summary">&mdash;</span>
+          </div>
+          <!-- Best-effort match on friendly unit type names against known
+               tanker/AWACS aircraft - see SUPPORT_TYPE_KEYWORDS in app.js.
+               Not exhaustive; a support type this list doesn't know about
+               just won't show up here. -->
+          <div class="ops-readout-row">
+            <span class="ops-readout-label">SUPPORT</span>
+            <span class="ops-readout-value mono" id="ops-nearest-support">&mdash;</span>
           </div>
           <!-- #map-viewport (the real map) lives here by default - JS
                moves it into #map-body instead when EXPAND/CLOSE is

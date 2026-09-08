@@ -291,17 +291,30 @@ header {
    fills it. */
 .simbrief-panel { flex: 1; }
 
-/* Sortie timer - a thin strip above the grid, not another grid cell,
-   since it's relevant regardless of what's in the two columns below. */
-.ops-top-strip {
+/* Live flight status - a thin strip of tiles above the grid, not another
+   grid cell, since it's relevant regardless of what's in the two columns
+   below. Row of evenly-spaced tiles rather than stacked readout rows -
+   five short values (time/fuel/alt/speed/heading) read better side by
+   side than as a tall stack eating into the map's space below. */
+.ops-flight-status {
   flex: 0 0 auto;
   flex-direction: row;
-  align-items: center;
-  gap: 10px;
+  flex-wrap: wrap;
+  gap: 4px;
   margin-bottom: 12px;
   padding: 10px 14px;
 }
-.ops-top-strip[hidden] { display: none; }
+.ops-flight-status[hidden] { display: none; }
+.ops-flight-tile {
+  flex: 1 1 100px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+/* .ops-readout-value defaults to right-aligned for the label-left/value-
+   right readout ROWS elsewhere in Ops - these are stacked tiles instead,
+   where left-aligned reads correctly under a left-aligned label. */
+.ops-flight-tile .ops-readout-value { text-align: left; }
 
 /* A live readout row, shared by the sortie timer strip and the
    situational-awareness card below (bullseye/divert/contacts). */

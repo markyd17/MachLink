@@ -60,7 +60,7 @@ MachLinkMission.lastHit = {}  -- unitId -> {shooterName, shooterRelation, shoote
 -- with no indication why - dcs_map_data.py compares this against
 -- EXPECTED_MAP_HOOK_VERSION and flags "hook_outdated" for the frontend to
 -- warn about instead. Keep the two in sync.
-local MAP_HOOK_VERSION = 1
+local MAP_HOOK_VERSION = 2
 
 local function safe_call(obj, method, ...)
 	if not obj then return nil end
@@ -109,6 +109,25 @@ local function category_label(unit)
 	if cat == Unit.Category.HELICOPTER then return "helicopter" end
 	if cat == Unit.Category.GROUND_UNIT then return "ground_unit" end
 	if cat == Unit.Category.SHIP then return "ship" end
+	return "other"
+end
+
+-- Airbase:getCategory() is DCS's own documented enum (Airbase.Category -
+-- AIRDROME/HELIPAD/SHIP), the same class of API as Unit.Category above,
+-- not guessed. Lets the frontend tell an aircraft carrier or a ship's
+-- helipad apart from a real airdrome for divert planning - DCS doesn't
+-- further distinguish "ship with a full flight deck" from "ship with just
+-- a helipad" within the SHIP category itself, so a fixed-wing pilot still
+-- has to know their specific carrier, but a helicopter can safely treat
+-- every SHIP/HELIPAD result as usable and a fixed-wing pilot can safely
+-- rule out HELIPAD-only ones (see findNearestFriendlyAirbase in app.js).
+-- NOT yet confirmed against a real live session the way category_label()
+-- above was - flag if a real airbase reports something unexpected.
+local function airbase_category_label(airbase)
+	local cat = safe_call(airbase, "getCategory")
+	if cat == Airbase.Category.AIRDROME then return "airdrome" end
+	if cat == Airbase.Category.HELIPAD then return "helipad" end
+	if cat == Airbase.Category.SHIP then return "ship" end
 	return "other"
 end
 
@@ -390,6 +409,42 @@ local function heading_degrees(unit)
 	return math.deg(heading)
 end
 
+-- Unit:getFuel() - real, documented DCS API - returns fuel as a fraction
+-- of INTERNAL capacity (can exceed 1.0 with external tanks fitted, a
+-- documented DCS quirk, not a bug here). Only ever queried for the
+-- player's own unit (see write_map_snapshot() below) - meaningless/wasted
+-- work for every friendly and detected unit on the map otherwise. Sent
+-- as-is (a plain fraction); the frontend does the *100 for a percentage
+-- rather than this file guessing a display format.
+local function get_fuel(unit)
+	local ok, fuel = pcall(function() return unit:getFuel() end)
+	if ok and type(fuel) == "number" then return fuel end
+	return nil
+end
+
+-- Unit:getAmmo() - real, documented DCS API - returns everything
+-- currently loaded, each entry {count, desc = {typeName, displayName,
+-- category, ...}}. Flattened to just [{name, count}] here since Ops only
+-- needs "what's left and how many," not the full weapon descriptor table.
+-- Only ever queried for the player's own unit, same reasoning as
+-- get_fuel() above. NOT yet confirmed against a real live session with a
+-- mixed loadout - expect edge cases (e.g. countermeasure dispensers
+-- showing up alongside real ordnance) to need filtering out later.
+local function get_loadout(unit)
+	local ok, ammo = pcall(function() return unit:getAmmo() end)
+	if not ok or not ammo then return {} end
+	local items = {}
+	for _, entry in ipairs(ammo) do
+		local desc = entry.desc or {}
+		local name = desc.displayName or desc.typeName or "Unknown"
+		items[#items + 1] = build_json({
+			{"name", name},
+			{"count", entry.count},
+		})
+	end
+	return items
+end
+
 local function unit_json(unit, extraFields)
 	local point = safe_call(unit, "getPoint")
 	local fields = point_fields(point)
@@ -448,6 +503,7 @@ local function gather_airbases()
 		local fields = point_fields(safe_call(ab, "getPoint"))
 		fields[#fields + 1] = {"name", safe_call(ab, "getName")}
 		fields[#fields + 1] = {"coalition", safe_call(ab, "getCoalition")}
+		fields[#fields + 1] = {"category", airbase_category_label(ab)}
 		items[#items + 1] = build_json(fields)
 	end
 	return items
@@ -557,9 +613,18 @@ local function write_map_snapshot()
 	local friendlyItems, friendlyUnits = gather_friendlies(myCoalition, myUnitId)
 	local detectedItems = gather_detected(friendlyUnits, myCoalition)
 
+	-- Fuel/loadout only ever make sense for the player's own unit - passed
+	-- as extraFields rather than added inside unit_json() itself, so
+	-- friendlies/detected (which reuse the same function) don't pay for a
+	-- getFuel()/getAmmo() call on every unit on the map every tick.
+	local ownExtra = {}
+	local fuel = get_fuel(playerUnit)
+	if fuel ~= nil then ownExtra[#ownExtra + 1] = {"fuel", fuel} end
+	ownExtra[#ownExtra + 1] = {"loadout", build_json_array(get_loadout(playerUnit))}
+
 	local fields = {
 		{"hookVersion", MAP_HOOK_VERSION},
-		{"own", unit_json(playerUnit)},
+		{"own", unit_json(playerUnit, ownExtra)},
 		{"friendlies", build_json_array(friendlyItems)},
 		{"airbases", build_json_array(gather_airbases())},
 		{"detected", build_json_array(detectedItems)},

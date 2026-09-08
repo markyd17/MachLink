@@ -32,7 +32,7 @@ MAP_DATA_FILENAME = "MachLinkMapData.json"
 # "hook_outdated" whenever the snapshot's own hookVersion is missing or
 # behind this constant, for the frontend to surface as an actionable
 # warning instead of a silent gap.
-EXPECTED_MAP_HOOK_VERSION = 1
+EXPECTED_MAP_HOOK_VERSION = 2
 
 
 def _candidate_paths():

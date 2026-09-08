@@ -30,13 +30,20 @@ const logbookClose = document.getElementById("logbook-close");
 const logbookFlightList = document.getElementById("logbook-flight-list");
 const liveMapBtn = document.getElementById("live-map-btn");
 const opsHookOutdatedWarning = document.getElementById("ops-hook-outdated-warning");
-const opsSortieTimer = document.getElementById("ops-sortie-timer");
+const opsFlightStatus = document.getElementById("ops-flight-status");
 const opsSortieTimeValue = document.getElementById("ops-sortie-time-value");
+const opsFuelValue = document.getElementById("ops-fuel-value");
+const opsAltitudeValue = document.getElementById("ops-altitude-value");
+const opsSpeedValue = document.getElementById("ops-speed-value");
+const opsHeadingValue = document.getElementById("ops-heading-value");
 const opsThreatAlert = document.getElementById("ops-threat-alert");
 const opsThreatText = document.getElementById("ops-threat-text");
 const opsBullseyeCall = document.getElementById("ops-bullseye-call");
 const opsNearestAirbase = document.getElementById("ops-nearest-airbase");
 const opsContactSummary = document.getElementById("ops-contact-summary");
+const opsNearestSupport = document.getElementById("ops-nearest-support");
+const opsLoadoutPanel = document.getElementById("ops-loadout-panel");
+const opsLoadoutContent = document.getElementById("ops-loadout-content");
 const opsEventsList = document.getElementById("ops-events-list");
 const opsMapHome = document.getElementById("ops-map-home");
 const opsMapHomePlaceholder = document.getElementById("ops-map-home-placeholder");
@@ -283,9 +290,13 @@ async function pollStatus() {
 // Lights up (see .debrief-btn.ready) once dcs_flight_tracker.py detects a
 // real flight that landed, stopped, and flew more than 5 minutes - polled
 // alongside everything else DCS-specific rather than its own interval.
-// Also carries the live sortie timer's start time (FlightTracker.start_time,
-// only ever non-null while an actual flight is in progress) - reusing this
-// existing poll instead of a separate endpoint just for one timestamp.
+// Also carries live flight telemetry for Ops's flight-status strip -
+// sortie_start_time (airborne-only), plus altitude/speed (available any
+// time real telemetry exists, even parked on the ramp). Reusing this
+// existing poll instead of a separate endpoint just for a few numbers.
+// Overall strip visibility is NOT decided here - updateOpsSituationalAwareness
+// gates that on the map snapshot's own own/lat, since that's the more
+// reliable "are we actually in a controlled unit" signal.
 let sortieStartTime = null; // unix seconds, or null while not airborne
 
 async function pollDebriefStatus() {
@@ -295,16 +306,20 @@ async function pollDebriefStatus() {
     debriefBtn.classList.toggle("ready", data.ready);
     debriefBtn.disabled = !data.ready;
     sortieStartTime = data.sortie_start_time ?? null;
-    opsSortieTimer.hidden = sortieStartTime == null;
+    opsAltitudeValue.textContent = data.altitude_ft != null ? `${data.altitude_ft.toLocaleString()} FT` : "—";
+    opsSpeedValue.textContent = data.speed_kt != null ? `${data.speed_kt} KT` : "—";
   } catch (e) {
-    // Transient - leave the button/timer in whatever state they were already in.
+    // Transient - leave the readouts in whatever state they were already in.
   }
 }
 
 // Ticks the sortie timer locally every second off the one timestamp above,
 // rather than re-fetching every second just to compute an elapsed time.
 function tickSortieTimer() {
-  if (sortieStartTime == null) return;
+  if (sortieStartTime == null) {
+    opsSortieTimeValue.textContent = "—";
+    return;
+  }
   const elapsed = Math.max(0, Math.floor(Date.now() / 1000 - sortieStartTime));
   const h = Math.floor(elapsed / 3600);
   const m = Math.floor((elapsed % 3600) / 60);
@@ -803,6 +818,21 @@ function airbaseColor(coalition, myCoalition) {
   return coalition === myCoalition ? "#1E88E5" : "#E53935";
 }
 
+// airbase_category_label() in dcs_mission_hook.lua - DCS's own documented
+// Airbase.Category enum (AIRDROME/HELIPAD/SHIP). Ship/helipad reuse the
+// SHIP/HELICOPTER unit shapes rather than inventing new ones - a
+// ship-category airbase IS a ship, and a helipad IS a helicopter landing
+// spot, so the same icon language applies. Airdrome gets its own new
+// "pentagon" shape (a real airbase symbology convention) instead of
+// reusing "square", which already means VEHICLE - falls back to it only
+// for an older deployed hook that predates this field entirely.
+function airbaseShape(category) {
+  if (category === "ship") return "diamond";
+  if (category === "helipad") return "cross";
+  if (category === "airdrome") return "pentagon";
+  return "square"; // unknown/older-hook data with no category field
+}
+
 // category_label()/categoryDetail strings from dcs_mission_hook.lua's
 // unit_json() - categoryDetail (sam/vehicle/soft_target) is the same
 // DCS-attribute-based breakdown the Logbook's kill stats already use
@@ -853,6 +883,10 @@ function makeMapIcon(shape, color, headingDeg) {
     html = `<div style="width:11px;height:11px;background:${color};border:1px solid rgba(0,0,0,0.6);clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);"></div>`;
   } else if (shape === "diamond") {
     html = `<div style="width:9px;height:9px;background:${color};border:1px solid rgba(0,0,0,0.6);transform:rotate(45deg);"></div>`;
+  } else if (shape === "pentagon") {
+    // Airdrome - the classic "home plate" installation symbol, distinct
+    // from the vehicle square and the SAM hexagon.
+    html = `<div style="width:11px;height:11px;background:${color};border:1px solid rgba(0,0,0,0.6);clip-path:polygon(50% 0%,100% 38%,82% 100%,18% 100%,0% 38%);"></div>`;
   } else {
     html = `<div style="width:9px;height:9px;border-radius:50%;background:${color};border:1px solid rgba(0,0,0,0.6);"></div>`;
   }
@@ -869,6 +903,7 @@ const MAP_KEY = [
   { shape: "hexagon", label: "SAM" },
   { shape: "circle", label: "SOLDIER" },
   { shape: "diamond", label: "SHIP" },
+  { shape: "pentagon", label: "AIRBASE" },
 ];
 const MAP_KEY_NEUTRAL_COLOR = "#B8C2CC"; // same gray as the range-ring labels - shape is what the key explains, not coalition color
 
@@ -986,10 +1021,11 @@ function updateMapMarkers(snapshot) {
         escapeHtml(u.type || "Contact"));
     });
 
-    // Airbases - color by actual friend/foe (see airbaseColor() below).
+    // Airbases - color by actual friend/foe, shape by airdrome/ship/helipad
+    // (see airbaseColor()/airbaseShape() above).
     (data.airbases || []).forEach((ab) => {
       if (ab.lat == null || ab.lon == null) return;
-      addDynamicMarker([ab.lat, ab.lon], makeMapIcon("square", airbaseColor(ab.coalition, data.myCoalition), 0), escapeHtml(ab.name || "Airbase"));
+      addDynamicMarker([ab.lat, ab.lon], makeMapIcon(airbaseShape(ab.category), airbaseColor(ab.coalition, data.myCoalition), 0), escapeHtml(ab.name || "Airbase"));
     });
   }
 
@@ -1071,13 +1107,55 @@ function closeMap() {
 // see write_map_snapshot() in dcs_mission_hook.lua) - null if that field
 // isn't present yet (an older mission hook still deployed) rather than
 // guessing at a "friendly" side.
-function findNearestFriendlyAirbase(own, airbases, myCoalition) {
+// A fixed-wing aircraft can never use a HELIPAD-only recovery point - a
+// safe exclusion regardless of which specific ship/pad it is, unlike
+// trying to guess the REVERSE (which ships support fixed-wing recovery
+// isn't something DCS's API exposes - Airbase.Category.SHIP covers a
+// real carrier and a frigate's helipad identically - so this never
+// asserts a ship IS carrier-capable, only ever rules helipads out for a
+// fixed-wing pilot). Helicopters can use anything (airdrome/ship/helipad
+// all land a helicopter fine).
+function findNearestFriendlyAirbase(own, airbases, myCoalition, ownCategory) {
   if (myCoalition == null) return null;
   let best = null;
   (airbases || []).forEach((ab) => {
     if (ab.lat == null || ab.coalition !== myCoalition) return;
+    if (ownCategory === "airplane" && ab.category === "helipad") return;
     const { bearingDeg, distanceNm } = bearingDistanceBetween(own.lat, own.lon, ab.lat, ab.lon);
-    if (!best || distanceNm < best.distanceNm) best = { name: ab.name || "Airbase", bearingDeg, distanceNm };
+    if (!best || distanceNm < best.distanceNm) {
+      best = { name: ab.name || "Airbase", category: ab.category, bearingDeg, distanceNm };
+    }
+  });
+  return best;
+}
+
+// Best-effort keyword match against friendly unit type names - DCS has no
+// "this is a tanker/AWACS" flag to query, only a typeName string, so this
+// is a curated list of common modules' real DCS typeName substrings, same
+// "not exhaustive, matched on real data, never guessed" spirit as
+// kill_category_detail()'s attribute list in dcs_mission_hook.lua. A
+// support aircraft using a type name not on this list just won't show up
+// here - not a false claim, just a known gap.
+const SUPPORT_TYPE_KEYWORDS = [
+  "kc135", "kc-135", "kc130", "kc-130", "kc_10", "kc-10",
+  "il_78", "il-78", "il78",
+  "s-3b tanker", "s3b tanker",
+  "a-50", "a50",
+  "e-3a", "e3a",
+  "e-2c", "e2c", "e-2d",
+  "kj-2000", "kj2000",
+];
+function isSupportAircraft(typeName) {
+  const t = (typeName || "").toLowerCase();
+  return SUPPORT_TYPE_KEYWORDS.some((kw) => t.includes(kw));
+}
+
+function findNearestSupport(own, friendlies) {
+  let best = null;
+  (friendlies || []).forEach((u) => {
+    if (u.lat == null || !isSupportAircraft(u.type)) return;
+    const { bearingDeg, distanceNm } = bearingDistanceBetween(own.lat, own.lon, u.lat, u.lon);
+    if (!best || distanceNm < best.distanceNm) best = { type: u.type, bearingDeg, distanceNm };
   });
   return best;
 }
@@ -1114,25 +1192,56 @@ function findSamThreats(own, detected) {
     .sort((a, b) => a.distanceNm - b.distanceNm);
 }
 
+// "2x AIM-120C, 90x 20mm" from Unit:getAmmo() (dcs_mission_hook.lua's
+// get_loadout()) - your actual current ordnance, not Flight School's
+// static reference data. Hides the whole card rather than showing "no
+// loadout" for an unarmed aircraft or one getAmmo() genuinely returns
+// nothing for.
+function renderLoadout(loadout) {
+  if (!loadout || !loadout.length) {
+    opsLoadoutPanel.hidden = true;
+    return;
+  }
+  opsLoadoutContent.innerHTML = loadout
+    .map((item) => `<div class="checklist-item plain"><span class="step-text">${item.count}x ${escapeHtml(item.name || "Unknown")}</span></div>`)
+    .join("");
+  opsLoadoutPanel.hidden = false;
+}
+
 function updateOpsSituationalAwareness(snapshot) {
   const available = snapshot && snapshot.available;
   // See MapDataStore.get() in dcs_map_data.py / MAP_HOOK_VERSION in
   // dcs_mission_hook.lua - the deployed mission hook predates a field
-  // something here depends on (categoryDetail, myCoalition, ...), most
-  // likely because it's a manual copy that hasn't been redone since a
-  // MachLink update. Meaningful any time a snapshot exists at all, not
-  // just once your own position is known.
+  // something here depends on (categoryDetail, myCoalition, fuel,
+  // loadout, airbase category, ...), most likely because it's a manual
+  // copy that hasn't been redone since a MachLink update. Meaningful any
+  // time a snapshot exists at all, not just once your own position is
+  // known.
   opsHookOutdatedWarning.hidden = !(available && snapshot.hook_outdated);
   const data = available ? (snapshot.data || {}) : null;
   const own = data && data.own && data.own.lat != null ? data.own : null;
+
+  // The map snapshot's own own/lat is a more reliable "are we actually in
+  // a controlled unit" signal than the separate Export-hook telemetry
+  // pipeline (dcs_flight_tracker.py) that feeds the rest of this strip -
+  // one gate for the whole thing, from one source.
+  opsFlightStatus.hidden = !own;
 
   if (!own) {
     opsThreatAlert.hidden = true;
     opsBullseyeCall.textContent = "—";
     opsNearestAirbase.textContent = "—";
     opsContactSummary.textContent = "—";
+    opsNearestSupport.textContent = "—";
+    opsFuelValue.textContent = "—";
+    opsHeadingValue.textContent = "—";
+    renderLoadout(null);
     return;
   }
+
+  opsFuelValue.textContent = own.fuel != null ? `${Math.round(own.fuel * 100)}%` : "—";
+  opsHeadingValue.textContent = own.heading != null ? `${Math.round(own.heading) % 360}°` : "—";
+  renderLoadout(own.loadout);
 
   const threats = findSamThreats(own, data.detected);
   opsThreatAlert.hidden = threats.length === 0;
@@ -1152,10 +1261,11 @@ function updateOpsSituationalAwareness(snapshot) {
   // Three distinct "nothing to show" reasons, not one generic blank -
   // each points at a different actual cause instead of leaving you to
   // guess whether it's the hook, the mission, or a real absence of data.
-  const nearest = findNearestFriendlyAirbase(own, data.airbases, data.myCoalition);
+  const nearest = findNearestFriendlyAirbase(own, data.airbases, data.myCoalition, own.category);
   let nearestText = "—";
   if (nearest) {
-    nearestText = `${nearest.name} ${formatBearingRange(nearest.bearingDeg, nearest.distanceNm)}`;
+    const categoryTag = nearest.category && nearest.category !== "airdrome" ? ` (${nearest.category.toUpperCase()})` : "";
+    nearestText = `${nearest.name}${categoryTag} ${formatBearingRange(nearest.bearingDeg, nearest.distanceNm)}`;
   } else if (data.myCoalition == null) {
     nearestText = "UNAVAILABLE"; // see the hook_outdated warning above
   } else if (!(data.airbases || []).length) {
@@ -1166,6 +1276,11 @@ function updateOpsSituationalAwareness(snapshot) {
   opsNearestAirbase.textContent = nearestText;
 
   opsContactSummary.textContent = summarizeContacts(data.detected) || "NONE DETECTED";
+
+  const support = findNearestSupport(own, data.friendlies);
+  opsNearestSupport.textContent = support
+    ? `${support.type || "Support"} ${formatBearingRange(support.bearingDeg, support.distanceNm)}`
+    : "NONE FOUND";
 }
 
 liveMapBtn.addEventListener("click", openMap);
@@ -1211,7 +1326,8 @@ function renderDcsBriefing(data) {
     return;
   }
   let html = `<h3 class="checklist-title">${escapeHtml(data.sortie || "Untitled sortie")}</h3>`;
-  const meta = [data.theatre, data.date].filter(Boolean).join(" — ");
+  const startTime = data.start_time_of_day ? `Mission start ${data.start_time_of_day} local` : null;
+  const meta = [data.theatre, data.date, startTime].filter(Boolean).join(" — ");
   if (meta) html += `<div class="checklist-subnote mono">${escapeHtml(meta)}</div>`;
   if (data.overview) {
     html += `<div class="checklist-item plain"><span class="step-text">${escapeHtml(data.overview)}</span></div>`;

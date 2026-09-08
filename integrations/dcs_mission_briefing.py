@@ -224,10 +224,25 @@ def parse_mission_briefing(miz_path):
         if 1 <= month <= 12:
             date_str = f"{day:02d} {_MONTH_ABBR[month]} {year}"
 
+    # ["start_time"] is a top-level field in every mission (seconds since
+    # midnight, mission-local time) - real authored data, not derived or
+    # guessed, same "send a ready-to-render value" pattern as weather's
+    # unit conversions below. Same single-regex-match approach already
+    # used for date/theatre above, so it'll pick up the first
+    # ["start_time"] in the file - fine in practice (this key isn't reused
+    # elsewhere in a mission the way something more generic like "name"
+    # would be), but flag it if a real mission ever proves otherwise.
+    start_time_seconds = _lua_number(mission_text, "start_time")
+    start_time_of_day = None
+    if start_time_seconds is not None:
+        total_minutes = int(start_time_seconds // 60) % (24 * 60)
+        start_time_of_day = f"{total_minutes // 60:02d}:{total_minutes % 60:02d}"
+
     return {
         "sortie": _resolve(mission_text, dictionary_text, "sortie"),
         "theatre": _lua_table_string(mission_text, "theatre") or "",
         "date": date_str,
+        "start_time_of_day": start_time_of_day,
         "overview": _resolve(mission_text, dictionary_text, "descriptionText"),
         "blue_task": _resolve(mission_text, dictionary_text, "descriptionBlueTask"),
         "red_task": _resolve(mission_text, dictionary_text, "descriptionRedTask"),
