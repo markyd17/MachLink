@@ -1,11 +1,32 @@
 const simDetectedValue = document.getElementById("sim-detected-value");
 const airframeDetectedValue = document.getElementById("airframe-detected-value");
+const missionStatusValue = document.getElementById("mission-status-value");
+const simbriefStatusValue = document.getElementById("simbrief-status-value");
+const datalinkStatusValue = document.getElementById("datalink-status-value");
+const settingsBtn = document.getElementById("settings-btn");
 const primaryNavBtns = document.querySelectorAll(".primary-nav-btn");
 const primarySections = {
   ops: document.getElementById("section-ops"),
   hangar: document.getElementById("section-hangar"),
   flightschool: document.getElementById("section-flightschool"),
+  debrief: document.getElementById("section-debrief"),
+  kneeboard: document.getElementById("section-kneeboard"),
+  settings: document.getElementById("section-settings"),
 };
+const kneeboardNavBtn = document.getElementById("kneeboard-nav-btn");
+const opsTabBtns = document.querySelectorAll(".ops-tab-btn");
+const opsTabPanels = {
+  mission: document.getElementById("ops-tab-mission"),
+  route: document.getElementById("ops-tab-route"),
+  threats: document.getElementById("ops-tab-threats"),
+  weather: document.getElementById("ops-tab-weather"),
+  airfields: document.getElementById("ops-tab-airfields"),
+  bullseye: document.getElementById("ops-tab-bullseye"),
+  kneeboard: document.getElementById("ops-tab-kneeboard"),
+};
+const opsThreatsList = document.getElementById("ops-threats-list");
+const opsAirfieldsList = document.getElementById("ops-airfields-list");
+const opsKneeboardShortcut = document.getElementById("ops-kneeboard-shortcut");
 const mfdTabs = document.getElementById("mfd-tabs");
 const tabContent = document.getElementById("tab-content");
 const citationLine = document.getElementById("citation-line");
@@ -20,10 +41,13 @@ const simbriefBtn = document.getElementById("simbrief-refresh");
 const simbriefContent = document.getElementById("simbrief-content");
 const dcsBriefingPanel = document.getElementById("dcs-briefing-panel");
 const dcsBriefingContent = document.getElementById("dcs-briefing-content");
-const debriefBtn = document.getElementById("debrief-btn");
+const debriefPill = document.getElementById("debrief-pill");
+const debriefStatusValue = document.getElementById("debrief-status-value");
 const debriefOverlay = document.getElementById("debrief-overlay");
 const debriefClose = document.getElementById("debrief-close");
 const debriefBody = document.getElementById("debrief-body");
+const debriefSectionIdle = document.getElementById("debrief-section-idle");
+const debriefSectionBody = document.getElementById("debrief-section-body");
 const pilotSummaryStats = document.getElementById("pilot-summary-stats");
 const pilotSummaryFlightList = document.getElementById("pilot-summary-flight-list");
 const viewFullLogbookBtn = document.getElementById("view-full-logbook-btn");
@@ -53,9 +77,6 @@ const mapRecenterBtn = document.getElementById("map-recenter");
 const mapRangeLabel = document.getElementById("map-range-label");
 const mapKeyToggle = document.getElementById("map-key-toggle");
 const mapLegend = document.getElementById("map-legend");
-const kneeboardTab = document.getElementById("kneeboard-tab");
-const kneeboardDrawer = document.getElementById("kneeboard-drawer");
-const kneeboardClose = document.getElementById("kneeboard-close");
 const kneeboardPageLabel = document.getElementById("kneeboard-page-label");
 const kneeboardPageArea = document.getElementById("kneeboard-page-area");
 const kneeboardImage = document.getElementById("kneeboard-image");
@@ -92,6 +113,8 @@ function switchPrimarySection(id) {
     btn.classList.toggle("active", btn.dataset.section === id);
   });
   if (id === "hangar") loadPilotSummary();
+  if (id === "debrief") loadLatestDebrief();
+  if (id === "kneeboard") { setKneeboardZoom(100); renderKneeboardPage(); }
   // The map was sized 0x0 while its #ops-map-home ancestor was hidden
   // (display:none doesn't just hide, Leaflet's cached container size goes
   // stale) - tell it to re-measure now that it's visible again.
@@ -100,6 +123,30 @@ function switchPrimarySection(id) {
 primaryNavBtns.forEach((btn) => {
   btn.addEventListener("click", () => switchPrimarySection(btn.dataset.section));
 });
+settingsBtn.addEventListener("click", () => switchPrimarySection("settings"));
+debriefPill.addEventListener("click", () => switchPrimarySection("debrief"));
+
+// ----------------------------------------------------------------------
+// OPS SUB-TABS - Mission/Route/Threats/Weather/Airfields/Bullseye/
+// Kneeboard. Same show-one-hide-the-rest pattern as switchPrimarySection()
+// above, just one level down and scoped to #section-ops.
+// ----------------------------------------------------------------------
+function switchOpsTab(id) {
+  Object.entries(opsTabPanels).forEach(([tabId, el]) => {
+    el.hidden = tabId !== id;
+  });
+  opsTabBtns.forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.opsTab === id);
+  });
+  // Same hidden-container gotcha as switchPrimarySection('ops') - the map
+  // only lives in the Route tab now, so it needs the same re-measure
+  // whenever that tab becomes visible again.
+  if (id === "route" && leafletMap) setTimeout(() => leafletMap.invalidateSize(), 0);
+}
+opsTabBtns.forEach((btn) => {
+  btn.addEventListener("click", () => switchOpsTab(btn.dataset.opsTab));
+});
+opsKneeboardShortcut.addEventListener("click", () => switchPrimarySection("kneeboard"));
 
 // One shared zoom level for every diagram currently shown in the modal
 // (set as a CSS custom property on the modal body - see style.css) rather
@@ -301,14 +348,18 @@ async function pollStatus() {
     simbriefPanel.hidden = data.game !== "msfs";
     dcsBriefingPanel.hidden = data.game !== "dcs";
     opsBriefingPlaceholder.hidden = data.game === "msfs" || data.game === "dcs";
+    if (data.game !== "msfs") {
+      simbriefStatusValue.textContent = "—";
+      simbriefStatusValue.className = "status-block idle mono";
+    }
     if (data.game === "dcs") {
       pollDcsBriefing();
       loadKneeboard();
       pollDebriefStatus();
       pollLiveEvents();
     } else {
-      kneeboardTab.hidden = true;
-      kneeboardDrawer.hidden = true;
+      kneeboardNavBtn.hidden = true;
+      if (!primarySections.kneeboard.hidden) switchPrimarySection("ops");
     }
   } catch (e) {
     simDetectedValue.textContent = "CANNOT REACH SERVER";
@@ -345,13 +396,25 @@ async function pollDebriefStatus() {
   try {
     const res = await fetch("/api/debrief_status");
     const data = await res.json();
-    debriefBtn.classList.toggle("ready", data.ready);
-    debriefBtn.disabled = !data.ready;
+    debriefPill.classList.toggle("ready", data.ready);
+    debriefStatusValue.textContent = data.ready ? "READY" : "NOT READY";
+    debriefStatusValue.className = data.ready ? "status-block dcs mono" : "status-block idle mono";
     sortieStartTime = data.sortie_start_time ?? null;
+    // MISSION pill - airborne is a genuine "mission in progress" signal,
+    // derived from the same sortie_start_time already fetched here for
+    // the sortie timer, not a new backend call.
+    const missionActive = sortieStartTime != null;
+    missionStatusValue.textContent = missionActive ? "IN PROGRESS" : "—";
+    missionStatusValue.className = missionActive ? "status-block dcs mono" : "status-block idle mono";
     if (data.altitude_ft != null) setDialValue(opsAltitudeValue, data.altitude_ft.toLocaleString(), "FT");
     else opsAltitudeValue.textContent = "—";
     if (data.speed_kt != null) setDialValue(opsSpeedValue, data.speed_kt, "KT");
     else opsSpeedValue.textContent = "—";
+    // DATA LINK pill - real telemetry presence (the same altitude/speed
+    // fields above being non-null), standing in for "data link live".
+    const dataLinkLive = data.altitude_ft != null || data.speed_kt != null;
+    datalinkStatusValue.textContent = dataLinkLive ? "LIVE" : "NO LINK";
+    datalinkStatusValue.className = dataLinkLive ? "status-block dcs mono" : "status-block idle mono";
   } catch (e) {
     // Transient - leave the readouts in whatever state they were already in.
   }
@@ -373,20 +436,32 @@ function tickSortieTimer() {
 }
 setInterval(tickSortieTimer, 1000);
 
-debriefBtn.addEventListener("click", async () => {
-  if (debriefBtn.disabled) return;
+// Called on entering the Debrief section (see switchPrimarySection) -
+// replaces the old header button's click handler. Fetching this route
+// also acknowledges the debrief server-side (flips ready false), same
+// real side effect the button always had, just triggered by navigating
+// in instead of a click - re-visiting the section after that just
+// re-renders the same still-cached debrief (harmless, idempotent) until
+// a genuinely new flight lands and lights the pill up again.
+async function loadLatestDebrief() {
   try {
     const res = await fetch("/api/debrief/latest");
     const data = await res.json();
-    if (!data.available) return; // shouldn't happen while lit, but don't show an empty overlay if it does
-    renderDebrief(data);
-    debriefOverlay.hidden = false;
-    debriefBtn.classList.remove("ready");
-    debriefBtn.disabled = true;
+    if (!data.available) {
+      debriefSectionIdle.hidden = false;
+      debriefSectionBody.hidden = true;
+      return;
+    }
+    renderDebrief(data, debriefSectionBody);
+    debriefSectionIdle.hidden = true;
+    debriefSectionBody.hidden = false;
+    debriefPill.classList.remove("ready");
+    debriefStatusValue.textContent = "NOT READY";
+    debriefStatusValue.className = "status-block idle mono";
   } catch (e) {
-    // leave the button as-is - they can just click it again
+    // Transient - leave whatever was already shown.
   }
-});
+}
 
 function formatClockTime(unixSeconds) {
   if (!unixSeconds) return "?";
@@ -517,7 +592,7 @@ function weaponTallyText(weaponsExpended) {
   return entries.map(([weapon, count]) => `${count}x ${weapon}`).join(", ");
 }
 
-function renderDebrief(d) {
+function renderDebrief(d, target = debriefBody) {
   const title = [d.aircraft, d.mission_name].filter(Boolean).join(" — ");
   const badge = outcomeBadge(d);
   const causeText = causeOfLossText(d);
@@ -578,7 +653,7 @@ function renderDebrief(d) {
        </div>`
     : "";
 
-  debriefBody.innerHTML = `
+  target.innerHTML = `
     <h3 class="checklist-title">${escapeHtml(title || "Flight")}</h3>
     <div class="checklist-subnote mono">${escapeHtml(formatClockTime(d.start_time))} – ${escapeHtml(formatClockTime(d.end_time))}</div>
     ${outcomeHtml}
@@ -1239,6 +1314,47 @@ function renderLoadout(loadout) {
   opsLoadoutPanel.hidden = false;
 }
 
+// Real per-contact list for the Threats tab - reuses findSamThreats()'s
+// exact result (same nearest-first distances the banner text already
+// showed), just as individual rows instead of one joined string.
+function renderThreatsList(threats) {
+  if (!threats.length) {
+    opsThreatsList.innerHTML = `<div class="ops-empty-note">No threats detected.</div>`;
+    return;
+  }
+  opsThreatsList.innerHTML = threats
+    .map((t) => `<div class="ops-readout-row"><span class="ops-readout-label">${escapeHtml(t.type)}</span><span class="ops-readout-value mono">${t.distanceNm < 10 ? t.distanceNm.toFixed(1) : Math.round(t.distanceNm)} NM</span></div>`)
+    .join("");
+}
+
+// Real full airbase list for the Airfields tab - every entry in
+// data.airbases, nearest first, same bearing/distance math
+// findNearestFriendlyAirbase() already does for just the single nearest
+// one. Coalition shown as FRIENDLY/ENEMY/NEUTRAL from the same
+// data.myCoalition comparison the map's own airbase coloring uses
+// (airbaseColor()), not a new classification.
+function renderAirfieldsList(own, airbases, myCoalition) {
+  const withDistance = (airbases || [])
+    .filter((ab) => ab.lat != null)
+    .map((ab) => {
+      const { bearingDeg, distanceNm } = bearingDistanceBetween(own.lat, own.lon, ab.lat, ab.lon);
+      let side = "UNKNOWN";
+      if (myCoalition != null && ab.coalition != null) side = ab.coalition === myCoalition ? "FRIENDLY" : "ENEMY";
+      return { name: ab.name || "Airbase", category: ab.category, side, bearingDeg, distanceNm };
+    })
+    .sort((a, b) => a.distanceNm - b.distanceNm);
+  if (!withDistance.length) {
+    opsAirfieldsList.innerHTML = `<div class="ops-empty-note">No airbase data.</div>`;
+    return;
+  }
+  opsAirfieldsList.innerHTML = withDistance
+    .map((ab) => {
+      const categoryTag = ab.category && ab.category !== "airdrome" ? ` (${ab.category.toUpperCase()})` : "";
+      return `<div class="ops-readout-row"><span class="ops-readout-label">${escapeHtml(ab.name)}${categoryTag} — ${ab.side}</span><span class="ops-readout-value mono">${formatBearingRange(ab.bearingDeg, ab.distanceNm)}</span></div>`;
+    })
+    .join("");
+}
+
 function updateOpsSituationalAwareness(snapshot) {
   const available = snapshot && snapshot.available;
   // See MapDataStore.get() in dcs_map_data.py / MAP_HOOK_VERSION in
@@ -1275,6 +1391,8 @@ function updateOpsSituationalAwareness(snapshot) {
     opsFuelValue.textContent = "—";
     opsHeadingValue.textContent = "—";
     renderLoadout(null);
+    renderThreatsList([]);
+    opsAirfieldsList.innerHTML = "";
     return;
   }
 
@@ -1291,6 +1409,7 @@ function updateOpsSituationalAwareness(snapshot) {
       .map((t) => `${t.type} — ${t.distanceNm < 10 ? t.distanceNm.toFixed(1) : Math.round(t.distanceNm)} NM`)
       .join(", ");
   }
+  renderThreatsList(threats);
 
   if (data.bullseye && data.bullseye.lat != null) {
     const { bearingDeg, distanceNm } = bearingDistanceBetween(data.bullseye.lat, data.bullseye.lon, own.lat, own.lon);
@@ -1322,6 +1441,8 @@ function updateOpsSituationalAwareness(snapshot) {
   opsNearestSupport.textContent = support
     ? `${support.type || "Support"} ${formatBearingRange(support.bearingDeg, support.distanceNm)}`
     : "NONE FOUND";
+
+  renderAirfieldsList(own, data.airbases, data.myCoalition);
 }
 
 mapRecenterBtn.addEventListener("click", () => {
@@ -1447,14 +1568,14 @@ async function loadKneeboard() {
     ];
     const changed = JSON.stringify(pages) !== JSON.stringify(kneeboardPages);
     kneeboardPages = pages;
-    kneeboardTab.hidden = pages.length === 0;
-    if (pages.length === 0) kneeboardDrawer.hidden = true;
+    kneeboardNavBtn.hidden = pages.length === 0;
+    if (pages.length === 0 && !primarySections.kneeboard.hidden) switchPrimarySection("ops");
     if (changed) {
       kneeboardIndex = 0;
-      if (!kneeboardDrawer.hidden) renderKneeboardPage();
+      if (!primarySections.kneeboard.hidden) renderKneeboardPage();
     }
   } catch (e) {
-    kneeboardTab.hidden = true;
+    kneeboardNavBtn.hidden = true;
   }
 }
 
@@ -1506,7 +1627,7 @@ function setKneeboardZoom(level) {
 
 kneeboardImage.addEventListener("load", updateKneeboardImageFit);
 window.addEventListener("resize", () => {
-  if (!kneeboardDrawer.hidden) updateKneeboardImageFit();
+  if (!primarySections.kneeboard.hidden) updateKneeboardImageFit();
 });
 
 kneeboardZoomOut.addEventListener("click", () => setKneeboardZoom(kneeboardZoom - KNEEBOARD_ZOOM_STEP));
@@ -1514,14 +1635,6 @@ kneeboardZoomIn.addEventListener("click", () => setKneeboardZoom(kneeboardZoom +
 kneeboardZoomReset.addEventListener("click", () => setKneeboardZoom(100));
 kneeboardImage.addEventListener("click", () => setKneeboardZoom(kneeboardZoom === 100 ? 200 : 100));
 
-kneeboardTab.addEventListener("click", () => {
-  kneeboardDrawer.hidden = false;
-  setKneeboardZoom(100);
-  renderKneeboardPage();
-});
-kneeboardClose.addEventListener("click", () => {
-  kneeboardDrawer.hidden = true;
-});
 // A carousel, not a dead end at either edge - PREV from page 1 wraps to
 // the last page and vice versa, so flipping through never just stops.
 kneeboardPrev.addEventListener("click", () => {
@@ -1543,10 +1656,12 @@ kneeboardPageInput.addEventListener("change", goToKneeboardPage);
 kneeboardPageInput.addEventListener("keydown", (e) => {
   if (e.key === "Enter") goToKneeboardPage();
 });
+// No Escape-to-close anymore - Kneeboard is a normal nav section now, not
+// an overlay/drawer with something to close back out of. Arrow-key page
+// nav still works while it's the active section.
 document.addEventListener("keydown", (e) => {
-  if (kneeboardDrawer.hidden) return;
-  if (e.key === "Escape") kneeboardDrawer.hidden = true;
-  else if (e.key === "ArrowLeft" && document.activeElement !== kneeboardPageInput) kneeboardPrev.click();
+  if (primarySections.kneeboard.hidden) return;
+  if (e.key === "ArrowLeft" && document.activeElement !== kneeboardPageInput) kneeboardPrev.click();
   else if (e.key === "ArrowRight" && document.activeElement !== kneeboardPageInput) kneeboardNext.click();
 });
 
@@ -1929,6 +2044,10 @@ simbriefBtn.addEventListener("click", async () => {
       simbriefContent.innerHTML = `<div class="placeholder-warning">${escapeHtml(data.error)}</div>`;
       return;
     }
+    // SIMBRIEF header pill - real signal, set only once a pull has
+    // actually populated real OFP data (not just "the panel exists").
+    simbriefStatusValue.textContent = "LOADED";
+    simbriefStatusValue.className = "status-block dcs mono";
     const route = `${data.origin || "?"} → ${data.destination || "?"}${data.alternate ? " (alt " + data.alternate + ")" : ""}`;
     simbriefContent.innerHTML = `
       <div class="data-grid mono">
