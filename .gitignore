@@ -28,3 +28,7 @@ _pre_mfd_redesign_backup/
 .idea/
 Thumbs.db
 .DS_Store
+
+# Claude Code local dev-server config for the browser preview tool -
+# machine-specific launch command, not app source.
+.claude/
