@@ -42,6 +42,7 @@ def start_dcs_listener(state, flight_tracker=None, port=39234):
                     with state.lock:
                         state.game = "dcs"
                         state.aircraft = payload["aircraft"]
+                        state.last_game_signal_at = time.time()
                         mission_name = (state.dcs_mission_briefing or {}).get("sortie")
                     _debug_log(
                         f"RECV aircraft={payload.get('aircraft')!r} "

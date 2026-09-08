@@ -146,6 +146,29 @@ header {
   50% { opacity: 0.45; }
 }
 
+/* Wraps the two header indicators (SIM / AIRFRAME) - each just reuses
+   .status-block/.idle/.alarm directly (see updateDetectionIndicators() in
+   app.js), so this only needs to add the small caption label and lay the
+   pair out. */
+#detection-status {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.detection-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.detection-label {
+  font-size: 0.66rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+
 /* Dim/inert until dcs_flight_tracker.py says a real flight just landed and
    stopped after 5+ minutes - then fills solid lime green (the "press
    this" treatment used everywhere else in the app) and pulses gently to

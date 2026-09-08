@@ -35,7 +35,24 @@
          time-critical - you want it glanceable the moment you land,
          whichever tab you're on. -->
     <button type="button" id="debrief-btn" class="debrief-btn" disabled>GENERATE DEBRIEF</button>
-    <div id="status-bar" class="status-block idle mono">DETECTING...</div>
+    <!-- Two separate indicators, not one combined string - DCS/MSFS
+         detection and airframe detection are genuinely different signals
+         (you can have a sim detected with no airframe yet, e.g. sitting
+         at a menu in MSFS), and collapsing them into one line made it
+         easy to misread stale data as current. See
+         updateDetectionIndicators() in app.js - both only ever show what
+         /api/status reports right now (already staleness-checked
+         server-side), never a guess or a leftover value. -->
+    <div id="detection-status">
+      <div class="detection-indicator">
+        <span class="detection-label">SIM</span>
+        <span id="sim-detected-value" class="status-block idle mono">DETECTING...</span>
+      </div>
+      <div class="detection-indicator">
+        <span class="detection-label">AIRFRAME</span>
+        <span id="airframe-detected-value" class="status-block idle mono">DETECTING...</span>
+      </div>
+    </div>
   </header>
 
   <!-- Primary nav - Ops / Hangar / Flight School. Ops first (pre-flight

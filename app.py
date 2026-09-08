@@ -1,6 +1,7 @@
 import json
 import sys
 import threading
+import time
 import webbrowser
 from pathlib import Path
 
@@ -54,6 +55,16 @@ class AppState:
         self.lock = threading.Lock()
         self.game = None
         self.aircraft = None
+        # Unix time of the last actual "here's an active aircraft" signal
+        # from either integration (dcs_listener.py/msfs_watcher.py) - see
+        # api_status()'s freshness check. Neither integration ever sends an
+        # explicit "no aircraft anymore" signal (DCS's export hook just
+        # stops sending packets once you're not controlling a unit; MSFS's
+        # poll loop just keeps returning whatever it last saw), so without
+        # this, game/aircraft would stay frozen at their last value forever
+        # after you exit - a real bug found live (fuel/heading still
+        # showing on Ops while not even in a mission).
+        self.last_game_signal_at = None
         self.msfs_available = False
         self.msfs_error = None
         self.dcs_hook = None
@@ -132,13 +143,34 @@ def index():
     return render_template("index.html")
 
 
+# Neither integration ever sends an explicit "no aircraft anymore" signal
+# (see the comment on AppState.last_game_signal_at) - DCS's export hook
+# sends telemetry roughly every 2s while actively controlling a unit
+# (dcs_export_hook.lua's telemetryIntervalSeconds), MSFS's watcher polls
+# every 5s (msfs_watcher.py's poll_interval_seconds default) - this is
+# generous buffer past either cadence without leaving stale data visible
+# for long after you've actually exited.
+GAME_SIGNAL_STALE_SECONDS = 8.0
+
+
 @app.route("/api/status")
 def api_status():
     with state.lock:
         game, aircraft = state.game, state.aircraft
+        last_signal_at = state.last_game_signal_at
         msfs_available, msfs_error = state.msfs_available, state.msfs_error
         dcs_hook = state.dcs_hook
         dcs_mission_hook = state.dcs_mission_hook
+
+    # Treat a stale signal as "nothing currently detected" rather than
+    # trusting the last-known game/aircraft forever - a real bug found
+    # live (fuel/heading still showing on Ops after exiting the aircraft
+    # entirely). This never destroys state.game/state.aircraft themselves
+    # (still there the moment a fresh signal arrives again) - just filters
+    # what this endpoint reports right now.
+    fresh = last_signal_at is not None and (time.time() - last_signal_at) <= GAME_SIGNAL_STALE_SECONDS
+    if not fresh:
+        game, aircraft = None, None
 
     aircraft_data = load_aircraft_file(aircraft, game) if aircraft else None
     return jsonify({

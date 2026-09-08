@@ -38,6 +38,7 @@ def start_msfs_watcher(state, poll_interval_seconds=5):
                     with state.lock:
                         state.game = "msfs"
                         state.aircraft = title.strip()
+                        state.last_game_signal_at = time.time()
             except Exception as e:
                 # SimConnect throws if MSFS isn't running yet - just retry
                 sm = None

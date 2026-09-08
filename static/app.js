@@ -1,4 +1,5 @@
-const statusBar = document.getElementById("status-bar");
+const simDetectedValue = document.getElementById("sim-detected-value");
+const airframeDetectedValue = document.getElementById("airframe-detected-value");
 const primaryNavBtns = document.querySelectorAll(".primary-nav-btn");
 const primarySections = {
   ops: document.getElementById("section-ops"),
@@ -237,22 +238,53 @@ cockpitConfigSelect.addEventListener("change", async () => {
 
 loadCockpitConfigs();
 
+// Two independent signals, not one combined string: which sim is running
+// (or neither) and which airframe it's reporting (or none) - genuinely
+// different questions (MSFS can be detected sitting at a menu with no
+// airframe loaded yet; DCS's export hook can't currently tell "DCS is
+// open but idle" from "DCS isn't running" apart, since it only ever sends
+// anything at all once you're actually controlling a unit - an honest gap
+// in what that hook can report, not something to paper over here).
+// data.game/data.aircraft are already staleness-checked server-side
+// (api_status() in app.py) - by the time this runs, null genuinely means
+// "nothing detected right now", never a guess.
+function updateDetectionIndicators(data) {
+  let simText, simCls;
+  if (data.game === "dcs") {
+    simText = "DCS DETECTED";
+    simCls = "status-block mono";
+  } else if (data.game === "msfs" || (data.msfs_connection && data.msfs_connection.available)) {
+    simText = "MSFS DETECTED";
+    simCls = "status-block mono";
+  } else {
+    simText = "NO SIM DETECTED";
+    simCls = "status-block idle mono";
+  }
+  simDetectedValue.textContent = simText;
+  simDetectedValue.className = simCls;
+  simDetectedValue.title = statusTooltip(data);
+
+  let airframeText, airframeCls;
+  if (data.aircraft && data.aircraft_data_loaded) {
+    airframeText = `${data.aircraft.toUpperCase()} ARMED`;
+    airframeCls = "status-block mono";
+  } else if (data.aircraft) {
+    airframeText = `${data.aircraft.toUpperCase()} — NO DATA FILE`;
+    airframeCls = "status-block alarm mono";
+  } else {
+    airframeText = "NO AIRFRAME DETECTED";
+    airframeCls = "status-block idle mono";
+  }
+  airframeDetectedValue.textContent = airframeText;
+  airframeDetectedValue.className = airframeCls;
+}
+
 async function pollStatus() {
   try {
     const res = await fetch("/api/status");
     const data = await res.json();
 
-    if (data.aircraft && data.aircraft_data_loaded) {
-      statusBar.textContent = `[ ${(data.game || "?").toUpperCase()} // ${data.aircraft.toUpperCase()} // ARMED ]`;
-      statusBar.className = "status-block mono";
-    } else if (data.aircraft) {
-      statusBar.textContent = "[ NO AIRFRAME DATA ]";
-      statusBar.className = "status-block alarm mono";
-    } else {
-      statusBar.textContent = "[ NO SIM DETECTED ]";
-      statusBar.className = "status-block idle mono";
-    }
-    statusBar.title = statusTooltip(data);
+    updateDetectionIndicators(data);
 
     if (data.aircraft !== lastAircraft) {
       lastAircraft = data.aircraft;
@@ -275,8 +307,10 @@ async function pollStatus() {
       kneeboardDrawer.hidden = true;
     }
   } catch (e) {
-    statusBar.textContent = "[ CANNOT REACH MACHLINK SERVER ]";
-    statusBar.className = "status-block alarm mono";
+    simDetectedValue.textContent = "CANNOT REACH SERVER";
+    simDetectedValue.className = "status-block alarm mono";
+    airframeDetectedValue.textContent = "CANNOT REACH SERVER";
+    airframeDetectedValue.className = "status-block alarm mono";
   }
 }
 
@@ -976,10 +1010,24 @@ function addDynamicMarker(latlng, icon, popupHtml) {
 }
 
 function updateMapMarkers(snapshot) {
-  if (!snapshot || !snapshot.available) {
+  // dcs_map_data.py already flags a snapshot "stale" once 5s pass with no
+  // fresh write from DCS (aircraft exited, mission ended, DCS closed) -
+  // this was never actually being checked, so the map kept every marker
+  // frozen exactly where it last saw them, looking exactly like a live
+  // picture. Treated the same as "no data at all": clear everything
+  // rather than leave a stale last-known frame on screen.
+  const stale = snapshot && snapshot.available && snapshot.stale;
+  if (!snapshot || !snapshot.available || stale) {
     mapHookOutdatedWarning.hidden = true;
     mapEmptyState.hidden = false;
-    mapEmptyState.textContent = "NO LIVE MAP DATA — make sure DCS is running, Phase 2's mission hook is installed, and you're in control of a unit.";
+    mapEmptyState.textContent = stale
+      ? "NO RECENT DATA — DCS/the mission hook stopped reporting (exited the aircraft, mission ended, or DCS closed)."
+      : "NO LIVE MAP DATA — make sure DCS is running, Phase 2's mission hook is installed, and you're in control of a unit.";
+    if (ownMarker) { leafletMap.removeLayer(ownMarker); ownMarker = null; }
+    if (bullseyeMarker) { leafletMap.removeLayer(bullseyeMarker); bullseyeMarker = null; }
+    if (dynamicLayer) dynamicLayer.clearLayers();
+    if (ringsLayer) ringsLayer.clearLayers();
+    hasCenteredOnce = false; // re-center cleanly whenever data resumes, rather than snapping to wherever it last panned
     return;
   }
   // See the same check in updateOpsSituationalAwareness - a deployed
@@ -1190,9 +1238,17 @@ function updateOpsSituationalAwareness(snapshot) {
   // loadout, airbase category, ...), most likely because it's a manual
   // copy that hasn't been redone since a MachLink update. Meaningful any
   // time a snapshot exists at all, not just once your own position is
-  // known.
+  // known - and independent of staleness below, since hookVersion doesn't
+  // change just because DCS stopped writing fresh ticks.
   opsHookOutdatedWarning.hidden = !(available && snapshot.hook_outdated);
-  const data = available ? (snapshot.data || {}) : null;
+  // dcs_map_data.py flags a snapshot "stale" once 5s pass with no fresh
+  // write from DCS - this was never actually being checked here, so
+  // exiting the aircraft (or closing DCS entirely) left every one of
+  // these readouts frozen at their last real value, looking exactly like
+  // live data (a real bug found live: fuel/heading still showing after
+  // leaving the aircraft). Treated the same as no data at all.
+  const fresh = available && !snapshot.stale;
+  const data = fresh ? (snapshot.data || {}) : null;
   const own = data && data.own && data.own.lat != null ? data.own : null;
 
   // The map snapshot's own own/lat is a more reliable "are we actually in

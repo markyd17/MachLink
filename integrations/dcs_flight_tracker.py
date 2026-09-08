@@ -45,6 +45,17 @@ STOPPED_VELOCITY_MPS = 0.5
 STOPPED_HOLD_SECONDS = 5.0
 DEBRIEF_MIN_FLIGHT_SECONDS = 5 * 60
 CRASH_TIMEOUT_SECONDS = 10.0
+# Separate from CRASH_TIMEOUT_SECONDS (which is specifically "silence this
+# long WHILE AIRBORNE means destroyed") - this is the much simpler "is
+# last_agl/last_vel actually current" check for Ops's live flight-status
+# strip. dcs_export_hook.lua sends telemetry roughly every 2s while
+# actively controlling a unit, so this is generous buffer without leaving
+# a frozen altitude/speed reading on screen for long after telemetry
+# actually stops (a real bug found live - not from an inference, from
+# checking the running app: exit the aircraft, and without this,
+# last_agl/last_vel just keep whatever they were at the moment telemetry
+# stopped, forever).
+TELEMETRY_STALE_SECONDS = 5.0
 # A takeoff transition this soon after a landing transition is a bounce
 # (main gear touched, briefly airborne again), not a real go-around or
 # deliberate touch-and-go (which takes a full pattern - minutes, not
@@ -527,14 +538,24 @@ class FlightTracker:
 
     def status(self):
         with self.lock:
+            now = self._now()
+            # last_agl/last_vel are never cleared on their own (see the
+            # comment on them in __init__) - without this check they'd
+            # keep reporting whatever they were at the moment telemetry
+            # actually stopped, forever, looking exactly like a live
+            # reading. See TELEMETRY_STALE_SECONDS above.
+            telemetry_fresh = (
+                self._last_update_time is not None
+                and (now - self._last_update_time) <= TELEMETRY_STALE_SECONDS
+            )
             # Ready-to-render units (feet/knots), same "convert once here"
             # pattern dcs_mission_briefing.py's weather extraction uses,
             # rather than the frontend re-deriving unit conversions. Shown
-            # any time real telemetry exists at all (including on the
-            # ramp before takeoff), unlike sortie_start_time below which is
-            # deliberately airborne-only.
-            altitude_ft = round(self.last_agl * 3.28084) if self.last_agl is not None else None
-            speed_kt = round(self.last_vel * 1.94384) if self.last_vel is not None else None
+            # any time real FRESH telemetry exists (including on the ramp
+            # before takeoff), unlike sortie_start_time below which is
+            # deliberately airborne-only on top of that.
+            altitude_ft = round(self.last_agl * 3.28084) if telemetry_fresh and self.last_agl is not None else None
+            speed_kt = round(self.last_vel * 1.94384) if telemetry_fresh and self.last_vel is not None else None
             return {
                 "ready": self.debrief_ready,
                 "aircraft": self.pending_debrief["aircraft"] if self.pending_debrief else None,
@@ -542,8 +563,9 @@ class FlightTracker:
                 # tracked for the Debrief duration calc, just never exposed
                 # for a live flight before it's finished. None whenever
                 # there's no in-progress flight to time (aircraft not
-                # airborne, or no aircraft detected at all).
-                "sortie_start_time": self.start_time if self.is_airborne else None,
+                # airborne, telemetry gone stale, or no aircraft detected
+                # at all).
+                "sortie_start_time": self.start_time if (self.is_airborne and telemetry_fresh) else None,
                 "altitude_ft": altitude_ft,
                 # "speed" - LoGetVectorVelocity()'s magnitude is world-frame
                 # (ground-relative) velocity, not indicated airspeed - DCS's
