@@ -1660,8 +1660,11 @@ header {
 }
 /* Leaflet ships its own default marker/popup look tuned for a light
    basemap sitting in a full-page context - override just enough to fit
-   MachLink's dark panel instead of restyling the whole library. */
-.ml-map-marker { background: none; border: none; }
+   MachLink's dark panel instead of restyling the whole library.
+   font-size pins the `em`-sized shapes makeMapIcon() (app.js) draws to a
+   fixed px size on the actual map, regardless of any font-size the legend
+   sets on its own copy of the same markup - see .map-legend-swatch below. */
+.ml-map-marker { background: none; border: none; font-size: 12px; }
 .leaflet-popup-content-wrapper, .leaflet-popup-tip {
   background: var(--panel-bg);
   color: var(--text-primary);
@@ -1750,13 +1753,16 @@ header {
 }
 .map-legend-row:last-child { margin-bottom: 0; }
 .map-legend-color-row { margin-top: clamp(4px, 0.5vw, 6px); }
-/* Swatch box scales with the legend; the tiny shapes drawn inside it
-   (makeMapIcon() in app.js) stay their fixed small px size - shared code
-   with the actual live map markers, and legible at any swatch size
-   anyway, so there's no need to touch it for this. */
+/* Swatch box scales with the legend, and so do the shapes drawn inside it
+   (makeMapIcon() in app.js) - that shared code sizes each shape in `em`,
+   so setting font-size here to the same clamp() as the box makes the
+   triangle/cross/hexagon/etc. grow and shrink right along with it. The
+   live map markers reuse the identical markup but stay a fixed px size
+   there instead - see .ml-map-marker above. */
 .map-legend-swatch {
   width: clamp(13px, 1.1vw, 18px);
   height: clamp(13px, 1.1vw, 18px);
+  font-size: clamp(13px, 1.1vw, 18px);
   flex: none;
   display: flex;
   align-items: center;

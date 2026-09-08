@@ -903,36 +903,41 @@ function shapeForUnit(u) {
 // MachLink's own brand colors, so it reads the way a DCS pilot expects.
 // Shape meanings are listed in MAP_KEY below and rendered in the map's
 // on-screen legend, so a new shape added here needs an entry there too.
+// Shape sizes are in `em`, not px, so the exact same markup renders at a
+// fixed small size on the live map (.ml-map-marker locks font-size:12px in
+// style.css, matching the old hardcoded px values exactly) but grows/shrinks
+// with the legend's swatch when reused inside .map-legend-swatch, which sets
+// its own clamp()'d font-size - see the CSS comment above .map-legend-swatch.
 function makeMapIcon(shape, color, headingDeg) {
   let html;
   if (shape === "triangle") {
     // border-trick triangle points up (north) at heading 0, matching
     // DCS's heading convention (0=north, clockwise) - CSS rotate() is
     // also clockwise-positive, so no sign flip needed.
-    html = `<div style="width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:12px solid ${color};transform:rotate(${headingDeg || 0}deg);filter:drop-shadow(0 0 2px rgba(0,0,0,0.8));"></div>`;
+    html = `<div style="width:0;height:0;border-left:0.5em solid transparent;border-right:0.5em solid transparent;border-bottom:1em solid ${color};transform:rotate(${headingDeg || 0}deg);filter:drop-shadow(0 0 2px rgba(0,0,0,0.8));"></div>`;
   } else if (shape === "cross") {
     // Helicopter: two crossed bars evoking a rotor disc seen from above -
     // distinct from the fixed-wing triangle at a glance. Rotates with
     // heading like the triangle does, though the shape is symmetric
     // enough that it barely shows.
-    html = `<div style="position:relative;width:12px;height:12px;transform:rotate(${headingDeg || 0}deg);filter:drop-shadow(0 0 2px rgba(0,0,0,0.8));">
-      <div style="position:absolute;top:5px;left:0;width:12px;height:2px;background:${color};"></div>
-      <div style="position:absolute;left:5px;top:0;width:2px;height:12px;background:${color};"></div>
+    html = `<div style="position:relative;width:1em;height:1em;transform:rotate(${headingDeg || 0}deg);filter:drop-shadow(0 0 2px rgba(0,0,0,0.8));">
+      <div style="position:absolute;top:0.417em;left:0;width:1em;height:0.167em;background:${color};"></div>
+      <div style="position:absolute;left:0.417em;top:0;width:0.167em;height:1em;background:${color};"></div>
     </div>`;
   } else if (shape === "square") {
-    html = `<div style="width:9px;height:9px;background:${color};border:1px solid rgba(0,0,0,0.6);"></div>`;
+    html = `<div style="width:0.75em;height:0.75em;background:${color};border:1px solid rgba(0,0,0,0.6);"></div>`;
   } else if (shape === "hexagon") {
     // SAM - a hexagon reads as "site/installation" and won't be confused
     // with the plain vehicle square or the soldier circle.
-    html = `<div style="width:11px;height:11px;background:${color};border:1px solid rgba(0,0,0,0.6);clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);"></div>`;
+    html = `<div style="width:0.917em;height:0.917em;background:${color};border:1px solid rgba(0,0,0,0.6);clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);"></div>`;
   } else if (shape === "diamond") {
-    html = `<div style="width:9px;height:9px;background:${color};border:1px solid rgba(0,0,0,0.6);transform:rotate(45deg);"></div>`;
+    html = `<div style="width:0.75em;height:0.75em;background:${color};border:1px solid rgba(0,0,0,0.6);transform:rotate(45deg);"></div>`;
   } else if (shape === "pentagon") {
     // Airdrome - the classic "home plate" installation symbol, distinct
     // from the vehicle square and the SAM hexagon.
-    html = `<div style="width:11px;height:11px;background:${color};border:1px solid rgba(0,0,0,0.6);clip-path:polygon(50% 0%,100% 38%,82% 100%,18% 100%,0% 38%);"></div>`;
+    html = `<div style="width:0.917em;height:0.917em;background:${color};border:1px solid rgba(0,0,0,0.6);clip-path:polygon(50% 0%,100% 38%,82% 100%,18% 100%,0% 38%);"></div>`;
   } else {
-    html = `<div style="width:9px;height:9px;border-radius:50%;background:${color};border:1px solid rgba(0,0,0,0.6);"></div>`;
+    html = `<div style="width:0.75em;height:0.75em;border-radius:50%;background:${color};border:1px solid rgba(0,0,0,0.6);"></div>`;
   }
   return L.divIcon({ html, className: "ml-map-marker", iconSize: [16, 16], iconAnchor: [8, 8] });
 }
