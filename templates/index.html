@@ -13,10 +13,15 @@
 <!-- Digital-clock look for Ops's flight-status numbers (sortie time, fuel,
      altitude, speed, heading) - a real 7-segment font isn't on Google
      Fonts, so this is the closest practical match: a genuine blocky
-     LED/LCD-display face, not a fake CSS effect on a normal font. -->
+     LED/LCD-display face, not a fake CSS effect on a normal font.
+     Oswald - a real condensed industrial/placard sans, the kind actually
+     stenciled on equipment nameplates - is the facelift pass's new
+     --font-display (see style.css :root), covering nav/panel-titles/
+     buttons/labels app-wide; the brand mark and hero text both force
+     Bahnschrift explicitly regardless, so the logo is unaffected. -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=VT323&family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>

@@ -24,7 +24,13 @@
      data, not that. New harmonious accent instead of colliding with an
      already-meaningful one. */
   --hangar-violet: #C084FC;
-  --font-display: system-ui, "Bahnschrift", "Arial Narrow", "Segoe UI", sans-serif;
+  /* Oswald - a real condensed industrial/placard sans (the kind stenciled
+     on actual equipment nameplates), not a generic system font - leads
+     the stack now for the "character" pass. Falls back to the previous
+     stack untouched if it fails to load, and the brand mark/hero text
+     both force Bahnschrift explicitly regardless (see .brand-mark/
+     .ops-hero-text) so the logo's look is unaffected either way. */
+  --font-display: "Oswald", system-ui, "Bahnschrift", "Arial Narrow", "Segoe UI", sans-serif;
   --font-mono: "SF Mono", Consolas, "Roboto Mono", "SFMono-Regular", monospace;
   /* A kneeboard is a physical accessory strapped to a pilot's leg, not
      another instrument - these deliberately break from the green/cyan MFD
@@ -39,18 +45,48 @@
      lime-green outline on "Link", so the desktop shortcut and the on-page
      logo read as the same mark. */
   --logo-dark-grey: #2E343A;
+  /* Facelift pass - "well-used field hardware", not literal damage decals.
+     Two purely DECORATIVE hardware tones (bezel corner brackets, rivet
+     dots) - deliberately not another semantic color, so they never
+     compete with the four above (cyan=trusted data, amber=unverified,
+     green=go/armed, red=danger). Reads as "the physical metal frame
+     around the glass", distinct from anything the glass itself displays. */
+  --hardware-warm: #9C7A42;
+  --hardware-warm-dim: rgba(156, 122, 66, 0.45);
 }
 
 * { box-sizing: border-box; }
 
 html, body { height: 100%; }
 
+/* Dark, thin scrollbars everywhere - previously unstyled, so panels with
+   internal scroll (tab-content-wrapper, simbrief-content, debrief/logbook
+   bodies) showed the browser's default light-grey scrollbar, a jarring
+   flat-web element inside an otherwise all-metal/glass cockpit surface. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb { background: var(--border); border: 2px solid var(--bg); border-radius: 0; }
+*::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
+
 /* Flex column (header, primary nav, content) so the content area's
    height is just "whatever's left", not a hardcoded calc(100vh - Npx)
-   that has to be re-derived every time something is added above it. */
+   that has to be re-derived every time something is added above it.
+   The two radial gradients are a faint vignette (a hair brighter dead
+   center-top, a good deal darker toward the bottom edge) sitting under
+   every panel's own opaque background - it only actually shows through
+   in the gaps between panels, but that's enough to keep the whole page
+   from reading as one flat, printed-looking black rather than a lit
+   physical space. */
 body {
   margin: 0;
-  background: var(--bg);
+  background:
+    radial-gradient(ellipse 1400px 800px at 50% -120px, rgba(255, 255, 255, 0.035), transparent 60%),
+    radial-gradient(ellipse 1600px 900px at 50% 120%, rgba(0, 0, 0, 0.5), transparent 55%),
+    var(--bg);
   color: var(--text-primary);
   font-family: var(--font-display);
   font-size: 14px;
@@ -75,6 +111,15 @@ header {
   padding: 12px 20px;
   border-bottom: 2px solid var(--border);
   background: var(--panel-bg);
+  /* Faint brushed-metal grain (fine diagonal hairlines) plus a vertical
+     bevel (a hairline-bright top edge fading to a darker bottom edge) -
+     the same "physical panel, not a flat CSS bar" treatment used on
+     .panel/.sub-panel below, applied here too since the header is the
+     first surface you see. */
+  background-image:
+    repeating-linear-gradient(115deg, rgba(255, 255, 255, 0.015) 0px, rgba(255, 255, 255, 0.015) 1px, transparent 1px, transparent 4px),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent 40%);
+  box-shadow: 0 2px 14px rgba(0, 0, 0, 0.45);
   flex-wrap: wrap;
   gap: 10px;
 }
@@ -220,6 +265,17 @@ header {
 }
 .logbook-btn:hover { background: rgba(0, 229, 255, 0.12); }
 
+/* Shared "physical switch" bevel for every outlined/filled command
+   button in the app - a faint top-edge highlight and bottom-edge shadow,
+   so pressing one reads as a real machined toggle rather than a flat CSS
+   rectangle. Purely additive (none of these set their own box-shadow),
+   listed once here instead of repeating it in each button's own rule. */
+.debrief-btn, .logbook-btn, .ask-btn, .mfd-btn, .simbrief-btn, .ask-picker-btn,
+#map-recenter, #map-key-toggle, #kneeboard-nav button, #kneeboard-header-controls button,
+#device-modal-controls button {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 -2px 3px rgba(0, 0, 0, 0.3);
+}
+
 /* ----------------------------------------------------------
    PRIMARY NAV - Ops / Hangar / Flight School. body is already a flex
    column (header, nav, content - see the body rule near the top), so the
@@ -232,6 +288,9 @@ header {
   background: var(--bg);
   border-bottom: 1px solid var(--border);
   padding: 0 20px;
+  /* A recessed channel the tabs sit in, like a physical rocker-switch
+     panel rather than a flat row of text links. */
+  box-shadow: inset 0 6px 10px -8px rgba(0, 0, 0, 0.7);
 }
 .primary-nav-btn {
   background: none;
@@ -245,22 +304,29 @@ header {
   font-size: 0.82rem;
   text-transform: uppercase;
   cursor: pointer;
+  transition: color 0.15s ease, text-shadow 0.15s ease;
 }
 .primary-nav-btn:hover { color: var(--text-primary); }
+/* Active tab gets the same "lit annunciator" glow language as the
+   debrief button/hero text/dash readouts elsewhere in the app, in that
+   tab's own identity color, instead of just a flat color swap. */
 .primary-nav-btn.active[data-section="ops"] {
   color: var(--tactical-cyan);
   border-bottom-color: var(--tactical-cyan);
   background: rgba(0, 229, 255, 0.06);
+  text-shadow: 0 0 8px rgba(0, 229, 255, 0.5);
 }
 .primary-nav-btn.active[data-section="hangar"] {
   color: var(--hangar-violet);
   border-bottom-color: var(--hangar-violet);
   background: rgba(192, 132, 252, 0.08);
+  text-shadow: 0 0 8px rgba(192, 132, 252, 0.5);
 }
 .primary-nav-btn.active[data-section="flightschool"] {
   color: var(--mfd-green);
   border-bottom-color: var(--mfd-green);
   background: rgba(0, 255, 102, 0.06);
+  text-shadow: 0 0 8px rgba(0, 255, 102, 0.5);
 }
 
 /* ----------------------------------------------------------
@@ -285,8 +351,23 @@ header {
    setting `display` beats the browser's own [hidden] default. */
 .primary-section[hidden] { display: none; }
 
+/* Shared "physical instrument panel" surface treatment - brushed-metal
+   grain, a top-lit/bottom-shadowed bevel, and two brass rivet dots on the
+   top corners - applied to both .panel and .sub-panel via one rule so the
+   two can never drift apart, then finished off below by the corner-
+   bracket pseudo-elements (::before/::after), which need their own
+   selector list since pseudo-elements can't be comma-joined into a
+   property-only rule like this one without repeating it anyway. */
+.panel, .sub-panel {
+  background-color: var(--panel-bg);
+  background-image:
+    radial-gradient(circle 3px at 11px 11px, var(--hardware-warm-dim), transparent 70%),
+    radial-gradient(circle 3px at calc(100% - 11px) 11px, var(--hardware-warm-dim), transparent 70%),
+    repeating-linear-gradient(100deg, rgba(255, 255, 255, 0.015) 0px, rgba(255, 255, 255, 0.015) 1px, transparent 1px, transparent 4px),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.025) 0%, transparent 25%, rgba(0, 0, 0, 0.14) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), inset 0 -1px 0 rgba(0, 0, 0, 0.35);
+}
 .panel {
-  background: var(--panel-bg);
   border: 1px solid var(--border);
   display: flex;
   flex-direction: column;
@@ -303,7 +384,6 @@ header {
 }
 
 .sub-panel {
-  background: var(--panel-bg);
   border: 1px solid var(--border);
   padding: 14px 16px;
   display: flex;
@@ -315,6 +395,41 @@ header {
    .hidden on the SimBrief/DCS-briefing panels would have no visual effect -
    both would stay showing regardless of which sim is detected. */
 .sub-panel[hidden] { display: none; }
+
+/* HUD/targeting-reticle corner brackets - the same worn-brass hardware
+   tone as the rivet dots above, deliberately NOT any of the app's data
+   colors (cyan/amber/green/red), so these read purely as "the physical
+   bezel corner", never as a status. Reused on the modal overlays below
+   (#debrief-panel/#logbook-panel/#device-modal) so every card-like
+   surface in the app shares the same frame language. */
+.sub-panel, .panel, #debrief-panel, #logbook-panel, #device-modal {
+  position: relative;
+}
+.sub-panel::before, .sub-panel::after,
+.panel::before, .panel::after,
+#debrief-panel::before, #debrief-panel::after,
+#logbook-panel::before, #logbook-panel::after,
+#device-modal::before, #device-modal::after {
+  content: "";
+  position: absolute;
+  width: 11px;
+  height: 11px;
+  border: 2px solid var(--hardware-warm);
+  opacity: 0.55;
+  pointer-events: none;
+}
+.sub-panel::before, .panel::before,
+#debrief-panel::before, #logbook-panel::before, #device-modal::before {
+  top: -1px;
+  left: -1px;
+  border-width: 2px 0 0 2px;
+}
+.sub-panel::after, .panel::after,
+#debrief-panel::after, #logbook-panel::after, #device-modal::after {
+  bottom: -1px;
+  right: -1px;
+  border-width: 0 2px 2px 0;
+}
 
 /* Ask is a search bar under the OSB tabs now, not a side panel - SimBrief/
    DCS Briefing is the only thing left in Ops's left column, so it just
@@ -383,6 +498,10 @@ header {
   padding: 14px 18px;
   border-right: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
+  /* Faint horizontal scanlines behind each dash number - a real digital
+     instrument's own bloom/refresh texture, not just flat glowing text
+     floating on the panel's brushed-metal background. */
+  background-image: repeating-linear-gradient(180deg, rgba(0, 0, 0, 0.16) 0px, rgba(0, 0, 0, 0.16) 1px, transparent 1px, transparent 3px);
 }
 /* Small caption above a big number, same relationship a real instrument
    cluster uses ("MPH" tiny above/below a huge speed digit) - the label
@@ -466,6 +585,7 @@ header {
    the kind of thing that deserves the pulsing-red annunciator look, not
    just another quiet readout row. */
 .ops-threat-alert {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -474,9 +594,21 @@ header {
   background: rgba(255, 59, 48, 0.08);
   font-size: 0.78rem;
   font-weight: bold;
-  padding: 6px 10px;
+  padding: 6px 10px 6px 18px;
   margin-bottom: 10px;
   animation: mfd-alarm-blink 1.4s ease-in-out infinite;
+}
+/* Real hazard tape on the leading edge - a detected SAM is exactly the
+   kind of thing a physical cockpit would flag with actual warning
+   striping, not just a colored border. */
+.ops-threat-alert::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 8px;
+  background: repeating-linear-gradient(45deg, var(--hazard-red) 0px, var(--hazard-red) 4px, #1a1006 4px, #1a1006 8px);
 }
 .ops-threat-alert[hidden] { display: none; }
 
@@ -552,6 +684,7 @@ header {
   border: 1px solid var(--border);
   border-left: 3px solid var(--border);
   background: rgba(0, 0, 0, 0.15);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), inset 0 -1px 0 rgba(0, 0, 0, 0.25);
 }
 .ops-event-time { color: var(--text-dim); font-size: 0.72rem; }
 .ops-event-card.ops-event-kill { border-left-color: var(--mfd-green); }
@@ -572,16 +705,32 @@ header {
 .hangar-panel .checklist-title:first-child { margin-top: 0; }
 .hangar-panel h4.checklist-title { margin-top: 16px; }
 
+/* A small "index tab" accent bar to the left of every panel title,
+   colored to match that section's own primary-nav identity (cyan for
+   Ops, violet for Hangar - see the #section-hangar override right
+   below) - ties each card back to which "avionics bay" it lives in
+   instead of every panel title looking identical regardless of section. */
 .panel-title {
+  position: relative;
   font-size: 0.78rem;
   font-weight: 700;
   color: var(--text-dim);
   letter-spacing: 0.1em;
   text-transform: uppercase;
   margin: 0 0 12px 0;
-  padding-bottom: 8px;
+  padding: 0 0 8px 14px;
   border-bottom: 1px solid var(--border);
 }
+.panel-title::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 1px;
+  bottom: 9px;
+  width: 3px;
+  background: var(--tactical-cyan);
+}
+#section-hangar .panel-title::before { background: var(--hangar-violet); }
 
 /* ----------------------------------------------------------
    LEFT PANEL: MFD OSB TABS
@@ -956,6 +1105,7 @@ header {
   border: 1px solid var(--border);
   padding: 8px 10px;
   background: rgba(0, 0, 0, 0.15);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), inset 0 -1px 0 rgba(0, 0, 0, 0.25);
 }
 .data-cell.span-2 { grid-column: span 2; }
 .data-label {
@@ -1094,7 +1244,7 @@ header {
   line-height: 1.6;
   padding: 20px 8px;
   cursor: pointer;
-  box-shadow: -3px 2px 12px rgba(0, 0, 0, 0.55);
+  box-shadow: -3px 2px 12px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.15), inset 0 -2px 3px rgba(0, 0, 0, 0.25);
 }
 #kneeboard-tab:hover { background: var(--text-primary); border-color: var(--text-primary); }
 #kneeboard-tab[hidden] { display: none; }
@@ -1176,7 +1326,13 @@ header {
   min-height: 0;
   overflow: auto;
   background: var(--kneeboard-paper);
-  background-image: linear-gradient(180deg, var(--kneeboard-paper) 0%, var(--kneeboard-paper-shadow) 100%);
+  /* Faint diagonal creases under the usual light-to-shadow gradient - a
+     kneeboard page that's actually been folded into a leg strap a few
+     hundred times, not a pristine printout. */
+  background-image:
+    repeating-linear-gradient(98deg, rgba(0, 0, 0, 0.025) 0px, transparent 2px, transparent 70px),
+    repeating-linear-gradient(-98deg, rgba(0, 0, 0, 0.02) 0px, transparent 2px, transparent 90px),
+    linear-gradient(180deg, var(--kneeboard-paper) 0%, var(--kneeboard-paper-shadow) 100%);
   margin: 0 16px;
   padding: 14px;
   display: flex;
@@ -1378,6 +1534,7 @@ header {
   gap: 12px;
   border: 1px solid var(--border);
   background: rgba(0, 0, 0, 0.15);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), inset 0 -1px 0 rgba(0, 0, 0, 0.25);
   padding: 8px 12px;
   margin-bottom: 6px;
   cursor: pointer;
@@ -1558,6 +1715,7 @@ header {
   color: var(--text-primary);
   border: 1px solid var(--border);
   background: rgba(0, 0, 0, 0.15);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), inset 0 -1px 0 rgba(0, 0, 0, 0.25);
   padding: 6px 10px;
 }
 .debrief-list-item-warn {
