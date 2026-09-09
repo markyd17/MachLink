@@ -66,6 +66,15 @@
      before (header ended up ~85px tall in practice while #primary-nav
      still assumed 74px, an 11px visible overlap between the two). */
   --header-h: 78px;
+  /* Same shared-variable idea as --header-h above, for the sidebar's
+     width - #primary-nav's own `width` and #primary-content's
+     `margin-left` (12px further out, matching the gap between them)
+     both read this one value instead of two independently-hardcoded
+     numbers that used to jump together at a single breakpoint (212px ->
+     168px at 1050px). Now a continuous clamp() instead - the sidebar
+     stays exactly where it is and just narrows smoothly with the window
+     instead of snapping to a second fixed width. */
+  --nav-w: clamp(168px, 15vw, 212px);
 
   --font-display: "Oswald", "Bahnschrift", "Arial Narrow", sans-serif;
   --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
@@ -206,6 +215,19 @@ header {
   overflow: hidden !important;
   padding: 8px !important;
   display: flex !important;
+  /* style.css has its own older @media(max-width:800px) rule setting
+     header{flex-direction:column} (from before the v0-aviation redesign)
+     that v5 never contested at ANY width, since v5's own responsive
+     system used to jump straight from full-size desktop styling to a
+     720px phone breakpoint - leaving an untested 721-800px gap where
+     style.css's pre-existing rule won by default (nothing here competed
+     with it) and every header child collapsed into a broken vertical
+     stack. Found live while checking the new fluid clamp() scaling
+     across the *whole* desktop/tablet range for the first time - explicit
+     row here, unconditionally, closes that gap instead of just moving it
+     (v5's own phone breakpoint below relies on row+flex-wrap:wrap too,
+     never column, so this is correct there as well). */
+  flex-direction: row !important;
   flex-wrap: nowrap !important;
   align-items: stretch !important;
   gap: 8px !important;
@@ -218,6 +240,13 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
    .brand itself must be flex-direction:column for that; style.css's
    own .brand rule never set one (it was only ever a single row before),
    so this needs to be explicit rather than assumed. */
+/* Every clamp() below follows the same "stay put, just scale" rule (the
+   user explicitly rejected the old graduated-breakpoint system - things
+   were reflowing/disappearing at fixed widths instead of just shrinking
+   continuously): floor = the smallest this is allowed to get before the
+   phone breakpoint's own real reflow takes over, ceiling = its original
+   always-was-this-size value, vw-based middle term so it scales smoothly
+   with window width instead of jumping between the two. */
 .brand {
   flex: 0 0 auto !important;
   display: flex !important;
@@ -225,7 +254,7 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
   align-items: flex-start !important;
   justify-content: center !important;
   gap: 2px !important;
-  padding: 8px 16px !important;
+  padding: clamp(6px, 0.6vw, 8px) clamp(12px, 1.2vw, 16px) !important;
 }
 /* Horizontal "MachLink" wordmark + jet icon to its right - style.css's
    own .brand-mark rule sets flex-direction:column (it used to stack
@@ -233,9 +262,9 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
    kept winning and the jet icon rendered on its own line underneath
    instead of beside the wordmark. */
 .brand-mark { display: flex !important; flex-direction: row !important; align-items: center !important; gap: 8px !important; line-height: 1 !important; }
-.brand-jet { color: var(--signal) !important; filter: drop-shadow(0 0 4px rgba(62, 224, 138, 0.4)); flex: none; }
-.brand-word { font-family: var(--font-display) !important; font-style: italic !important; font-weight: 700 !important; font-size: 24px !important; letter-spacing: 0.02em !important; color: var(--ink) !important; }
-.brand-sub { display: block !important; font-family: var(--font-display) !important; font-size: 9px !important; text-transform: uppercase !important; letter-spacing: 0.14em !important; color: var(--ink-dim) !important; white-space: nowrap !important; }
+.brand-jet { width: clamp(14px, 1.4vw, 20px) !important; height: clamp(14px, 1.4vw, 20px) !important; color: var(--signal) !important; filter: drop-shadow(0 0 4px rgba(62, 224, 138, 0.4)); flex: none; }
+.brand-word { font-family: var(--font-display) !important; font-style: italic !important; font-weight: 700 !important; font-size: clamp(17px, 1.7vw, 24px) !important; letter-spacing: 0.02em !important; color: var(--ink) !important; }
+.brand-sub { display: block !important; font-family: var(--font-display) !important; font-size: clamp(7px, 0.6vw, 9px) !important; text-transform: uppercase !important; letter-spacing: 0.14em !important; color: var(--ink-dim) !important; white-space: nowrap !important; }
 
 #detection-status {
   flex: 1 1 auto !important;
@@ -249,8 +278,8 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
 }
 .detection-indicator, .status-pill-btn {
   flex: 1 1 0 !important;
-  min-width: 104px !important;
-  padding: 8px 16px !important;
+  min-width: clamp(68px, 5.4vw, 104px) !important;
+  padding: clamp(6px, 0.6vw, 8px) clamp(8px, 1.2vw, 16px) !important;
   display: flex !important;
   flex-direction: column !important;
   /* THE actual root cause of the status-cell overlap: style.css's
@@ -278,7 +307,7 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
   text-transform: uppercase !important;
   letter-spacing: 0.09em !important;
   color: var(--ink-dim) !important;
-  font-size: 10px !important;
+  font-size: clamp(8px, 0.6vw, 10px) !important;
 }
 /* min-width:0 on BOTH this row (a flex item of the column
    .detection-indicator) and .status-block (a flex item of THIS row) is
@@ -296,7 +325,7 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
   font-family: var(--font-display) !important;
   text-transform: uppercase !important;
   letter-spacing: 0.02em !important;
-  font-size: 13px !important;
+  font-size: clamp(11px, 0.8vw, 13px) !important;
   font-weight: 600 !important;
   line-height: 1 !important;
   color: var(--ink) !important;
@@ -308,29 +337,35 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
 .status-block.alarm { color: var(--threat) !important; }
 .status-block.dcs { color: var(--ink) !important; text-shadow: 0 0 10px rgba(62, 224, 138, 0.3); }
 
+/* Stays visible and shrinks at every desktop/tablet width now (it used
+   to just vanish at 1300px) - real wall-clock time is exactly the kind
+   of thing that should never disappear, only get smaller. */
 #header-clock {
   flex: 0 0 auto !important;
-  min-width: 150px;
-  padding: 6px 16px !important;
+  min-width: clamp(90px, 7.8vw, 150px);
+  padding: clamp(4px, 0.5vw, 6px) clamp(8px, 1.2vw, 16px) !important;
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
   justify-content: center !important;
   gap: 1px !important;
 }
-#header-clock-time { font-family: var(--font-mono) !important; font-size: 22px !important; font-weight: 600 !important; letter-spacing: 0.02em !important; color: var(--signal) !important; text-shadow: 0 0 10px rgba(62, 224, 138, 0.55); }
+#header-clock-time { font-family: var(--font-mono) !important; font-size: clamp(15px, 1.4vw, 22px) !important; font-weight: 600 !important; letter-spacing: 0.02em !important; color: var(--signal) !important; text-shadow: 0 0 10px rgba(62, 224, 138, 0.55); }
 #header-clock .detection-label { margin-top: 2px; }
-#header-clock-date { font-family: var(--font-mono) !important; font-size: 9px !important; color: var(--ink-faint) !important; }
+#header-clock-date { font-family: var(--font-mono) !important; font-size: clamp(7px, 0.5vw, 9px) !important; color: var(--ink-faint) !important; }
 
+/* Stays visible at every desktop/tablet width now too (used to vanish
+   at 1700px) - pure decoration, but "stays put, just scales" applies to
+   it exactly the same as everything else the user actually looks at. */
 #header-motto {
   flex: 0 0 auto !important;
   display: flex !important;
   align-items: center !important;
-  padding: 8px 14px !important;
+  padding: clamp(4px, 0.5vw, 8px) clamp(8px, 1vw, 14px) !important;
   font-family: var(--font-display) !important;
   text-transform: uppercase !important;
   letter-spacing: 0.09em !important;
-  font-size: 10px !important;
+  font-size: clamp(7px, 0.55vw, 10px) !important;
   line-height: 1.35 !important;
   color: var(--ink-dim) !important;
 }
@@ -361,7 +396,7 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
   top: var(--header-h) !important;
   bottom: 0 !important;
   left: 0 !important;
-  width: 212px !important;
+  width: var(--nav-w) !important;
   padding: 12px !important;
   display: flex !important;
   flex-direction: column !important;
@@ -447,19 +482,19 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
   width: 100% !important;
   box-sizing: border-box !important;
   margin-top: auto !important;
-  padding: 20px 16px 14px !important;
+  padding: clamp(10px, 1.2vw, 20px) clamp(8px, 1vw, 16px) clamp(8px, 0.9vw, 14px) !important;
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
-  gap: 8px !important;
+  gap: clamp(4px, 0.5vw, 8px) !important;
   text-align: center !important;
 }
-#nav-motto-jet { width: 48px !important; height: 48px !important; color: #3a423d !important; transform: rotate(-90deg); filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.05)); }
-#nav-motto-tagline { font-family: var(--font-display) !important; text-transform: uppercase !important; letter-spacing: 0.09em !important; font-size: 10px !important; line-height: 1.3 !important; color: var(--ink-faint) !important; margin: 4px 0 0; }
+#nav-motto-jet { width: clamp(26px, 2.8vw, 48px) !important; height: clamp(26px, 2.8vw, 48px) !important; color: #3a423d !important; transform: rotate(-90deg); filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.05)); }
+#nav-motto-tagline { font-family: var(--font-display) !important; text-transform: uppercase !important; letter-spacing: 0.09em !important; font-size: clamp(8px, 0.6vw, 10px) !important; line-height: 1.3 !important; color: var(--ink-faint) !important; margin: 4px 0 0; }
 #nav-motto-divider { display: flex !important; align-items: center !important; gap: 8px !important; width: 100% !important; margin-top: 4px !important; }
 #nav-motto-divider span:first-child, #nav-motto-divider span:last-child { flex: 1 1 auto; height: 1px; background: rgba(255, 255, 255, 0.06); }
-#nav-motto-est { font-family: var(--font-display) !important; font-weight: 700 !important; font-size: 15px !important; letter-spacing: 0.2em !important; color: #464e48 !important; white-space: nowrap; }
-#nav-motto-year { font-family: var(--font-display) !important; text-transform: uppercase !important; letter-spacing: 0.3em !important; font-size: 9px !important; color: var(--ink-faint) !important; }
+#nav-motto-est { font-family: var(--font-display) !important; font-weight: 700 !important; font-size: clamp(11px, 0.9vw, 15px) !important; letter-spacing: 0.2em !important; color: #464e48 !important; white-space: nowrap; }
+#nav-motto-year { font-family: var(--font-display) !important; text-transform: uppercase !important; letter-spacing: 0.3em !important; font-size: clamp(8px, 0.5vw, 9px) !important; color: var(--ink-faint) !important; }
 
 /* The workspace itself is a recessed instrument well, distinctly darker
    than the header/nav chassis it sits inside of - without this the Ops
@@ -468,7 +503,7 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
    (medium) -> raised control (lighter) -> workspace well (much darker)
    -> individual display panels (near-black, screen-tinted). */
 #primary-content {
-  margin-left: 224px !important;
+  margin-left: calc(var(--nav-w) + 12px) !important;
   min-width: 0 !important;
   min-height: calc(100vh - var(--header-h) - 16px) !important;
   display: block !important;
@@ -600,9 +635,9 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
   font-family: var(--font-display) !important;
   text-transform: uppercase !important;
   letter-spacing: .09em !important;
-  font-size: .78rem !important;
+  font-size: clamp(.62rem, .8vw, .78rem) !important;
   font-weight: 600 !important;
-  padding: 10px 18px !important;
+  padding: clamp(6px, 0.9vw, 10px) clamp(10px, 1.6vw, 18px) !important;
   cursor: pointer !important;
 }
 .ops-tab-btn:hover { color: var(--ink) !important; background-image: var(--btn-face-hover) !important; }
@@ -619,6 +654,20 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
   text-shadow: 0 0 8px rgba(62, 224, 138, .4);
 }
 .ops-tab-btn.active svg { color: var(--signal); }
+
+/* Same real "nothing to show yet" signal the old full-width placeholder
+   banner used to gate on (see pollStatus() in app.js) - now a small
+   inline hint sitting in the tab strip's own free space next to Bullseye
+   instead of a whole extra row, so the card grid below keeps the room. */
+#ops-tabs-hint {
+  align-self: center !important;
+  margin-left: 6px !important;
+  color: var(--ink-dim) !important;
+  font-family: var(--font-mono) !important;
+  font-size: .78rem !important;
+  font-style: italic !important;
+}
+#ops-tabs-hint[hidden] { display: none !important; }
 
 .ops-tab-panel { order: 3 !important; min-height: 0 !important; }
 /* Every other tab is one plain panel of readouts, sized by content - only
@@ -642,22 +691,33 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
    is a plain .sub-panel/.panel-title (the same raised-chassis look used
    everywhere else in the app), just with tighter padding since these are
    dashboard tiles, not full narrative panels. ---- */
-/* flex-shrink:0 (the "0" in "0 0 auto"), not flex:1 1 auto - #ops-tab-mission
-   (this row's own parent) is a bounded box with its own overflow-y:auto,
-   the one single scroll region meant to hold every bit of Mission tab
-   content that doesn't fit. If this row were allowed to flex-shrink, a
-   tall .mission-right-col (3 stacked cards) would get squeezed down to
-   this row's min-height floor instead of its own natural content height,
-   overflowing that squeezed box with overflow:visible - real content
-   spilling downward and visually overlapping .mission-bottom-row below
-   it (a real bug found live). Rendering at natural size unconditionally
-   and letting the excess total height overflow #ops-tab-mission's own
-   bound instead is what actually keeps everything reachable via one
-   clean scroll, with nothing overlapping. */
+/* flex-shrink:0 (the middle "0" below), never flex:X 1 auto -
+   #ops-tab-mission (this row's own parent) is a bounded box with its own
+   overflow-y:auto, the one single scroll region meant to hold every bit
+   of Mission tab content that doesn't fit. If this row were allowed to
+   flex-shrink, a tall .mission-right-col (3 stacked cards) would get
+   squeezed down to this row's min-height floor instead of its own
+   natural content height, overflowing that squeezed box with
+   overflow:visible - real content spilling downward and visually
+   overlapping .mission-bottom-row below it (a real bug found live).
+   Never shrinking below natural size and letting any real shortfall
+   overflow #ops-tab-mission's own bound instead is what keeps everything
+   reachable via one clean scroll, with nothing overlapping.
+   flex-GROW is allowed (the leading "3") though, unlike shrink - with the
+   old full-width "Begin Mission" placeholder banner gone (it's a small
+   tab-strip hint now, #ops-tabs-hint), and the SimBrief/DCS-briefing
+   panels usually hidden too (no sim detected), this row and
+   .mission-bottom-row below are often the only real content in
+   #ops-tab-mission - growing to fill whatever room that leaves (map
+   included, and every card continues to adjust size with the window per
+   the same design constraint the rest of Mission's cards already follow)
+   instead of leaving it blank is the whole point. Roughly proportional
+   to the two rows' natural heights (460:334) so growth doesn't skew
+   oddly toward one row. */
 .mission-top-row {
   display: flex !important;
   gap: 10px !important;
-  flex: 0 0 auto !important;
+  flex: 3 0 460px !important;
   min-height: 460px !important;
 }
 .mission-map-col { flex: 1 1 auto !important; min-width: 0 !important; display: flex !important; flex-direction: column !important; padding: 8px !important; }
@@ -669,15 +729,30 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
    bug found live). #ops-tab-mission's own overflow-y:auto is the single,
    outermost scroll for all of Mission's content - letting this column
    size to its natural content height instead feeds that one scroll
-   region correctly instead of fighting it with a second one. */
-.mission-right-col { flex: 0 0 400px !important; min-width: 300px !important; display: flex !important; flex-direction: column !important; gap: 10px !important; }
+   region correctly instead of fighting it with a second one.
+   justify-content:space-between - when .mission-top-row grows taller
+   than these 3 cards' own natural stacked height (align-items:stretch
+   from the row gives this column that extra height for free), spread
+   the reclaimed room BETWEEN the cards instead of leaving it as one dead
+   strip below Next Waypoint - keeps the last card flush at the bottom,
+   same as before, while the whole column visibly fills the space. */
+/* Fluid width, not a fixed 400px that jumps to a different breakpoint
+   value or stacks under the map at some fixed cutoff - shrinks smoothly
+   with the window (down to a 230px floor) instead, same "stays put, just
+   scales" rule as everything else; the corresponding card text/paddings
+   below scale down with it via their own clamp()s so nothing overflows
+   as this narrows. Only the phone breakpoint actually stacks this under
+   the map (see its own rule). */
+.mission-right-col { flex: 0 0 clamp(280px, 24vw, 400px) !important; min-width: 0 !important; display: flex !important; flex-direction: column !important; justify-content: space-between !important; gap: 10px !important; }
 .mission-card { padding: 12px !important; flex: 0 0 auto !important; }
-/* flex-shrink:0 - same reasoning as .mission-top-row above: a flex child
-   of #ops-tab-mission that's allowed to shrink would get squeezed below
-   its 3 cards' natural content height with overflow:visible, spilling
-   into the real briefing panel just below it instead of staying full
-   height and letting #ops-tab-mission's own scroll take the overflow. */
-.mission-bottom-row { display: grid !important; grid-template-columns: 1.3fr 1fr 1fr !important; gap: 10px !important; flex: 0 0 auto !important; }
+/* Same flex-grow reasoning as .mission-top-row above - fills the room
+   the removed placeholder banner used to leave blank instead of it, via
+   grid-template-rows:1fr below (a plain grid row otherwise sizes to
+   content and ignores extra container height, leaving it blank under
+   the cards rather than growing them - grid items default to
+   align-self:stretch, so a `1fr` row genuinely makes all 3 cards taller,
+   not just the row's own empty box). */
+.mission-bottom-row { display: grid !important; grid-template-columns: 1.3fr 1fr 1fr !important; grid-template-rows: 1fr !important; gap: 10px !important; flex: 2 0 auto !important; }
 
 /* Make the map visually dominant, v0's recessed "screen" bezel - the
    Leaflet map itself (tiles/markers/zoom) is completely untouched, only
@@ -803,7 +878,7 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
 .data-cell.span-2 { grid-column: span 2 !important; }
 .data-value {
   font-family: var(--font-mono) !important;
-  font-size: 19px !important;
+  font-size: clamp(14px, 1.4vw, 19px) !important;
   font-weight: 600 !important;
   color: var(--signal) !important;
   text-shadow: 0 0 8px rgba(62,224,138,.3) !important;
@@ -814,7 +889,7 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
 .data-value.ink-faint { color: var(--ink-faint) !important; text-shadow: none !important; }
 /* Mission Info's cells hold short text, not big numerics - the mockup's
    own DataCell/InfoField distinction. */
-.mission-card .data-grid.cols-3 .data-value { font-size: 13px !important; text-transform: none !important; }
+.mission-card .data-grid.cols-3 .data-value { font-size: clamp(10px, 1vw, 13px) !important; text-transform: none !important; }
 .mission-card .data-grid.cols-3 .detection-value-row { min-height: 0 !important; }
 .mission-info-substatus { margin-top: 2px !important; font-size: 11px !important; color: var(--ink-dim) !important; }
 
@@ -838,7 +913,7 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
 .mission-aircraft-card { display: flex !important; flex-direction: column !important; }
 .mission-aircraft-name {
   font-family: var(--font-display) !important;
-  font-size: 22px !important;
+  font-size: clamp(16px, 1.6vw, 22px) !important;
   font-weight: 700 !important;
   color: var(--ink) !important;
   letter-spacing: .04em !important;
@@ -850,10 +925,11 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
 .mission-weather-card #mission-weather-theatre { color: var(--ink-dim) !important; font-size: 11px !important; text-transform: none !important; letter-spacing: 0 !important; margin-left: 6px !important; }
 .mission-wx-grid { display: grid !important; grid-template-columns: repeat(2, 1fr) !important; gap: 10px 14px !important; margin: 4px 0 10px !important; }
 .mission-wx-row { display: flex !important; align-items: center !important; gap: 8px !important; color: var(--signal) !important; }
+.mission-wx-row svg { width: clamp(15px, 1.5vw, 20px) !important; height: clamp(15px, 1.5vw, 20px) !important; flex: none !important; }
 .mission-wx-row > div { display: flex !important; flex-direction: column !important; line-height: 1.2 !important; }
-.mission-wx-value { font-size: 14px !important; font-weight: 600 !important; color: var(--ink) !important; }
+.mission-wx-value { font-size: clamp(11px, 1vw, 14px) !important; font-weight: 600 !important; color: var(--ink) !important; }
 .mission-wx-value.ink-faint { color: var(--ink-faint) !important; }
-.mission-wx-sub { font-family: var(--font-display) !important; font-size: 9px !important; text-transform: uppercase !important; letter-spacing: .08em !important; color: var(--ink-dim) !important; }
+.mission-wx-sub { font-family: var(--font-display) !important; font-size: clamp(8px, 0.6vw, 9px) !important; text-transform: uppercase !important; letter-spacing: .08em !important; color: var(--ink-dim) !important; }
 
 /* "View Detailed Weather" / "View All" links - restrained, not another
    raised button, since these just jump to real content that already
@@ -890,7 +966,7 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
 
 .mission-recentflights-card { display: flex !important; flex-direction: column !important; }
 .mission-flights-table-wrap { overflow-x: auto !important; }
-.mission-flights-table { width: 100% !important; border-collapse: collapse !important; font-family: var(--font-mono) !important; font-size: 11.5px !important; }
+.mission-flights-table { width: 100% !important; border-collapse: collapse !important; font-family: var(--font-mono) !important; font-size: clamp(9px, 0.85vw, 11.5px) !important; }
 .mission-flights-table th {
   text-align: left !important;
   padding-bottom: 6px !important;
@@ -995,72 +1071,21 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
 /* ---------- Overlays ---------- */
 #debrief-overlay, #logbook-overlay { background: rgba(2,4,3,.82) !important; backdrop-filter: blur(2px); }
 
-/* ---------- Responsive: status rail, graduated (desktop widths only -
-   distinct from the tablet/phone breakpoints below, which also
-   restructure the nav/content layout). Rather than a single jump from
-   "full size" straight to the tablet treatment, the status cells shrink
-   in two steps first so the DCS/AIRCRAFT/MISSION/SIMBRIEF/DATA
-   LINK/DEBRIEF cells and the clock all stay visible without needing
-   #detection-status's own horizontal scroll at common desktop widths
-   (tested 1280-2560px) - the motto list is dropped first since it's
-   pure decoration, never primary status. */
-@media (max-width: 1700px) {
-  #header-motto { display: none !important; }
-  /* Same graduated shrink as the header status rail, applied to the
-     sidebar's own bottom badge - jet icon and type scale down together
-     rather than the badge just getting cramped inside a fixed size. */
-  #nav-motto-jet { width: 40px !important; height: 40px !important; }
-  #nav-motto-badge { padding: 16px 14px 12px !important; gap: 6px !important; }
-}
-@media (max-width: 1500px) {
-  .detection-indicator, .status-pill-btn { min-width: 84px !important; padding: 7px 10px !important; }
-  .detection-label { font-size: 9px !important; letter-spacing: .06em !important; }
-  .status-block { font-size: 12px !important; }
-  #header-clock { min-width: 120px; padding: 6px 12px !important; }
-  #header-clock-time { font-size: 18px !important; }
-  .brand-word { font-size: 21px !important; }
-  .brand-sub { font-size: 8px !important; }
-  #nav-motto-jet { width: 34px !important; height: 34px !important; }
-  #nav-motto-tagline { font-size: 9px !important; }
-  #nav-motto-est { font-size: 13px !important; }
-}
-@media (max-width: 1300px) {
-  .detection-indicator, .status-pill-btn { min-width: 68px !important; padding: 6px 8px !important; }
-  .detection-label { font-size: 8px !important; }
-  .status-block { font-size: 11px !important; }
-  .brand { padding: 6px 12px !important; gap: 8px !important; }
-  .brand-word { font-size: 18px !important; }
-  .brand-jet { width: 16px !important; height: 16px !important; }
-  #header-clock { display: none !important; }
-  /* Shrunk, not hidden - "Tactical Flight Companion" is real branding
-     copy, not disposable secondary status text like the clock/motto. */
-  .brand-sub { font-size: 7px !important; letter-spacing: .1em !important; }
-  #nav-motto-badge { padding: 12px 10px 10px !important; gap: 5px !important; }
-  #nav-motto-jet { width: 28px !important; height: 28px !important; }
-  #nav-motto-tagline { font-size: 8px !important; }
-  #nav-motto-est { font-size: 11px !important; }
-  #nav-motto-year { font-size: 8px !important; letter-spacing: .2em !important; }
-  /* Give the map more room before the two columns fully stack at 1050px. */
-  .mission-right-col { flex-basis: 340px !important; min-width: 260px !important; }
-}
-
-/* ---------- Responsive: tablet ---------- */
-@media (max-width: 1050px) {
-  #primary-nav { width: 168px !important; }
-  #primary-content { margin-left: 180px !important; }
-  /* Map-beside-cards stops fitting at tablet width - stack the map above
-     the telemetry cards instead of squeezing both into half the screen. */
-  .mission-top-row { flex-direction: column !important; min-height: 0 !important; }
-  .mission-map-col { min-height: 340px !important; }
-  .mission-right-col { flex: 0 0 auto !important; width: 100% !important; overflow-y: visible !important; }
-  .mission-bottom-row { grid-template-columns: repeat(2, 1fr) !important; }
-  .mission-recentflights-card { grid-column: span 2 !important; }
-  .detection-indicator, .status-pill-btn { min-width: 74px !important; padding: 8px 8px !important; }
-  .detection-label { font-size: 8px !important; letter-spacing: .08em !important; }
-  .status-block { font-size: 12px !important; }
-  .ops-tab-btn { padding: 6px 10px !important; font-size: .66rem !important; }
-  #header-motto, #header-clock { display: none !important; }
-}
+/* ---------- Responsive: desktop/tablet ----------
+   No breakpoints here anymore, deliberately - this used to be 3 separate
+   graduated steps (1700/1500/1300px) plus a 4th structural one at
+   1050px that stacked the Mission map/cards and reflowed the bottom row
+   into 2 columns. The user explicitly rejected that: things were
+   reflowing/disappearing (header motto and clock vanishing, Mission's
+   cards jumping to a different arrangement) at fixed widths instead of
+   just getting smaller. Every size that used to live in these blocks is
+   now a clamp() on its own base rule instead (search this file for
+   "clamp(" - detection pills, header clock/motto, brand, nav badge, the
+   sidebar's own width via --nav-w, ops tab buttons, Mission's cards),
+   so the whole desktop/tablet range scales continuously with the window
+   and nothing moves or disappears until the phone breakpoint below,
+   which is the one place a genuinely different (stacked) layout still
+   makes sense. */
 
 /* ---------- Responsive: phone = electronic kneeboard ---------- */
 @media (max-width: 720px) {
@@ -1100,9 +1125,16 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
   .ops-tab-btn { flex: 0 0 auto !important; white-space: nowrap !important; }
   #ops-tab-mission { min-height: 54vh !important; }
   .ops-map-home { min-height: 42vh !important; }
+  /* The one place map-beside-cards actually stops making sense and a
+     genuinely different (stacked) layout takes over, per the user's own
+     call - everywhere wider than this just scales the side-by-side
+     layout down via the clamp()s above instead of reflowing it. */
+  .mission-top-row { flex-direction: column !important; min-height: 0 !important; }
+  .mission-map-col { min-height: 340px !important; }
+  .mission-right-col { flex: 0 0 auto !important; width: 100% !important; justify-content: flex-start !important; }
   /* 4/3-column telemetry grids stop fitting phone width - drop to 2. */
   .data-grid.cols-4, .data-grid.cols-3 { grid-template-columns: repeat(2, 1fr) !important; }
-  .mission-bottom-row { grid-template-columns: 1fr !important; }
+  .mission-bottom-row { grid-template-columns: 1fr !important; grid-template-rows: none !important; }
   .mission-recentflights-card { grid-column: span 1 !important; }
   .ops-events-panel { margin-top: 8px !important; }
   #pilot-summary-stats { grid-template-columns: repeat(2, minmax(0,1fr)) !important; }

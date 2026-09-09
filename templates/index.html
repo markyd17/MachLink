@@ -201,6 +201,13 @@
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="22" x2="18" y1="12" y2="12"/><line x1="6" x2="2" y1="12" y2="12"/><line x1="12" x2="12" y1="6" y2="2"/><line x1="12" x2="12" y1="22" y2="18"/></svg>
           <span>Bullseye</span>
         </button>
+        <!-- Real signal, same one the old full-width "Begin Mission to
+             Fetch Data" banner used to gate on - shown exactly while
+             neither SimBrief nor a DCS mission briefing has anything yet
+             (see pollStatus() in app.js), hidden the moment either sim is
+             actually detected. Lives in the tab strip's own free space
+             now instead of a banner that used to take a whole row. -->
+        <span id="ops-tabs-hint">Begin mission to show data</span>
       </div>
 
       <!-- MISSION - the real Leaflet map (moved here from its own former
@@ -411,16 +418,12 @@
              SimBrief has no DCS-mission equivalent - a real DCS mission
              already carries its own authored briefing, so that's what
              fills this slot instead when the detected sim is DCS (see
-             pollStatus in app.js). The placeholder below takes over
-             whenever neither applies (no sim detected yet, or a sim's
-             detected but you're not in a mission/aircraft) - a real
-             "nothing yet" status, not fabricated data, same pattern as
-             Flight School's "Waiting for aircraft detection..." and the
-             map's own empty state. -->
-        <section class="sub-panel simbrief-panel ops-briefing-placeholder" id="ops-briefing-placeholder">
-          <div class="ops-hero-text">Begin Mission<br>to Fetch Data</div>
-        </section>
-
+             pollStatus in app.js). Whenever neither applies (no sim
+             detected yet, or a sim's detected but you're not in a
+             mission/aircraft) both panels below just stay hidden - the
+             "nothing yet" status lives as a small hint next to the ops
+             tab strip instead (#ops-tabs-hint), not a full-width banner
+             here, so the card grid above gets the reclaimed room. -->
         <section class="sub-panel simbrief-panel" id="simbrief-panel" hidden>
           <h2 class="panel-title">SimBrief</h2>
           <button id="simbrief-refresh" class="simbrief-btn">Pull Latest OFP</button>
