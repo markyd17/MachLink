@@ -17,7 +17,6 @@ const kneeboardNavBtn = document.getElementById("kneeboard-nav-btn");
 const opsTabBtns = document.querySelectorAll(".ops-tab-btn");
 const opsTabPanels = {
   mission: document.getElementById("ops-tab-mission"),
-  route: document.getElementById("ops-tab-route"),
   threats: document.getElementById("ops-tab-threats"),
   weather: document.getElementById("ops-tab-weather"),
   airfields: document.getElementById("ops-tab-airfields"),
@@ -53,12 +52,30 @@ const logbookOverlay = document.getElementById("logbook-overlay");
 const logbookClose = document.getElementById("logbook-close");
 const logbookFlightList = document.getElementById("logbook-flight-list");
 const opsHookOutdatedWarning = document.getElementById("ops-hook-outdated-warning");
-const opsFlightStatus = document.getElementById("ops-flight-status");
 const opsSortieTimeValue = document.getElementById("ops-sortie-time-value");
 const opsFuelValue = document.getElementById("ops-fuel-value");
+const opsFuelBarFill = document.getElementById("ops-fuel-bar-fill");
 const opsAltitudeValue = document.getElementById("ops-altitude-value");
 const opsSpeedValue = document.getElementById("ops-speed-value");
 const opsHeadingValue = document.getElementById("ops-heading-value");
+const opsOatValue = document.getElementById("ops-oat-value");
+const opsWindValue = document.getElementById("ops-wind-value");
+const missionNameValue = document.getElementById("mission-name-value");
+const missionAircraftValue = document.getElementById("mission-aircraft-value");
+const missionStartTimeValue = document.getElementById("mission-start-time-value");
+const missionInfoStatusLed = document.getElementById("mission-info-status-led");
+const missionInfoStatusValue = document.getElementById("mission-info-status-value");
+const missionAircraftName = document.getElementById("mission-aircraft-name");
+const missionAircraftEmpty = document.getElementById("mission-aircraft-empty");
+const missionWeatherTheatre = document.getElementById("mission-weather-theatre");
+const missionWeatherTemp = document.getElementById("mission-weather-temp");
+const missionWeatherPreset = document.getElementById("mission-weather-preset");
+const missionWeatherWind = document.getElementById("mission-weather-wind");
+const missionWeatherQnh = document.getElementById("mission-weather-qnh");
+const missionWeatherVis = document.getElementById("mission-weather-vis");
+const missionWeatherViewBtn = document.getElementById("mission-weather-viewbtn");
+const missionViewAllBtn = document.getElementById("mission-viewall-btn");
+const missionRecentFlightsBody = document.getElementById("mission-recent-flights-body");
 const opsThreatAlert = document.getElementById("ops-threat-alert");
 const opsThreatText = document.getElementById("ops-threat-text");
 const opsBullseyeCall = document.getElementById("ops-bullseye-call");
@@ -137,9 +154,9 @@ function switchOpsTab(id) {
     btn.classList.toggle("active", btn.dataset.opsTab === id);
   });
   // Same hidden-container gotcha as switchPrimarySection('ops') - the map
-  // only lives in the Route tab now, so it needs the same re-measure
-  // whenever that tab becomes visible again.
-  if (id === "route" && leafletMap) setTimeout(() => leafletMap.invalidateSize(), 0);
+  // lives permanently in the Mission tab now, so it needs the same
+  // re-measure whenever that tab becomes visible again.
+  if (id === "mission" && leafletMap) setTimeout(() => leafletMap.invalidateSize(), 0);
 }
 opsTabBtns.forEach((btn) => {
   btn.addEventListener("click", () => switchOpsTab(btn.dataset.opsTab));
@@ -336,6 +353,13 @@ async function pollStatus() {
       loadChecklist();
     }
 
+    // Mission Info's Aircraft field and the Aircraft card's name both
+    // mirror the exact same data.aircraft the header's AIRCRAFT pill
+    // already shows above - real any time a sim is detected, DCS or MSFS.
+    const aircraftText = data.aircraft ? data.aircraft.toUpperCase() : "NA";
+    missionAircraftValue.textContent = aircraftText;
+    missionAircraftName.textContent = aircraftText;
+
     // SimBrief has no DCS-mission equivalent - a real DCS mission already
     // carries its own authored briefing, so that's what fills this slot
     // instead when the detected sim is DCS. The placeholder card takes
@@ -357,6 +381,22 @@ async function pollStatus() {
     } else {
       kneeboardNavBtn.hidden = true;
       if (!primarySections.kneeboard.hidden) switchPrimarySection("ops");
+      // renderDcsBriefing() only runs while data.game === "dcs" - without
+      // this, Mission Name/Start Time/OAT/Wind would stay frozen on the
+      // last DCS mission's values forever after leaving DCS, the same
+      // "looks live but isn't" bug class fixed for the map readouts
+      // (updateOpsSituationalAwareness's own stale-check comment above).
+      lastBriefingSeq = null;
+      missionNameValue.textContent = "NA";
+      missionStartTimeValue.textContent = "NA";
+      opsOatValue.textContent = "—";
+      opsWindValue.textContent = "—";
+      missionWeatherTheatre.textContent = "";
+      missionWeatherPreset.textContent = "";
+      missionWeatherTemp.textContent = "NA";
+      missionWeatherWind.textContent = "NA";
+      missionWeatherQnh.textContent = "NA";
+      missionWeatherVis.textContent = "NA";
     }
   } catch (e) {
     simDetectedValue.textContent = "CANNOT REACH SERVER";
@@ -403,6 +443,10 @@ async function pollDebriefStatus() {
     const missionActive = sortieStartTime != null;
     missionStatusValue.textContent = missionActive ? "IN PROGRESS" : "—";
     missionStatusValue.className = missionActive ? "status-block dcs mono" : "status-block idle mono";
+    // Mission Info card's Status field - same signal as the header's
+    // MISSION pill above, not a second independent guess.
+    missionInfoStatusValue.textContent = missionActive ? "IN PROGRESS" : "NOT STARTED";
+    missionInfoStatusValue.className = missionActive ? "status-block dcs mono" : "status-block idle mono";
     if (data.altitude_ft != null) setDialValue(opsAltitudeValue, data.altitude_ft.toLocaleString(), "FT");
     else opsAltitudeValue.textContent = "—";
     if (data.speed_kt != null) setDialValue(opsSpeedValue, data.speed_kt, "KT");
@@ -799,11 +843,37 @@ function renderFlightRows(container, flights) {
   });
 }
 
+// Mission tab's compact Recent Flights card - same real cachedFlights array
+// as the Hangar preview/full Logbook, just a Date/Mission/Aircraft/Result
+// table matching the mockup's column layout instead of renderFlightRows()'s
+// title+sub row.
+function renderMissionRecentFlights(flights) {
+  if (!flights.length) {
+    missionRecentFlightsBody.innerHTML = `<tr><td colspan="4" class="ops-empty-note">No flights logged yet.</td></tr>`;
+    return;
+  }
+  missionRecentFlightsBody.innerHTML = flights.map((f, i) => {
+    const badge = outcomeBadge(f);
+    return `<tr class="mission-flights-row" data-index="${i}">
+      <td>${escapeHtml(formatFlightDate(f.start_time))}</td>
+      <td>${escapeHtml(f.mission_name || "NA")}</td>
+      <td>${escapeHtml(f.aircraft || "NA")}</td>
+      <td class="mission-flights-result ${badge.cls}">${escapeHtml(badge.text)}</td>
+    </tr>`;
+  }).join("");
+  missionRecentFlightsBody.querySelectorAll(".mission-flights-row").forEach((row) => {
+    row.addEventListener("click", () => openPastFlight(flights[Number(row.dataset.index)]));
+  });
+}
+
 // Fetched every time the Hangar tab is switched into (see
-// switchPrimarySection above), reused by the full Logbook so "View Full
-// Logbook" doesn't need a second round-trip. Fine to go a little stale if
-// a new flight completes while Logbook stays open - an edge case not
-// worth a live-refresh for.
+// switchPrimarySection above) and once up front at page load (see the
+// bootstrap sequence at the bottom of this file) so the Mission tab's
+// Recent Flights card has data immediately instead of waiting for a
+// Hangar visit - reused by the full Logbook so "View Full Logbook"
+// doesn't need a second round-trip. Fine to go a little stale if a new
+// flight completes while Logbook stays open - an edge case not worth a
+// live-refresh for.
 let cachedFlights = [];
 
 async function loadPilotSummary() {
@@ -813,8 +883,9 @@ async function loadPilotSummary() {
     cachedFlights = data.flights || [];
     renderPilotSummaryStats(data.summary);
     renderFlightRows(pilotSummaryFlightList, cachedFlights.slice(0, 5));
+    renderMissionRecentFlights(cachedFlights.slice(0, 5));
   } catch (e) {
-    // transient - Hangar just keeps showing whatever it last had
+    // transient - Hangar/Mission just keep showing whatever they last had
   }
 }
 
@@ -1317,12 +1388,14 @@ function findSamThreats(own, detected) {
 function renderLoadout(loadout) {
   if (!loadout || !loadout.length) {
     opsLoadoutPanel.hidden = true;
+    missionAircraftEmpty.hidden = false;
     return;
   }
   opsLoadoutContent.innerHTML = loadout
     .map((item) => `<div class="checklist-item plain"><span class="step-text">${item.count}x ${escapeHtml(item.name || "Unknown")}</span></div>`)
     .join("");
   opsLoadoutPanel.hidden = false;
+  missionAircraftEmpty.hidden = true;
 }
 
 // Real per-contact list for the Threats tab - reuses findSamThreats()'s
@@ -1389,10 +1462,10 @@ function updateOpsSituationalAwareness(snapshot) {
 
   // The map snapshot's own own/lat is a more reliable "are we actually in
   // a controlled unit" signal than the separate Export-hook telemetry
-  // pipeline (dcs_flight_tracker.py) that feeds the rest of this strip -
-  // one gate for the whole thing, from one source.
-  opsFlightStatus.hidden = !own;
-
+  // pipeline (dcs_flight_tracker.py) that feeds the rest of this card -
+  // one gate for the whole thing, from one source. The Flight Data card
+  // itself always stays visible (per the mockup's card layout); only the
+  // values inside it reset to "—" when there's no own unit to read.
   if (!own) {
     opsThreatAlert.hidden = true;
     opsBullseyeCall.textContent = "—";
@@ -1400,6 +1473,7 @@ function updateOpsSituationalAwareness(snapshot) {
     opsContactSummary.textContent = "—";
     opsNearestSupport.textContent = "—";
     opsFuelValue.textContent = "—";
+    opsFuelBarFill.style.width = "0%";
     opsHeadingValue.textContent = "—";
     renderLoadout(null);
     renderThreatsList([]);
@@ -1407,8 +1481,14 @@ function updateOpsSituationalAwareness(snapshot) {
     return;
   }
 
-  if (own.fuel != null) setDialValue(opsFuelValue, Math.round(own.fuel * 100), "%");
-  else opsFuelValue.textContent = "—";
+  if (own.fuel != null) {
+    const fuelPct = Math.round(own.fuel * 100);
+    setDialValue(opsFuelValue, fuelPct, "%");
+    opsFuelBarFill.style.width = `${Math.max(0, Math.min(100, fuelPct))}%`;
+  } else {
+    opsFuelValue.textContent = "—";
+    opsFuelBarFill.style.width = "0%";
+  }
   if (own.heading != null) setDialValue(opsHeadingValue, String(Math.round(own.heading) % 360).padStart(3, "0"), "°");
   else opsHeadingValue.textContent = "—";
   renderLoadout(own.loadout);
@@ -1465,6 +1545,14 @@ mapKeyToggle.addEventListener("click", () => {
   mapKeyToggle.classList.toggle("active", !mapLegend.hidden);
 });
 
+// The Mission tab's compact Weather card links out to the real Weather
+// sub-tab (full grid) instead of duplicating it - one honest empty state,
+// not two to keep in sync.
+missionWeatherViewBtn.addEventListener("click", () => switchOpsTab("weather"));
+// Recent Flights' "View All" reuses the exact same Logbook overlay Hangar's
+// own "View Full Logbook" button opens - same real cachedFlights array.
+missionViewAllBtn.addEventListener("click", openLogbook);
+
 let lastBriefingSeq = null;
 
 async function pollDcsBriefing() {
@@ -1484,11 +1572,53 @@ async function pollDcsBriefing() {
   }
 }
 
+// Mission Info/Flight Data/the Weather card's compact fields all come from
+// this same one already-fetched /api/dcs_briefing payload - not new
+// backend calls, just more of it surfaced than the narrative panel alone
+// used to show.
+function renderMissionInfoAndWeather(data) {
+  missionNameValue.textContent = data.sortie || "NA";
+  missionStartTimeValue.textContent = data.start_time_of_day ? `${data.start_time_of_day}Z` : "NA";
+  missionWeatherTheatre.textContent = data.theatre ? ` (${data.theatre})` : "";
+  const w = data.weather;
+  if (w) {
+    opsOatValue.textContent = w.temperature_c != null ? `${w.temperature_c}°C` : "—";
+    opsWindValue.textContent = (w.wind_ground_kt != null && w.wind_ground_dir_deg != null)
+      ? `${w.wind_ground_dir_deg}°/${w.wind_ground_kt}KT` : "—";
+    missionWeatherTemp.textContent = (w.temperature_c != null || w.temperature_f != null)
+      ? `${w.temperature_c ?? "?"}°C / ${w.temperature_f ?? "?"}°F` : "NA";
+    missionWeatherPreset.textContent = w.preset_name || "";
+    missionWeatherWind.textContent = (w.wind_ground_kt != null && w.wind_ground_dir_deg != null)
+      ? `${w.wind_ground_dir_deg}° / ${w.wind_ground_kt} KT` : "NA";
+    missionWeatherQnh.textContent = w.qnh_inhg != null ? `${w.qnh_inhg} inHg` : "NA";
+    missionWeatherVis.textContent = w.visibility_nm != null ? `${w.visibility_nm} NM` : "NA";
+  } else {
+    opsOatValue.textContent = "—";
+    opsWindValue.textContent = "—";
+    missionWeatherTemp.textContent = "NA";
+    missionWeatherPreset.textContent = "";
+    missionWeatherWind.textContent = "NA";
+    missionWeatherQnh.textContent = "NA";
+    missionWeatherVis.textContent = "NA";
+  }
+}
+
 function renderDcsBriefing(data) {
   if (!data.available) {
     dcsBriefingContent.innerHTML = `<div class="placeholder-warning">No mission briefing detected yet — load into a mission in DCS.</div>`;
+    missionNameValue.textContent = "NA";
+    missionStartTimeValue.textContent = "NA";
+    missionWeatherTheatre.textContent = "";
+    missionWeatherPreset.textContent = "";
+    opsOatValue.textContent = "—";
+    opsWindValue.textContent = "—";
+    missionWeatherTemp.textContent = "NA";
+    missionWeatherWind.textContent = "NA";
+    missionWeatherQnh.textContent = "NA";
+    missionWeatherVis.textContent = "NA";
     return;
   }
+  renderMissionInfoAndWeather(data);
   let html = `<h3 class="checklist-title">${escapeHtml(data.sortie || "Untitled sortie")}</h3>`;
   const startTime = data.start_time_of_day ? `Mission start ${data.start_time_of_day} local` : null;
   const meta = [data.theatre, data.date, startTime].filter(Boolean).join(" — ");
@@ -2100,6 +2230,11 @@ function escapeHtml(str) {
 
 pollStatus();
 setInterval(pollStatus, 3000);
+
+// The Mission tab's Recent Flights card needs real logbook data on the
+// very first paint (Ops is the default landing section) - previously this
+// only ever fetched on a Hangar nav-in.
+loadPilotSummary();
 
 // The map lives permanently in Ops's #ops-map-home - no expand/full-screen
 // mode, just one map, one home - so it's built up front instead of
