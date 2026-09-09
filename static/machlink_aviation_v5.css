@@ -59,6 +59,14 @@
   --btn-selected-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(62, 224, 138, 0.4), 0 0 16px rgba(62, 224, 138, 0.22), inset 0 0 14px rgba(62, 224, 138, 0.08);
   --btn-focus-ring: 0 0 0 2px rgba(62, 224, 138, 0.55);
 
+  /* Single source of truth for the header's height - #primary-nav's
+     `top` and #primary-content/.primary-section's height calcs all
+     reference this instead of each hardcoding their own guess at
+     header's height, which is exactly how they drifted out of sync
+     before (header ended up ~85px tall in practice while #primary-nav
+     still assumed 74px, an 11px visible overlap between the two). */
+  --header-h: 78px;
+
   --font-display: "Oswald", "Bahnschrift", "Arial Narrow", sans-serif;
   --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "Geist Mono", "SF Mono", Consolas, "Roboto Mono", monospace;
@@ -186,8 +194,16 @@ body::before {
 }
 
 /* ---------- Header: TopBar ---------- */
+/* A hard height (not min-height) so it's actually deterministic -
+   #primary-nav/#primary-content below size themselves against this
+   SAME --header-h value rather than an independent guess, which is
+   exactly how the two drifted apart before. overflow:hidden is a
+   safety clip in case any future content genuinely needs more room,
+   so it clips instead of silently growing header past what nav/content
+   still assume. */
 header {
-  min-height: 74px !important;
+  height: var(--header-h) !important;
+  overflow: hidden !important;
   padding: 8px !important;
   display: flex !important;
   flex-wrap: nowrap !important;
@@ -198,17 +214,28 @@ header {
 header.metal.panel { background-color: var(--chassis); }
 header { background-color: var(--chassis); background-image: linear-gradient(180deg, var(--chassis-hi) 0%, var(--chassis) 14%, var(--chassis) 82%, var(--chassis-lo) 100%), repeating-linear-gradient(90deg, rgba(255,255,255,.018) 0px, rgba(255,255,255,.018) 1px, transparent 1px, transparent 3px) !important; background-blend-mode: overlay, normal !important; border-radius: var(--radius-lg) !important; border: 1px solid rgba(0,0,0,.55) !important; box-shadow: inset 0 1px 0 rgba(255,255,255,.09), inset 0 -2px 4px rgba(0,0,0,.5), 0 2px 4px rgba(0,0,0,.55) !important; }
 
+/* Logo row (horizontal "MachLink" + jet) stacked over the tagline -
+   .brand itself must be flex-direction:column for that; style.css's
+   own .brand rule never set one (it was only ever a single row before),
+   so this needs to be explicit rather than assumed. */
 .brand {
   flex: 0 0 auto !important;
   display: flex !important;
-  align-items: center !important;
-  gap: 12px !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  justify-content: center !important;
+  gap: 2px !important;
   padding: 8px 16px !important;
 }
-.brand-mark { display: flex !important; align-items: center !important; gap: 8px !important; line-height: 1 !important; }
+/* Horizontal "MachLink" wordmark + jet icon to its right - style.css's
+   own .brand-mark rule sets flex-direction:column (it used to stack
+   "Mach"/"Link" as two lines); v5 never overrode that property, so it
+   kept winning and the jet icon rendered on its own line underneath
+   instead of beside the wordmark. */
+.brand-mark { display: flex !important; flex-direction: row !important; align-items: center !important; gap: 8px !important; line-height: 1 !important; }
 .brand-jet { color: var(--signal) !important; filter: drop-shadow(0 0 4px rgba(62, 224, 138, 0.4)); flex: none; }
 .brand-word { font-family: var(--font-display) !important; font-style: italic !important; font-weight: 700 !important; font-size: 24px !important; letter-spacing: 0.02em !important; color: var(--ink) !important; }
-.brand-sub { display: block; font-family: var(--font-display); font-size: 9px; text-transform: uppercase; letter-spacing: 0.14em; color: var(--ink-dim) !important; white-space: nowrap; margin-top: 2px; }
+.brand-sub { display: block !important; font-family: var(--font-display) !important; font-size: 9px !important; text-transform: uppercase !important; letter-spacing: 0.14em !important; color: var(--ink-dim) !important; white-space: nowrap !important; }
 
 #detection-status {
   flex: 1 1 auto !important;
@@ -331,13 +358,21 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
 /* ---------- Desktop shell: left mission nav (v0's Sidebar) ---------- */
 #primary-nav {
   position: fixed !important;
-  top: 74px !important;
+  top: var(--header-h) !important;
   bottom: 0 !important;
   left: 0 !important;
   width: 212px !important;
   padding: 12px !important;
   display: flex !important;
   flex-direction: column !important;
+  /* style.css's own #primary-nav rule sets align-items:flex-end (it
+     used to hold differently-sized icon-only buttons) - v5 never
+     overrode that, so #nav-motto-badge (the only child here without
+     its own explicit width:100%) was shrinking to its own content
+     width and sitting flush against the right edge instead of
+     spanning the sidebar, exactly the "badge doesn't match the
+     sidebar's width" bug. */
+  align-items: stretch !important;
   gap: 10px !important;
   z-index: 1000 !important;
   overflow-y: auto !important;
@@ -409,6 +444,8 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
 /* Pure flavor - no functionality. v0's "engraved plaque". */
 #nav-motto-badge {
   position: relative;
+  width: 100% !important;
+  box-sizing: border-box !important;
   margin-top: auto !important;
   padding: 20px 16px 14px !important;
   display: flex !important;
@@ -433,7 +470,7 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
 #primary-content {
   margin-left: 224px !important;
   min-width: 0 !important;
-  min-height: calc(100vh - 90px) !important;
+  min-height: calc(100vh - var(--header-h) - 16px) !important;
   display: block !important;
   padding: 12px !important;
   background: var(--bezel) !important;
@@ -441,7 +478,7 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
   box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.6), inset 0 0 0 1px rgba(0, 0, 0, 0.4) !important;
 }
 
-.primary-section { min-height: calc(100vh - 126px) !important; }
+.primary-section { min-height: calc(100vh - var(--header-h) - 52px) !important; }
 /* Without this, #section-ops's own unconditional display:grid below
    outranks the browser's [hidden]{display:none} UA rule (an ID+attribute
    selector beats a plain attribute one even before !important), so
@@ -761,6 +798,11 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
    pure decoration, never primary status. */
 @media (max-width: 1700px) {
   #header-motto { display: none !important; }
+  /* Same graduated shrink as the header status rail, applied to the
+     sidebar's own bottom badge - jet icon and type scale down together
+     rather than the badge just getting cramped inside a fixed size. */
+  #nav-motto-jet { width: 40px !important; height: 40px !important; }
+  #nav-motto-badge { padding: 16px 14px 12px !important; gap: 6px !important; }
 }
 @media (max-width: 1500px) {
   .detection-indicator, .status-pill-btn { min-width: 84px !important; padding: 7px 10px !important; }
@@ -768,15 +810,28 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
   .status-block { font-size: 12px !important; }
   #header-clock { min-width: 120px; padding: 6px 12px !important; }
   #header-clock-time { font-size: 18px !important; }
+  .brand-word { font-size: 21px !important; }
+  .brand-sub { font-size: 8px !important; }
+  #nav-motto-jet { width: 34px !important; height: 34px !important; }
+  #nav-motto-tagline { font-size: 9px !important; }
+  #nav-motto-est { font-size: 13px !important; }
 }
 @media (max-width: 1300px) {
   .detection-indicator, .status-pill-btn { min-width: 68px !important; padding: 6px 8px !important; }
   .detection-label { font-size: 8px !important; }
   .status-block { font-size: 11px !important; }
   .brand { padding: 6px 12px !important; gap: 8px !important; }
-  .brand-word { font-size: 19px !important; }
-  .brand-sub { display: none; }
+  .brand-word { font-size: 18px !important; }
+  .brand-jet { width: 16px !important; height: 16px !important; }
   #header-clock { display: none !important; }
+  /* Shrunk, not hidden - "Tactical Flight Companion" is real branding
+     copy, not disposable secondary status text like the clock/motto. */
+  .brand-sub { font-size: 7px !important; letter-spacing: .1em !important; }
+  #nav-motto-badge { padding: 12px 10px 10px !important; gap: 5px !important; }
+  #nav-motto-jet { width: 28px !important; height: 28px !important; }
+  #nav-motto-tagline { font-size: 8px !important; }
+  #nav-motto-est { font-size: 11px !important; }
+  #nav-motto-year { font-size: 8px !important; letter-spacing: .2em !important; }
 }
 
 /* ---------- Responsive: tablet ---------- */
@@ -795,7 +850,11 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
 @media (max-width: 720px) {
   body { overflow: auto !important; }
   body::before { border: 0; box-shadow: inset 0 0 35px rgba(0,0,0,.5); }
-  header { position: sticky !important; top: 0 !important; z-index: 1100 !important; min-height: 62px !important; flex-wrap: wrap !important; }
+  /* Overrides the desktop header's fixed `height`/`overflow:hidden` -
+     phone deliberately wraps header content onto multiple rows
+     (flex-wrap:wrap below), so it needs to grow with that content
+     instead of being clipped to the desktop --header-h. */
+  header { position: sticky !important; top: 0 !important; z-index: 1100 !important; height: auto !important; min-height: 62px !important; overflow: visible !important; flex-wrap: wrap !important; }
   .brand { padding: 8px 12px !important; }
   .brand-word { font-size: 18px !important; }
   #detection-status { flex-basis: 100% !important; width: 100% !important; }
