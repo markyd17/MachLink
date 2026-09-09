@@ -22,11 +22,9 @@ const opsTabPanels = {
   weather: document.getElementById("ops-tab-weather"),
   airfields: document.getElementById("ops-tab-airfields"),
   bullseye: document.getElementById("ops-tab-bullseye"),
-  kneeboard: document.getElementById("ops-tab-kneeboard"),
 };
 const opsThreatsList = document.getElementById("ops-threats-list");
 const opsAirfieldsList = document.getElementById("ops-airfields-list");
-const opsKneeboardShortcut = document.getElementById("ops-kneeboard-shortcut");
 const mfdTabs = document.getElementById("mfd-tabs");
 const tabContent = document.getElementById("tab-content");
 const citationLine = document.getElementById("citation-line");
@@ -146,7 +144,6 @@ function switchOpsTab(id) {
 opsTabBtns.forEach((btn) => {
   btn.addEventListener("click", () => switchOpsTab(btn.dataset.opsTab));
 });
-opsKneeboardShortcut.addEventListener("click", () => switchPrimarySection("kneeboard"));
 
 // One shared zoom level for every diagram currently shown in the modal
 // (set as a CSS custom property on the modal body - see style.css) rather
@@ -435,6 +432,20 @@ function tickSortieTimer() {
   opsSortieTimeValue.textContent = h > 0 ? `${h}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`;
 }
 setInterval(tickSortieTimer, 1000);
+
+// Header clock - real wall-clock time computed client-side (ported from
+// v0's TopBar Clock), not app/mission state, so it's not something to
+// "detect" or leave in an unavailable state.
+const headerClockTime = document.getElementById("header-clock-time");
+const headerClockDate = document.getElementById("header-clock-date");
+function tickHeaderClock() {
+  if (!headerClockTime) return;
+  const now = new Date();
+  headerClockTime.textContent = now.toLocaleTimeString("en-GB", { hour12: false });
+  headerClockDate.textContent = now.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" }).toUpperCase();
+}
+tickHeaderClock();
+setInterval(tickHeaderClock, 1000);
 
 // Called on entering the Debrief section (see switchPrimarySection) -
 // replaces the old header button's click handler. Fetching this route
