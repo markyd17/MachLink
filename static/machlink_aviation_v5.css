@@ -516,30 +516,44 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
 }
 
 /* ---------- OPS ---------- */
+/* flex, not grid - this used to be display:grid with a fixed
+   grid-template-rows sized for a fixed number of tracks, but that broke
+   the moment a sibling was actually hidden (display:none removes an item
+   from grid auto-placement entirely, so with e.g. the hook-outdated
+   warning hidden - the overwhelmingly common case - the remaining items
+   shift up one track each, landing the tab-panel in an `auto` track
+   instead of the intended `minmax(...,1fr)` one, a real bug found live by
+   measuring computed grid-template-rows directly). flex-direction:column
+   has no such pitfall - a hidden sibling is just absent from the flex
+   flow, every remaining item keeps its own `order`/`flex` regardless of
+   how many siblings are actually present. Also needs a DEFINITE height
+   (not just the min-height already inherited from .primary-section) -
+   #primary-content is display:block (see its own comment above), so
+   nothing in this chain is flex/grid-sizing #section-ops from outside;
+   with only a min-height, this box (and its one flex:1 child) would just
+   grow to fit whatever content is inside it instead of clamping - which,
+   for the Mission tab's now much taller content (map + stacked cards +
+   the real briefing panel), leaked all the way out through
+   #primary-content to body (a real bug found live: the fixed-viewport
+   app shell started page-scrolling, dragging the sidebar/header
+   off-screen with it - body{overflow:hidden} only clips *visually* here,
+   Chrome still honors scrollTo()/scrollTop on an overflow:hidden box, it
+   just blocks wheel/scrollbar input, so the overflow was invisible in
+   testing until measured directly). Same formula .primary-section
+   already uses for its min-height, just applied as the actual height, so
+   the one flex:1 tab-panel (#ops-tab-mission's own overflow-y:auto) has
+   something real to clamp against and scroll internally instead. */
 #section-ops {
-  display: grid !important;
-  grid-template-rows: auto auto auto minmax(430px, 1fr) auto !important;
-  gap: 8px !important;
-}
-
-.ops-flight-status {
-  order: 1 !important;
-  display: grid !important;
-  grid-template-columns: repeat(5, minmax(0,1fr)) !important;
-  padding: 0 !important;
-  overflow: hidden !important;
-}
-.ops-flight-status[hidden] { display: none !important; }
-.ops-flight-tile {
-  min-height: 74px !important;
-  padding: 10px 14px !important;
-  border-right: 1px solid rgba(0,0,0,.5) !important;
-  box-shadow: inset 1px 0 0 rgba(255,255,255,.04) !important;
   display: flex !important;
   flex-direction: column !important;
-  justify-content: center !important;
+  height: calc(100vh - var(--header-h) - 52px) !important;
+  gap: 8px !important;
 }
-.ops-flight-tile:last-child { border-right: 0 !important; box-shadow: none !important; }
+#section-ops > .placeholder-warning { flex: 0 0 auto !important; }
+.ops-tabs { flex: 0 0 auto !important; }
+.ops-tab-panel { flex: 1 1 auto !important; }
+.ops-events-panel { flex: 0 0 auto !important; }
+
 .ops-readout-value {
   font-family: var(--font-mono) !important;
   font-size: 24px !important;
@@ -607,15 +621,13 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
 .ops-tab-btn.active svg { color: var(--signal); }
 
 .ops-tab-panel { order: 3 !important; min-height: 0 !important; }
-/* Every non-Route tab is one plain panel of readouts, sized by content -
-   only Route needs to fill the remaining Ops height for the map.
-   [hidden] variants MUST come after the unqualified rule and win on
-   specificity (id+attribute beats id alone) - same bug pattern flagged
-   above. */
-#ops-tab-route { display: flex !important; flex-direction: column !important; }
-#ops-tab-route[hidden] { display: none !important; }
+/* Every other tab is one plain panel of readouts, sized by content - only
+   Mission needs to fill the remaining Ops height for the map. [hidden]
+   variants MUST come after the unqualified rule and win on specificity
+   (id+attribute beats id alone) - same bug pattern flagged above. */
+#ops-tab-mission { display: flex !important; flex-direction: column !important; gap: 10px !important; overflow-y: auto !important; }
+#ops-tab-mission[hidden] { display: none !important; }
 .ops-tab-panel[hidden] { display: none !important; }
-#ops-tab-route .ops-sitaware { flex: 1 1 auto !important; display: flex !important; flex-direction: column !important; }
 
 .ops-empty-note {
   color: var(--ink-dim) !important;
@@ -623,10 +635,49 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
   font-size: .85rem !important;
   padding: 8px 0 !important;
 }
+.ink-faint { color: var(--ink-faint) !important; }
 
-/* Turn the existing briefing/map arrangement into a tactical composition. */
-.right-panel { display: flex !important; flex-direction: column !important; gap: 8px !important; height: 100% !important; }
-.right-panel .simbrief-panel { flex: 1 1 auto !important; min-height: 0 !important; }
+/* ---- Mission tab composition: map + stacked telemetry cards, then a
+   bottom row, then the existing real briefing content. Every card below
+   is a plain .sub-panel/.panel-title (the same raised-chassis look used
+   everywhere else in the app), just with tighter padding since these are
+   dashboard tiles, not full narrative panels. ---- */
+/* flex-shrink:0 (the "0" in "0 0 auto"), not flex:1 1 auto - #ops-tab-mission
+   (this row's own parent) is a bounded box with its own overflow-y:auto,
+   the one single scroll region meant to hold every bit of Mission tab
+   content that doesn't fit. If this row were allowed to flex-shrink, a
+   tall .mission-right-col (3 stacked cards) would get squeezed down to
+   this row's min-height floor instead of its own natural content height,
+   overflowing that squeezed box with overflow:visible - real content
+   spilling downward and visually overlapping .mission-bottom-row below
+   it (a real bug found live). Rendering at natural size unconditionally
+   and letting the excess total height overflow #ops-tab-mission's own
+   bound instead is what actually keeps everything reachable via one
+   clean scroll, with nothing overlapping. */
+.mission-top-row {
+  display: flex !important;
+  gap: 10px !important;
+  flex: 0 0 auto !important;
+  min-height: 460px !important;
+}
+.mission-map-col { flex: 1 1 auto !important; min-width: 0 !important; display: flex !important; flex-direction: column !important; padding: 8px !important; }
+/* No overflow-y:auto here on purpose - setting one gives this box an
+   automatic minimum size of 0 for its OWN parent's (.mission-top-row)
+   sizing decision, which let the row settle at its small min-height
+   floor instead of stretching to fit these 3 stacked cards, forcing an
+   awkward second, nested scrollbar independent of the one below (a real
+   bug found live). #ops-tab-mission's own overflow-y:auto is the single,
+   outermost scroll for all of Mission's content - letting this column
+   size to its natural content height instead feeds that one scroll
+   region correctly instead of fighting it with a second one. */
+.mission-right-col { flex: 0 0 400px !important; min-width: 300px !important; display: flex !important; flex-direction: column !important; gap: 10px !important; }
+.mission-card { padding: 12px !important; flex: 0 0 auto !important; }
+/* flex-shrink:0 - same reasoning as .mission-top-row above: a flex child
+   of #ops-tab-mission that's allowed to shrink would get squeezed below
+   its 3 cards' natural content height with overflow:visible, spilling
+   into the real briefing panel just below it instead of staying full
+   height and letting #ops-tab-mission's own scroll take the overflow. */
+.mission-bottom-row { display: grid !important; grid-template-columns: 1.3fr 1fr 1fr !important; gap: 10px !important; flex: 0 0 auto !important; }
 
 /* Make the map visually dominant, v0's recessed "screen" bezel - the
    Leaflet map itself (tiles/markers/zoom) is completely untouched, only
@@ -640,6 +691,32 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
   box-shadow: inset 0 2px 6px rgba(0,0,0,.85), inset 0 0 0 1px rgba(255,255,255,.02) !important;
   overflow: hidden;
 }
+/* North-up compass rose - a fixed orientation reference, not a live
+   instrument, so it never needs JS-driven rotation. */
+#map-compass {
+  position: absolute !important;
+  /* Bottom-right - the only corner nothing else in this box ever claims:
+     #map-legend sits bottom-LEFT (visible by default - #map-key-toggle
+     starts .active), and #map-hook-outdated-warning spans the full top
+     edge when the hook's out of date. This is purely decorative, so it
+     stays clear of both rather than risk overlapping either. */
+  right: 12px !important;
+  bottom: 12px !important;
+  /* Same tier as #map-legend/#map-hook-outdated-warning - Leaflet's own
+     internal panes/controls reach up to z-index 1000 within this box's
+     isolated stacking context (see .ops-map-home's comment in style.css),
+     so anything meant to float above the map itself needs to match. */
+  z-index: 1100 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 2px !important;
+  color: var(--ink-dim) !important;
+  pointer-events: none !important;
+  text-shadow: 0 1px 3px rgba(0,0,0,.9) !important;
+}
+#map-compass-n { font-family: var(--font-display) !important; font-size: 11px !important; font-weight: 700 !important; color: var(--ink) !important; }
+#map-compass svg { width: 30px !important; height: 30px !important; filter: drop-shadow(0 1px 2px rgba(0,0,0,.8)); }
 #map-controls-bar {
   background: rgba(6,10,9,.9) !important;
   border-bottom: 1px solid rgba(0,0,0,.6) !important;
@@ -685,7 +762,13 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
 }
 
 /* Make briefing content read like a mission card. */
-.simbrief-panel { padding: 12px !important; }
+/* flex:0 0 auto - these (SimBrief/DCS briefing/the placeholder) are also
+   direct children of #ops-tab-mission's flex column now that the Mission
+   tab holds the map+cards above them too; same "don't let it shrink
+   below natural content size" reasoning as .mission-top-row/
+   .mission-bottom-row, even though as the last child there's nothing
+   below it to visually overlap if it did. */
+.simbrief-panel { padding: 12px !important; flex: 0 0 auto !important; }
 .simbrief-btn, .logbook-btn, .ask-btn {
   background-color: #23282a !important;
   background-image: var(--btn-face) !important;
@@ -699,6 +782,131 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
 .simbrief-btn:hover, .logbook-btn:hover, .ask-btn:hover { color: var(--signal) !important; background-image: var(--btn-face-hover) !important; }
 .simbrief-btn:active, .logbook-btn:active, .ask-btn:active { background-image: var(--btn-face-pressed) !important; box-shadow: var(--btn-face-shadow-pressed) !important; }
 .simbrief-btn:focus-visible, .logbook-btn:focus-visible, .ask-btn:focus-visible { outline: none !important; box-shadow: var(--btn-focus-ring), var(--btn-face-shadow) !important; }
+
+/* .data-grid/.data-cell/.data-value/.data-label are shared, generic
+   readout classes (style.css) already reused by the DCS-briefing weather
+   grid and Pilot Summary's stat grid, not something new invented for the
+   Mission cards - themed here once so all three pick up the same
+   recessed-display look, not just the new cards. .data-label already
+   gets this treatment (grouped with .detection-label/.ops-readout-label
+   above), so only the grid/cell/value need it. */
+.data-grid { display: grid !important; grid-template-columns: repeat(2, 1fr) !important; gap: 8px 10px !important; }
+.data-grid.cols-3 { grid-template-columns: repeat(3, 1fr) !important; }
+.data-grid.cols-4 { grid-template-columns: repeat(4, 1fr) !important; }
+.data-cell {
+  border: 1px solid rgba(0,0,0,.55) !important;
+  background: var(--screen) !important;
+  border-radius: var(--radius-sm) !important;
+  padding: 7px 9px !important;
+  box-shadow: inset 0 2px 5px rgba(0,0,0,.6) !important;
+}
+.data-cell.span-2 { grid-column: span 2 !important; }
+.data-value {
+  font-family: var(--font-mono) !important;
+  font-size: 19px !important;
+  font-weight: 600 !important;
+  color: var(--signal) !important;
+  text-shadow: 0 0 8px rgba(62,224,138,.3) !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+.data-value.ink-faint { color: var(--ink-faint) !important; text-shadow: none !important; }
+/* Mission Info's cells hold short text, not big numerics - the mockup's
+   own DataCell/InfoField distinction. */
+.mission-card .data-grid.cols-3 .data-value { font-size: 13px !important; text-transform: none !important; }
+.mission-card .data-grid.cols-3 .detection-value-row { min-height: 0 !important; }
+.mission-info-substatus { margin-top: 2px !important; font-size: 11px !important; color: var(--ink-dim) !important; }
+
+/* Flight Data's fuel bar - a real percentage-width fill, not decoration -
+   see updateOpsSituationalAwareness()'s own opsFuelBarFill.style.width. */
+.mission-fuel-bar {
+  margin-top: 4px !important;
+  height: 6px !important;
+  border-radius: 3px !important;
+  overflow: hidden !important;
+  background: var(--bezel) !important;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,.7) !important;
+}
+.mission-fuel-bar-fill {
+  height: 100% !important;
+  background: var(--signal) !important;
+  box-shadow: 0 0 8px rgba(62,224,138,.7) !important;
+  transition: width .4s ease !important;
+}
+
+.mission-aircraft-card { display: flex !important; flex-direction: column !important; }
+.mission-aircraft-name {
+  font-family: var(--font-display) !important;
+  font-size: 22px !important;
+  font-weight: 700 !important;
+  color: var(--ink) !important;
+  letter-spacing: .04em !important;
+  margin-bottom: 4px !important;
+}
+.mission-aircraft-card .simbrief-panel { padding: 0 !important; background: none !important; border: 0 !important; box-shadow: none !important; }
+.mission-aircraft-card #ops-loadout-content { max-height: 130px !important; overflow-y: auto !important; }
+
+.mission-weather-card #mission-weather-theatre { color: var(--ink-dim) !important; font-size: 11px !important; text-transform: none !important; letter-spacing: 0 !important; margin-left: 6px !important; }
+.mission-wx-grid { display: grid !important; grid-template-columns: repeat(2, 1fr) !important; gap: 10px 14px !important; margin: 4px 0 10px !important; }
+.mission-wx-row { display: flex !important; align-items: center !important; gap: 8px !important; color: var(--signal) !important; }
+.mission-wx-row > div { display: flex !important; flex-direction: column !important; line-height: 1.2 !important; }
+.mission-wx-value { font-size: 14px !important; font-weight: 600 !important; color: var(--ink) !important; }
+.mission-wx-value.ink-faint { color: var(--ink-faint) !important; }
+.mission-wx-sub { font-family: var(--font-display) !important; font-size: 9px !important; text-transform: uppercase !important; letter-spacing: .08em !important; color: var(--ink-dim) !important; }
+
+/* "View Detailed Weather" / "View All" links - restrained, not another
+   raised button, since these just jump to real content that already
+   exists elsewhere (the Weather ops-tab, the Logbook overlay). */
+.mission-link-btn {
+  width: 100% !important;
+  margin-top: auto !important;
+  padding: 8px !important;
+  background: var(--signal-soft) !important;
+  border: 1px solid rgba(62,224,138,.4) !important;
+  border-radius: var(--radius-sm) !important;
+  color: var(--signal) !important;
+  font-family: var(--font-display) !important;
+  text-transform: uppercase !important;
+  letter-spacing: .08em !important;
+  font-size: 11px !important;
+  cursor: pointer !important;
+}
+.mission-link-btn:hover { background: rgba(62,224,138,.22) !important; }
+.mission-link-btn:focus-visible { outline: none !important; box-shadow: var(--btn-focus-ring) !important; }
+.mission-link-inline {
+  float: right !important;
+  background: none !important;
+  border: 0 !important;
+  color: var(--friendly) !important;
+  font-family: var(--font-display) !important;
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+}
+.mission-link-inline:hover { text-decoration: underline !important; }
+
+.mission-recentflights-card { display: flex !important; flex-direction: column !important; }
+.mission-flights-table-wrap { overflow-x: auto !important; }
+.mission-flights-table { width: 100% !important; border-collapse: collapse !important; font-family: var(--font-mono) !important; font-size: 11.5px !important; }
+.mission-flights-table th {
+  text-align: left !important;
+  padding-bottom: 6px !important;
+  font-family: var(--font-display) !important;
+  font-size: 10px !important;
+  text-transform: uppercase !important;
+  letter-spacing: .06em !important;
+  color: var(--ink-dim) !important;
+  font-weight: 500 !important;
+  border-bottom: 1px solid var(--line) !important;
+}
+.mission-flights-table th.mission-flights-result, .mission-flights-table td.mission-flights-result { text-align: right !important; }
+.mission-flights-table td { padding: 7px 0 !important; color: var(--ink); border-bottom: 1px solid rgba(255,255,255,.05) !important; }
+.mission-flights-table tr:last-child td { border-bottom: 0 !important; }
+.mission-flights-row { cursor: pointer !important; }
+.mission-flights-row:hover td:not(.mission-flights-result) { color: var(--signal) !important; }
 
 .ops-events-panel { order: 4 !important; min-height: 95px !important; padding: 11px 12px !important; }
 /* A distinct recessed display well, not lines drawn straight onto the
@@ -832,13 +1040,21 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
   #nav-motto-tagline { font-size: 8px !important; }
   #nav-motto-est { font-size: 11px !important; }
   #nav-motto-year { font-size: 8px !important; letter-spacing: .2em !important; }
+  /* Give the map more room before the two columns fully stack at 1050px. */
+  .mission-right-col { flex-basis: 340px !important; min-width: 260px !important; }
 }
 
 /* ---------- Responsive: tablet ---------- */
 @media (max-width: 1050px) {
   #primary-nav { width: 168px !important; }
   #primary-content { margin-left: 180px !important; }
-  .right-panel { flex-direction: column !important; }
+  /* Map-beside-cards stops fitting at tablet width - stack the map above
+     the telemetry cards instead of squeezing both into half the screen. */
+  .mission-top-row { flex-direction: column !important; min-height: 0 !important; }
+  .mission-map-col { min-height: 340px !important; }
+  .mission-right-col { flex: 0 0 auto !important; width: 100% !important; overflow-y: visible !important; }
+  .mission-bottom-row { grid-template-columns: repeat(2, 1fr) !important; }
+  .mission-recentflights-card { grid-column: span 2 !important; }
   .detection-indicator, .status-pill-btn { min-width: 74px !important; padding: 8px 8px !important; }
   .detection-label { font-size: 8px !important; letter-spacing: .08em !important; }
   .status-block { font-size: 12px !important; }
@@ -879,13 +1095,15 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
   #primary-content { margin-left: 0 !important; padding: 8px !important; min-height: auto !important; }
   .primary-section { min-height: auto !important; }
   #section-ops { display: block !important; }
-  .ops-flight-status { margin-bottom: 8px !important; grid-template-columns: repeat(5, minmax(90px,1fr)) !important; overflow-x: auto !important; }
-  .ops-flight-tile { min-width: 90px !important; min-height: 63px !important; padding: 8px !important; }
   .ops-readout-value { font-size: 19px !important; }
   .ops-tabs { overflow-x: auto !important; flex-wrap: nowrap !important; margin-bottom: 8px !important; }
   .ops-tab-btn { flex: 0 0 auto !important; white-space: nowrap !important; }
-  #ops-tab-route { min-height: 54vh !important; }
-  .ops-map-home { min-height: 50vh !important; }
+  #ops-tab-mission { min-height: 54vh !important; }
+  .ops-map-home { min-height: 42vh !important; }
+  /* 4/3-column telemetry grids stop fitting phone width - drop to 2. */
+  .data-grid.cols-4, .data-grid.cols-3 { grid-template-columns: repeat(2, 1fr) !important; }
+  .mission-bottom-row { grid-template-columns: 1fr !important; }
+  .mission-recentflights-card { grid-column: span 1 !important; }
   .ops-events-panel { margin-top: 8px !important; }
   #pilot-summary-stats { grid-template-columns: repeat(2, minmax(0,1fr)) !important; }
   .mfd-tabs { overflow-x: auto !important; }

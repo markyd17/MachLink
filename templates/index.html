@@ -172,36 +172,6 @@
         Re-copy <code class="mono">integrations/dcs_mission_hook.lua</code> to <code class="mono">Saved Games\DCS\Scripts\MachLinkMissionHook.lua</code>, then reload the mission.
       </div>
 
-      <!-- Live flight status - hidden until the map snapshot reports your
-           own position (see updateOpsSituationalAwareness in app.js).
-           SORTIE TIME comes from dcs_flight_tracker.py (airborne-gated,
-           ticked locally - see tickSortieTimer()); FUEL/HEADING come from
-           the same /api/map_data snapshot as the rest of Ops; ALT/SPEED
-           come from dcs_export_hook.lua's telemetry (already captured for
-           Debrief's landing-rate calc, now also surfaced live). -->
-      <div class="sub-panel ops-flight-status" id="ops-flight-status" hidden>
-        <div class="ops-flight-tile">
-          <span class="ops-readout-label">SORTIE TIME</span>
-          <span class="ops-readout-value mono" id="ops-sortie-time-value">&mdash;</span>
-        </div>
-        <div class="ops-flight-tile">
-          <span class="ops-readout-label">FUEL</span>
-          <span class="ops-readout-value mono" id="ops-fuel-value">&mdash;</span>
-        </div>
-        <div class="ops-flight-tile">
-          <span class="ops-readout-label">ALT AGL</span>
-          <span class="ops-readout-value mono" id="ops-altitude-value">&mdash;</span>
-        </div>
-        <div class="ops-flight-tile">
-          <span class="ops-readout-label">SPEED</span>
-          <span class="ops-readout-value mono" id="ops-speed-value">&mdash;</span>
-        </div>
-        <div class="ops-flight-tile">
-          <span class="ops-readout-label">HEADING</span>
-          <span class="ops-readout-value mono" id="ops-heading-value">&mdash;</span>
-        </div>
-      </div>
-
       <!-- Sub-navigation within Ops itself, matching the mockup's tab
            strip under the map. Real destinations only - every tab either
            shows real data (reusing the exact same /api/map_data-derived
@@ -214,10 +184,6 @@
         <button type="button" class="ops-tab-btn active" data-ops-tab="mission">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
           <span>Mission</span>
-        </button>
-        <button type="button" class="ops-tab-btn" data-ops-tab="route">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
-          <span>Route</span>
         </button>
         <button type="button" class="ops-tab-btn" data-ops-tab="threats">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
@@ -237,98 +203,233 @@
         </button>
       </div>
 
-      <!-- MISSION - pre-flight briefing content (SimBrief OFP / DCS's own
-           mission briefing / current loadout), unchanged from before the
-           tab split, just its own destination now instead of always
-           sharing the screen with the map. -->
+      <!-- MISSION - the real Leaflet map (moved here from its own former
+           Route tab - Route was removed, the map now lives here
+           permanently) beside live-telemetry cards (Flight Data/Mission
+           Info/Next Waypoint), a bottom row (Aircraft/Weather/Recent
+           Flights), and the existing real pre-flight briefing content
+           (SimBrief OFP / DCS's own mission briefing / current loadout).
+           Every field either binds to a real, already-fetched value (see
+           the id-by-id notes below) or shows an honest NA/-- placeholder -
+           never an invented number, same standard as the rest of Ops. -->
       <div class="ops-tab-panel" id="ops-tab-mission">
-        <div class="right-panel">
-          <!-- SimBrief has no DCS-mission equivalent - a real DCS mission
-               already carries its own authored briefing, so that's what
-               fills this slot instead when the detected sim is DCS (see
-               pollStatus in app.js). MSFS gets its own dedicated layout
-               later; for now this panel just stays hidden under DCS. -->
-          <!-- Shown only while neither panel below has anything to show yet
-               (no sim detected, or sim detected but you're not in a
-               mission/aircraft) - see pollStatus() in app.js. Without
-               this, this whole column goes empty pre-mission instead of
-               showing a card - a real "nothing yet" status, not fabricated
-               data, same pattern as Flight School's "Waiting for aircraft
-               detection..." and the map's own empty state. Styled as a
-               big call to action (same stroke/fill treatment as "LINK" in
-               the header logo) rather than a small subtitle line, since
-               this fills the whole card while it's the only thing showing. -->
-          <section class="sub-panel simbrief-panel ops-briefing-placeholder" id="ops-briefing-placeholder">
-            <div class="ops-hero-text">Begin Mission<br>to Fetch Data</div>
+        <div class="mission-top-row">
+          <!-- Real Leaflet map, internals completely unchanged (tiles,
+               markers, zoom, KEY, RECENTER) - only its home moved from the
+               old Route tab. See switchOpsTab()'s leafletMap.invalidateSize()
+               call, now keyed off "mission" instead of "route". -->
+          <section class="sub-panel ops-sitaware mission-map-col">
+            <div class="ops-map-home" id="ops-map-home">
+              <div id="map-controls-bar">
+                <!-- Live radius-to-edge of the current view, from actual
+                     geodesic distance - updates on zoom/pan and every data
+                     poll. Doubles as the mockup's "distance marker". -->
+                <span id="map-range-label" class="mono"></span>
+                <!-- Leaflet's own zoom control (scroll wheel + on-map +/-)
+                     handles zoom - RECENTER just snaps back to your own
+                     position after you've panned away, since the map
+                     doesn't auto-follow every tick (that would fight manual
+                     panning). -->
+                <button type="button" id="map-key-toggle" class="active">KEY</button>
+                <button type="button" id="map-recenter">RECENTER</button>
+              </div>
+              <!-- Everything drawn here comes straight from /api/map_data
+                   (dcs_mission_hook.lua's own snapshot) - own position,
+                   friendlies, airbases, bullseye, and only whatever DCS
+                   itself has confirmed detected. Nothing here is computed
+                   or guessed client-side; if DCS doesn't report a contact,
+                   it doesn't appear. -->
+              <div id="map-viewport">
+                <div id="map-empty-state" hidden></div>
+                <!-- hook_outdated flag also drives Ops's own warning above
+                     this tab strip - this one covers icons/colors on the
+                     map itself (airbase coloring needs myCoalition, unit
+                     icons need categoryDetail). -->
+                <div id="map-hook-outdated-warning" class="placeholder-warning" hidden>
+                  ⚠ Mission hook out of date — some icons/colors may be wrong. Re-copy <code class="mono">dcs_mission_hook.lua</code> to <code class="mono">Saved Games\DCS\Scripts\MachLinkMissionHook.lua</code>.
+                </div>
+                <div id="map-leaflet"></div>
+                <!-- North-up orientation reference - not a simulated
+                     heading readout (the map is always drawn north-up by
+                     Leaflet, so this is always accurate), just a fixed
+                     compass rose, same as the mockup's stagnant symbol. -->
+                <div id="map-compass" aria-hidden="true">
+                  <span id="map-compass-n">N</span>
+                  <svg viewBox="0 0 34 34">
+                    <circle cx="17" cy="17" r="14" fill="none" stroke="currentColor" stroke-width="1" opacity=".5"/>
+                    <polygon points="17,4 20,17 17,15 14,17" fill="var(--threat)"/>
+                    <polygon points="17,30 14,17 17,19 20,17" fill="currentColor" opacity=".6"/>
+                    <line x1="3" y1="17" x2="7" y2="17" stroke="currentColor" stroke-width="1" opacity=".5"/>
+                    <line x1="27" y1="17" x2="31" y2="17" stroke="currentColor" stroke-width="1" opacity=".5"/>
+                  </svg>
+                </div>
+                <!-- Populated once by buildMapLegend() in app.js, reusing the
+                     exact same makeMapIcon() HTML the live markers are drawn
+                     with, so the key can never drift out of sync with what's
+                     on the map. -->
+                <div id="map-legend"></div>
+              </div>
+            </div>
           </section>
 
-          <section class="sub-panel simbrief-panel" id="simbrief-panel" hidden>
-            <h2 class="panel-title">SimBrief</h2>
-            <button id="simbrief-refresh" class="simbrief-btn">Pull Latest OFP</button>
-            <div id="simbrief-content" class="simbrief-content"></div>
+          <div class="mission-right-col">
+            <!-- FLIGHT DATA - live telemetry, the same real values the old
+                 standalone strip above the tabs used to show, just moved
+                 into this card (identical ids, so app.js's existing
+                 update logic is untouched). VS/G-Force have no field
+                 anywhere in dcs_export_hook.lua's telemetry - permanent,
+                 honest "--", never invented. OAT/Wind come from the
+                 mission file's own authored weather (renderDcsBriefing()
+                 in app.js), so they're real but only update once per
+                 mission, not tick-by-tick like the rest of this card. -->
+            <section class="sub-panel mission-card">
+              <h2 class="panel-title">Flight Data</h2>
+              <div class="data-grid mono cols-4">
+                <div class="data-cell"><div class="data-label">Altitude</div><div class="data-value" id="ops-altitude-value">&mdash;</div></div>
+                <div class="data-cell"><div class="data-label">IAS</div><div class="data-value" id="ops-speed-value">&mdash;</div></div>
+                <div class="data-cell"><div class="data-label">HDG</div><div class="data-value" id="ops-heading-value">&mdash;</div></div>
+                <div class="data-cell">
+                  <div class="data-label">Fuel</div>
+                  <div class="data-value" id="ops-fuel-value">&mdash;</div>
+                  <div class="mission-fuel-bar"><div class="mission-fuel-bar-fill" id="ops-fuel-bar-fill" style="width:0%"></div></div>
+                </div>
+                <div class="data-cell"><div class="data-label">VS</div><div class="data-value ink-faint">--</div></div>
+                <div class="data-cell"><div class="data-label">G-Force</div><div class="data-value ink-faint">--</div></div>
+                <div class="data-cell"><div class="data-label">OAT</div><div class="data-value" id="ops-oat-value">&mdash;</div></div>
+                <div class="data-cell"><div class="data-label">Wind</div><div class="data-value" id="ops-wind-value">&mdash;</div></div>
+              </div>
+            </section>
+
+            <!-- MISSION INFO - Name/Start Time come from the mission
+                 file's own briefing (renderDcsBriefing() in app.js);
+                 Aircraft mirrors the same data.aircraft the header's
+                 AIRCRAFT pill already shows (see pollStatus()); Status
+                 reuses the exact sortie_start_time-derived signal as the
+                 header's MISSION pill (see pollDebriefStatus()) - not a
+                 second independent guess at "are we mid-mission", plus
+                 the same real elapsed sortie timer the old flight-status
+                 bar showed (tickSortieTimer(), unchanged, same id).
+                 Package/Task/TOT have no concept anywhere in MachLink (no
+                 flight-package/tasking data exists) - omitted rather than
+                 faked. -->
+            <section class="sub-panel mission-card">
+              <h2 class="panel-title">Mission Info</h2>
+              <div class="data-grid mono cols-3">
+                <div class="data-cell"><div class="data-label">Mission Name</div><div class="data-value" id="mission-name-value">NA</div></div>
+                <div class="data-cell"><div class="data-label">Aircraft</div><div class="data-value" id="mission-aircraft-value">NA</div></div>
+                <div class="data-cell"><div class="data-label">Start Time</div><div class="data-value" id="mission-start-time-value">NA</div></div>
+                <div class="data-cell">
+                  <div class="data-label">Status</div>
+                  <span class="detection-value-row"><span class="ml-led idle" id="mission-info-status-led"></span><span id="mission-info-status-value" class="status-block idle mono">NA</span></span>
+                  <div class="mission-info-substatus mono" id="ops-sortie-time-value"></div>
+                </div>
+              </div>
+            </section>
+
+            <!-- NEXT WAYPOINT - no waypoint/route-leg concept exists
+                 anywhere in MachLink (SimBrief's own OFP legs are shown in
+                 full in the briefing panel below, but nothing tracks "the
+                 next one" against your live position) - a real, present
+                 card with an honest empty state, never invented BRG/DIST/
+                 ETE numbers. -->
+            <section class="sub-panel mission-card">
+              <h2 class="panel-title">Next Waypoint</h2>
+              <div class="ops-empty-note">No active waypoint.</div>
+            </section>
+          </div>
+        </div>
+
+        <div class="mission-bottom-row">
+          <!-- AIRCRAFT (the mockup's "Quick Aircraft", renamed per
+               instruction) - the real detected airframe plus your actual
+               current ordnance (Unit:getAmmo(), not Flight School's
+               static reference loadout). No aircraft photo or prev/next
+               carousel - MachLink only ever tracks the one aircraft
+               you're actually in, so there's nothing real for either to
+               show or page through. -->
+          <section class="sub-panel mission-card mission-aircraft-card">
+            <h2 class="panel-title">Aircraft</h2>
+            <div class="mission-aircraft-name" id="mission-aircraft-name">NA</div>
+            <h4 class="checklist-title">CURRENT LOADOUT</h4>
+            <section class="simbrief-panel" id="ops-loadout-panel" hidden>
+              <div id="ops-loadout-content" class="simbrief-content"></div>
+            </section>
+            <div class="ops-empty-note" id="mission-aircraft-empty">No loadout data.</div>
           </section>
 
-          <section class="sub-panel simbrief-panel" id="dcs-briefing-panel" hidden>
-            <h2 class="panel-title">DCS Mission Briefing</h2>
-            <div id="dcs-briefing-content" class="simbrief-content"></div>
+          <!-- WEATHER - the same real per-mission weather already parsed
+               from the .miz file (dcs_mission_briefing.py); the full grid
+               (plus overview/tasks) still lives in the briefing panel
+               below and the dedicated Weather tab. Visibility has no
+               field anywhere in that data - honest NA, not a guess.
+               "MISSION WEATHER" instead of a live "Updated HH:MM" badge
+               since this is authored once per mission, not a ticking
+               feed. -->
+          <section class="sub-panel mission-card mission-weather-card">
+            <h2 class="panel-title">Weather<span id="mission-weather-theatre"></span></h2>
+            <div class="mission-wx-grid">
+              <div class="mission-wx-row">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+                <div><span class="mission-wx-value mono" id="mission-weather-temp">NA</span><span class="mission-wx-sub" id="mission-weather-preset"></span></div>
+              </div>
+              <div class="mission-wx-row">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.8 19.6A2 2 0 1 0 14 16H2"/><path d="M17.5 8a2.5 2.5 0 1 1 2 4H2"/><path d="M9.8 4.4A2 2 0 1 1 11 8H2"/></svg>
+                <div><span class="mission-wx-value mono" id="mission-weather-wind">NA</span><span class="mission-wx-sub">Wind</span></div>
+              </div>
+              <div class="mission-wx-row">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></svg>
+                <div><span class="mission-wx-value mono" id="mission-weather-qnh">NA</span><span class="mission-wx-sub">QNH</span></div>
+              </div>
+              <div class="mission-wx-row">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg>
+                <div><span class="mission-wx-value mono" id="mission-weather-vis">NA</span><span class="mission-wx-sub">Visibility</span></div>
+              </div>
+            </div>
+            <button type="button" id="mission-weather-viewbtn" class="mission-link-btn">View Detailed Weather</button>
           </section>
 
-          <!-- Your actual current ordnance (Unit:getAmmo()), not the
-               static reference loadout data Flight School shows - what's
-               really still on the jet right now. Hidden whenever there's
-               nothing to report (no own unit, or a genuinely empty/
-               unarmed loadout). -->
-          <section class="sub-panel simbrief-panel" id="ops-loadout-panel" hidden>
-            <h2 class="panel-title">Current Loadout</h2>
-            <div id="ops-loadout-content" class="simbrief-content"></div>
+          <!-- RECENT FLIGHTS - the same real logbook data Hangar's Pilot
+               Performance preview uses (loadPilotSummary() now also runs
+               at page load, not just on nav-in) - see
+               renderMissionRecentFlights() in app.js. -->
+          <section class="sub-panel mission-card mission-recentflights-card">
+            <h2 class="panel-title">Recent Flights<button type="button" id="mission-viewall-btn" class="mission-link-inline">View All →</button></h2>
+            <div class="mission-flights-table-wrap">
+              <table class="mission-flights-table">
+                <thead><tr><th>Date</th><th>Mission</th><th>Aircraft</th><th class="mission-flights-result">Result</th></tr></thead>
+                <tbody id="mission-recent-flights-body"></tbody>
+              </table>
+            </div>
           </section>
         </div>
-      </div>
 
-      <!-- ROUTE - the real Leaflet map, moved here from always sharing
-           the screen with Situational Awareness. Same map/KEY/RECENTER,
-           unchanged - see switchOpsTab()'s leafletMap.invalidateSize()
-           call for the same hidden-container gotcha primary-section
-           switching already handles. -->
-      <div class="ops-tab-panel" id="ops-tab-route" hidden>
-        <section class="sub-panel ops-sitaware">
-          <div class="ops-map-home" id="ops-map-home">
-            <div id="map-controls-bar">
-              <!-- Live radius-to-edge of the current view, from actual
-                   geodesic distance - updates on zoom/pan and every data
-                   poll. -->
-              <span id="map-range-label" class="mono"></span>
-              <!-- Leaflet's own zoom control (scroll wheel + on-map +/-)
-                   handles zoom - RECENTER just snaps back to your own
-                   position after you've panned away, since the map
-                   doesn't auto-follow every tick (that would fight manual
-                   panning). -->
-              <button type="button" id="map-key-toggle" class="active">KEY</button>
-              <button type="button" id="map-recenter">RECENTER</button>
-            </div>
-            <!-- Everything drawn here comes straight from /api/map_data
-                 (dcs_mission_hook.lua's own snapshot) - own position,
-                 friendlies, airbases, bullseye, and only whatever DCS
-                 itself has confirmed detected. Nothing here is computed
-                 or guessed client-side; if DCS doesn't report a contact,
-                 it doesn't appear. -->
-            <div id="map-viewport">
-              <div id="map-empty-state" hidden></div>
-              <!-- hook_outdated flag also drives Ops's own warning above
-                   the sortie timer - this one covers icons/colors on the
-                   map itself (airbase coloring needs myCoalition, unit
-                   icons need categoryDetail). -->
-              <div id="map-hook-outdated-warning" class="placeholder-warning" hidden>
-                ⚠ Mission hook out of date — some icons/colors may be wrong. Re-copy <code class="mono">dcs_mission_hook.lua</code> to <code class="mono">Saved Games\DCS\Scripts\MachLinkMissionHook.lua</code>.
-              </div>
-              <div id="map-leaflet"></div>
-              <!-- Populated once by buildMapLegend() in app.js, reusing the
-                   exact same makeMapIcon() HTML the live markers are drawn
-                   with, so the key can never drift out of sync with what's
-                   on the map. -->
-              <div id="map-legend"></div>
-            </div>
-          </div>
+        <!-- Existing real pre-flight briefing content (SimBrief OFP pull /
+             DCS's own mission briefing text / current-loadout narrative) -
+             unchanged, just relocated under the new card layout instead of
+             being the only thing on this tab. Same ids, same
+             pollStatus()/renderDcsBriefing() logic.
+             SimBrief has no DCS-mission equivalent - a real DCS mission
+             already carries its own authored briefing, so that's what
+             fills this slot instead when the detected sim is DCS (see
+             pollStatus in app.js). The placeholder below takes over
+             whenever neither applies (no sim detected yet, or a sim's
+             detected but you're not in a mission/aircraft) - a real
+             "nothing yet" status, not fabricated data, same pattern as
+             Flight School's "Waiting for aircraft detection..." and the
+             map's own empty state. -->
+        <section class="sub-panel simbrief-panel ops-briefing-placeholder" id="ops-briefing-placeholder">
+          <div class="ops-hero-text">Begin Mission<br>to Fetch Data</div>
+        </section>
+
+        <section class="sub-panel simbrief-panel" id="simbrief-panel" hidden>
+          <h2 class="panel-title">SimBrief</h2>
+          <button id="simbrief-refresh" class="simbrief-btn">Pull Latest OFP</button>
+          <div id="simbrief-content" class="simbrief-content"></div>
+        </section>
+
+        <section class="sub-panel simbrief-panel" id="dcs-briefing-panel" hidden>
+          <h2 class="panel-title">DCS Mission Briefing</h2>
+          <div id="dcs-briefing-content" class="simbrief-content"></div>
         </section>
       </div>
 
