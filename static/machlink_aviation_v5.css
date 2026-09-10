@@ -752,12 +752,15 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
    outermost scroll for all of Mission's content - letting this column
    size to its natural content height instead feeds that one scroll
    region correctly instead of fighting it with a second one.
-   justify-content:space-between - when .mission-top-row grows taller
-   than these 3 cards' own natural stacked height (align-items:stretch
-   from the row gives this column that extra height for free), spread
-   the reclaimed room BETWEEN the cards instead of leaving it as one dead
-   strip below Next Waypoint - keeps the last card flush at the bottom,
-   same as before, while the whole column visibly fills the space. */
+   No gap, no justify-content:space-between (that used to spread any
+   leftover height as dead gaps BETWEEN the 3 cards when .mission-top-row
+   grows taller than their natural stacked height, which read as
+   "wasted space" - explicit feedback). Flight Data and Mission Info
+   (the two with real data grids) now grow to soak up that leftover
+   height themselves instead - see their own flex:1 1 auto rules below -
+   so all 3 cards sit flush against each other with nothing wasted
+   between them, and the extra room actually enlarges the cards
+   (bigger data-grid cells) rather than padding empty space around them. */
 /* Fluid width, not a fixed 400px that jumps to a different breakpoint
    value or stacks under the map at some fixed cutoff - shrinks smoothly
    with the window (down to a 230px floor) instead, same "stays put, just
@@ -765,7 +768,25 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
    below scale down with it via their own clamp()s so nothing overflows
    as this narrows. Only the phone breakpoint actually stacks this under
    the map (see its own rule). */
-.mission-right-col { flex: 0 0 clamp(280px, 24vw, 400px) !important; min-width: 0 !important; display: flex !important; flex-direction: column !important; justify-content: space-between !important; gap: clamp(6px, min(1vw, 0.56vh), 10px) !important; }
+.mission-right-col { flex: 0 0 clamp(280px, 24vw, 400px) !important; min-width: 0 !important; display: flex !important; flex-direction: column !important; justify-content: flex-start !important; gap: 0 !important; overflow: hidden !important; }
+/* Flight Data/Mission Info grow to fill whatever height the column has
+   beyond the 3 cards' natural need, splitting it evenly between them -
+   Next Waypoint (a real, often-empty "no active waypoint" state, not a
+   dense data grid) stays its own natural size rather than stretching
+   into a big empty box. Each is its own flex column internally so its
+   data-grid can grow/center within the extra room instead of just
+   padding empty space below it (see the .data-grid rule right after). */
+.mission-flightdata-card, .mission-info-card { display: flex !important; flex-direction: column !important; }
+.mission-flightdata-card .data-grid, .mission-info-card .data-grid { flex: 1 1 auto !important; align-content: space-evenly !important; }
+/* Square off the touching edges - with zero gap between them (see
+   .mission-right-col above), each card's own 7px corner radius on every
+   side would otherwise leave a small rounded notch of the chassis
+   background peeking through at every seam. Rounded only on the two
+   outer edges (top of the first card, bottom of the last) reads as one
+   continuous block, which is the actual point of removing the gap. */
+.mission-flightdata-card { border-bottom-left-radius: 0 !important; border-bottom-right-radius: 0 !important; }
+.mission-info-card { border-radius: 0 !important; }
+.mission-waypoint-card { border-top-left-radius: 0 !important; border-top-right-radius: 0 !important; }
 /* overflow:hidden on the card itself - if this card's own content still
    doesn't fit its allotted space at a truly extreme window size, it
    gets cropped cleanly at THIS box's own bordered edge (the card's
@@ -775,6 +796,28 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
    clip (confirmed via hit-testing to already be pixel-accurate), but
    content escaping an individual card's rounded/bordered box first. */
 .mission-card { padding: clamp(6px, min(1vw, 0.56vh), 10px) !important; flex: 0 0 auto !important; overflow: hidden !important; }
+/* Overrides .mission-card's own flex:0 0 auto above (same specificity,
+   source order breaks the tie - this MUST stay below it) - Flight Data
+   and Mission Info grow to fill whatever height .mission-right-col has
+   beyond the 3 cards' natural need, splitting it evenly between them, so
+   nothing is left as dead space after Next Waypoint either (a real bug
+   found live: removing the old inter-card gap without this just moved
+   the "wasted space" complaint to below the last card instead of fixing
+   it). Next Waypoint (a real, often-empty "no active waypoint" state,
+   not a dense data grid) keeps .mission-card's own natural sizing rather
+   than stretching into a big empty box. */
+/* flex-SHRINK allowed here (the middle "1"), unlike most of this file's
+   other flex items - if .mission-right-col's actual height (stretched
+   from .mission-top-row, not driven by these cards' own needs) ends up
+   smaller than these two cards' combined natural+grown size, letting
+   them shrink instead of forcing a flex:...0... floor is what keeps
+   Next Waypoint from being pushed past the column's own bottom edge
+   into the bottom row below it (a real overlap found live at 1366x768,
+   right after fixing the "wasted space after Next Waypoint" bug above -
+   .mission-card's own overflow:hidden safely crops each card's internal
+   content at its own border if it's ever squeezed below what its
+   data-grid needs, rather than the whole column overflowing). */
+.mission-flightdata-card, .mission-info-card { flex: 1 1 auto !important; }
 /* CURRENT LOADOUT's own h4 - the app-wide .checklist-title (used
    everywhere from Hangar to Flight School) stays full-size there; only
    scoped down here where it shares a short window's squeeze with the
