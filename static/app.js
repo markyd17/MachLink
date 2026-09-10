@@ -91,8 +91,6 @@ const mapRangeLabel = document.getElementById("map-range-label");
 const mapKeyToggle = document.getElementById("map-key-toggle");
 const mapLegend = document.getElementById("map-legend");
 const mapPausedBadge = document.getElementById("map-paused-badge");
-const opsMissileWarning = document.getElementById("ops-missile-warning");
-const opsMissileWarningText = document.getElementById("ops-missile-warning-text");
 const missionLaunchIndicator = document.getElementById("mission-launch-indicator");
 const mapExpandBtn = document.getElementById("map-expand-btn");
 const mapPopoutOverlay = document.getElementById("map-popout-overlay");
@@ -663,11 +661,11 @@ if (window.document && document.fonts && document.fonts.load) {
 function renderLiveEvents(events) {
   // Called unconditionally, before any filtering/early-return below - a
   // fresh birth/respawn clears live_events back to [] server-side (see
-  // LiveEventStore's own docstring), and without this here first, a
-  // banner left over from the PREVIOUS life would never get told to hide
-  // (a real bug caught before it shipped: an early return used to skip
-  // this call entirely whenever events was empty).
-  updateMissileWarningBanner(events);
+  // LiveEventStore's own docstring), and without this here first, the
+  // indicator would never get told to go dark again after a life ends
+  // mid-warning (a real bug caught before it shipped: an early return
+  // used to skip this call entirely whenever events was empty).
+  updateLaunchIndicator(events);
   // events arrives oldest-first (LiveEventStore.recent() - a plain deque
   // appended to in arrival order) - kept as-is so the ticker reads left-
   // to-right the way it happened, newest emerging last.
@@ -718,36 +716,27 @@ function renderTicker(majorEvents) {
 // continuous CSS animation doesn't need a JS timer to pause/resume the
 // way the old per-card setTimeout schedule did.
 
-// How long the banner stays up after a launch, once no NEWER launch event
-// has refreshed it - long enough to actually notice and react (a missile's
-// own flight time is often well under this for a short-range shot), short
-// enough that it doesn't sit there falsely implying "still incoming" for a
-// missile that hit, missed, or was defeated minutes ago. Purely a display
-// window, not DCS telling us the missile is gone - there's no real "the
-// threat has ended" signal to read from the API, so this is an honest
-// timeout, not a guess dressed up as knowledge.
+// How long the indicator stays lit after a launch, once no NEWER launch
+// event has refreshed it - long enough to actually notice and react (a
+// missile's own flight time is often well under this for a short-range
+// shot), short enough that it doesn't sit there falsely implying "still
+// incoming" for a missile that hit, missed, or was defeated minutes ago.
+// Purely a display window, not DCS telling us the missile is gone -
+// there's no real "the threat has ended" signal to read from the API, so
+// this is an honest timeout, not a guess dressed up as knowledge.
 const MISSILE_WARNING_DISPLAY_SECONDS = 15;
 
-function updateMissileWarningBanner(events) {
+// Mission Info's LAUNCH annunciator (explicit request: "a bar... that
+// flashes red when an enemy has launched on you") - the full-width
+// overlay banner that used to sit above the map on the same signal was
+// removed per explicit follow-up ("eliminate that"); this is now the
+// only place a launch shows up outside the ticker's own scrolling entry.
+function updateLaunchIndicator(events) {
   const now = Date.now() / 1000;
-  const recentLaunch = events
-    .filter((e) => e.kind === "missile_launch_warning" && now - e.ts < MISSILE_WARNING_DISPLAY_SECONDS)
-    .sort((a, b) => b.ts - a.ts)[0];
-  // Mission Info's own LAUNCH annunciator (explicit request: "a new bar
-  // in the Mission Info section that is just a Launch button that
-  // flashes red when an enemy has launched on you") - same underlying
-  // signal/same 15s window as the full-width banner below, just a
-  // second, always-present indicator (dim by default, .active flashes
-  // it) rather than an overlay that only exists while there's something
-  // to show, matching a real jet's RWR launch light more literally.
-  missionLaunchIndicator.classList.toggle("active", !!recentLaunch);
-  if (!recentLaunch) {
-    opsMissileWarning.hidden = true;
-    return;
-  }
-  const desc = describeActor(recentLaunch) || "unknown launcher";
-  opsMissileWarningText.textContent = `MISSILE LAUNCH DETECTED — ${desc}`;
-  opsMissileWarning.hidden = false;
+  const recentLaunch = events.some(
+    (e) => e.kind === "missile_launch_warning" && now - e.ts < MISSILE_WARNING_DISPLAY_SECONDS
+  );
+  missionLaunchIndicator.classList.toggle("active", recentLaunch);
 }
 
 async function pollLiveEvents() {
