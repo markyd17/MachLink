@@ -675,6 +675,17 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
    variants MUST come after the unqualified rule and win on specificity
    (id+attribute beats id alone) - same bug pattern flagged above. */
 #ops-tab-mission { display: flex !important; flex-direction: column !important; gap: 10px !important; overflow-y: auto !important; }
+/* A real, visible scrollbar - the floors above keep this from ever
+   scrolling at most window sizes now, but a genuinely short/cramped
+   window still can need it, and the OS-default scrollbar on this dark
+   theme is nearly invisible, which is exactly how "content is scrolled
+   out of view" reads as "something is covering the cards" instead (the
+   bug this was reported as). Thin and signal-tinted, same idiom as
+   every other real control in this file, not a generic gray bar. */
+#ops-tab-mission::-webkit-scrollbar { width: 8px; }
+#ops-tab-mission::-webkit-scrollbar-track { background: var(--bezel); }
+#ops-tab-mission::-webkit-scrollbar-thumb { background: var(--chassis-hi); border-radius: 4px; }
+#ops-tab-mission::-webkit-scrollbar-thumb:hover { background: var(--signal-dim); }
 #ops-tab-mission[hidden] { display: none !important; }
 .ops-tab-panel[hidden] { display: none !important; }
 
@@ -714,11 +725,23 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
    instead of leaving it blank is the whole point. Roughly proportional
    to the two rows' natural heights (460:334) so growth doesn't skew
    oddly toward one row. */
+/* The floor itself is now viewport-HEIGHT-fluid too (clamp against vh,
+   not a flat 460px) - a short browser window used to leave this pinned
+   at 460px regardless (flex-shrink:0, see above), which combined with
+   the tabs strip + Recent Events below could genuinely need more height
+   than a short window actually has, pushing this tab's own
+   overflow-y:auto scroll into play with no obvious scrollbar - Next
+   Waypoint and the bottom row would scroll out of view and Recent
+   Events would sit directly against the cut edge, reading as "something
+   is covering the cards" rather than "scroll for more" (a real bug
+   reported live). Shrinking the floor with the window's actual height
+   keeps everything fitting without scrolling for most real window
+   sizes, the same "just scale" rule already applied to width. */
 .mission-top-row {
   display: flex !important;
   gap: 10px !important;
-  flex: 3 0 460px !important;
-  min-height: 460px !important;
+  flex: 3 0 clamp(260px, 46vh, 460px) !important;
+  min-height: clamp(260px, 46vh, 460px) !important;
 }
 .mission-map-col { flex: 1 1 auto !important; min-width: 0 !important; display: flex !important; flex-direction: column !important; padding: 8px !important; }
 /* No overflow-y:auto here on purpose - setting one gives this box an
@@ -759,7 +782,7 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
    its surrounding chrome changes. */
 .ops-map-home {
   flex: 1 1 auto !important;
-  min-height: 380px !important;
+  min-height: clamp(200px, 38vh, 380px) !important;
   background: var(--screen) !important;
   border: 1px solid rgba(0,0,0,.7) !important;
   border-radius: var(--radius-md) !important;
