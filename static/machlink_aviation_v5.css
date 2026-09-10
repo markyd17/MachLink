@@ -1386,8 +1386,28 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
 #pilot-summary-stats > * { border: 1px solid rgba(0,0,0,.5) !important; background: var(--screen) !important; border-radius: var(--radius-sm) !important; }
 
 /* ---------- Flight School ---------- */
-#section-flightschool { padding: 0 !important; }
-.mfd-tabs { display: flex !important; gap: 6px !important; margin-bottom: 8px !important; }
+/* Needs the exact same explicit-height treatment #section-ops already
+   got, for the exact reason that rule's own comment documents:
+   #primary-content is deliberately display:block (see its own comment
+   further up), so nothing sizes any .primary-section from outside any
+   more - only an inherited min-height, never a real height. Without one
+   here, this section (and .tab-content-wrapper's own flex:1 inside it)
+   just grew to fit however much checklist/procedure content the loaded
+   aircraft actually had, instead of clamping to the viewport - for any
+   aircraft with enough content, that pushed the page past the bottom of
+   the screen with no way to reach it (body itself is overflow:hidden,
+   and .tab-content-wrapper's own overflow-y:auto - already correct,
+   untouched below - never engages if IT is never actually shorter than
+   its own content). Real bug reported live: "need to make the flight
+   school page scrollable." Same formula as #section-ops/.primary-section
+   already use elsewhere, just applied as a real height here too. */
+#section-flightschool {
+  display: flex !important;
+  flex-direction: column !important;
+  height: calc(100vh - var(--header-h) - 52px) !important;
+  padding: 0 !important;
+}
+.mfd-tabs { display: flex !important; flex: 0 0 auto !important; gap: 6px !important; margin-bottom: 8px !important; }
 .mfd-tabs > * {
   border-radius: var(--radius-md) !important;
   background-color: #23282a !important;
