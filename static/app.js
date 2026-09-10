@@ -1210,35 +1210,43 @@ function buildMapLegend() {
   `;
 }
 
-// Plain OpenStreetMap standard tiles - replaced Esri's World Topo Map
-// here (explicit user feedback: "too hard to read and just plain ugly").
-// Esri Topo is a light, visually busy contour-shaded map, THEN darkened/
-// desaturated further by #map-leaflet's own CSS filter (machlink_
-// aviation_v5.css) to fit the avionics theme - stacking a heavy filter on
-// top of an already-detailed light basemap is exactly what made small
-// labels/roads hard to pick out. CARTO's Dark Matter tiles (genuinely
-// dark from the source) were tried first and looked right in an isolated
-// fetch test, but actually loading them into the live map showed a real
-// "API KEY REQUIRED" watermark baked into the tiles - their free
-// anonymous tier turned out to need a registered domain now, not just an
-// unauthenticated request succeeding. OSM's own standard tile server has
-// no such key/domain mechanic at all - the #map-leaflet CSS filter
-// (still needed here, unlike the Dark Matter attempt) does an invert +
-// hue-rotate to turn its light base dark instead, a well-known technique
-// for adapting a light-styled map to a dark theme. Also genuinely global
-// (real OpenStreetMap coverage) - covers every DCS theater (Caucasus,
-// Syria, Persian Gulf, Nevada, Normandy, Marianas, Sinai, Channel) the
-// same way, all real places DCS's own terrains are modeled on, with zero
-// per-theater setup. Free tile service, same "public tiles + attribution"
-// legal footing Esri's was on - not DCS's own copyrighted map assets
-// (see this session's own research: extracting those raised real EULA
-// concerns, so deliberately avoided instead of attempted).
+// Esri's "Dark Gray Canvas" - two stacked layers (Base underneath,
+// Reference on top, transparent PNG with just labels/roads/borders) from
+// the same free, key-free server.arcgisonline.com service already
+// proven out by the old World_Topo_Map layer this replaced (and before
+// that, replaced again - see below). History: World_Topo_Map (original)
+// -> plain OpenStreetMap tiles (explicit feedback: World_Topo_Map was
+// "too hard to read and just plain ugly" - light, visually busy,
+// further darkened/desaturated by #map-leaflet's own CSS filter to fit
+// the theme, stacking two problems) -> THIS (explicit follow-up report:
+// OSM's raw place-name tags render in whatever LOCAL script a region
+// actually uses - Cyrillic over the Caucasus, Arabic over Syria, etc,
+// not English - unreadable for exactly the same reason World_Topo_Map's
+// own original comment specifically called out needing "Esri's own
+// standardized English labels rather than raw OSM name tags" in the
+// first place. Missed that tradeoff when swapping to OSM). Dark Gray
+// Canvas gets both right at once: genuinely dark FROM THE SOURCE (no
+// CSS filter needed - see that rule's own updated comment) AND Esri's
+// standardized English labels (confirmed live - a real tile over Ukraine
+// labeled "Mykolaiv", not "Миколаїв"), covering every DCS theater
+// (Caucasus, Syria, Persian Gulf, Nevada, Normandy, Marianas, Sinai,
+// Channel) the same way since it's genuinely global, same as the OSM
+// attempt was.
 function ensureLeafletMap() {
   if (leafletMap) return;
   leafletMap = L.map(mapLeafletDiv, { center: [0, 0], zoom: 11 });
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    attribution: "&copy; OpenStreetMap contributors",
-    subdomains: "abc",
+  L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}", {
+    attribution: "Tiles &copy; Esri",
+    maxZoom: 19,
+  }).addTo(leafletMap);
+  // Reference is transparent PNG (labels/roads/borders only) - drawn on
+  // top of Base, not a replacement for it. maxZoom:19 matches what the
+  // old World_Topo_Map layer already used (queried this service's own
+  // ?f=json metadata directly rather than guessing - it actually
+  // supports real tiles up to level 23, so 19 has real headroom, not a
+  // number bumping into an upscaled/blurry ceiling).
+  L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}", {
+    attribution: "Tiles &copy; Esri",
     maxZoom: 19,
   }).addTo(leafletMap);
   dynamicLayer = L.layerGroup().addTo(leafletMap);
