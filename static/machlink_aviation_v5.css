@@ -986,6 +986,26 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
   color: var(--threat) !important;
   font-family: var(--font-mono) !important;
 }
+/* Icon instead of a bare bullet per threat row - explicit request (see
+   renderThreatsList() in app.js, which builds this markup and reuses
+   makeMapIcon()'s own shape HTML directly). .ops-readout-label stays the
+   single flex child .ops-readout-row's own space-between expects -
+   .ops-threat-label just makes IT an inline-flex row internally so the
+   icon and the text sit side by side inside that one slot, instead of a
+   3rd top-level child confusing space-between's own left/right split. */
+.ops-threat-label { display: inline-flex !important; align-items: center !important; gap: 6px !important; }
+.ops-threat-icon {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex: 0 0 auto !important;
+  width: 14px !important;
+  height: 14px !important;
+  /* The shape markup itself is sized in em (see makeMapIcon() in app.js,
+     same reasoning as .map-legend-swatch's own font-size) - this is what
+     actually controls the drawn hexagon's real size here. */
+  font-size: 14px !important;
+}
 
 /* Make briefing content read like a mission card. */
 /* flex:0 0 auto - these (SimBrief/DCS briefing/the placeholder) are also

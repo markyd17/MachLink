@@ -19,7 +19,6 @@ const opsTabPanels = {
   threats: document.getElementById("ops-tab-threats"),
   weather: document.getElementById("ops-tab-weather"),
   airfields: document.getElementById("ops-tab-airfields"),
-  bullseye: document.getElementById("ops-tab-bullseye"),
 };
 const opsThreatsList = document.getElementById("ops-threats-list");
 const opsAirfieldsList = document.getElementById("ops-airfields-list");
@@ -37,6 +36,7 @@ const simbriefBtn = document.getElementById("simbrief-refresh");
 const simbriefContent = document.getElementById("simbrief-content");
 const dcsBriefingPanel = document.getElementById("dcs-briefing-panel");
 const dcsBriefingContent = document.getElementById("dcs-briefing-content");
+const opsWeatherBody = document.getElementById("ops-weather-body");
 const debriefPill = document.getElementById("debrief-pill");
 const debriefStatusValue = document.getElementById("debrief-status-value");
 const debriefOverlay = document.getElementById("debrief-overlay");
@@ -1670,13 +1670,22 @@ function renderLoadout(loadout) {
 // Real per-contact list for the Threats tab - reuses findSamThreats()'s
 // exact result (same nearest-first distances the banner text already
 // showed), just as individual rows instead of one joined string.
+// Icons instead of a plain bullet per row - explicit request: "instead
+// of bullet points create icons for each threat that would be a simple
+// depiction of what the threat is." Reuses makeMapIcon()'s own hexagon
+// shape/enemy-red color - the exact same icon the live map already draws
+// for a SAM contact - rather than inventing a second shape language just
+// for this list. findSamThreats() only ever returns SAM-category-detail
+// ground units (see its own docstring above), so every row here really
+// is that same kind of threat.
 function renderThreatsList(threats) {
   if (!threats.length) {
     opsThreatsList.innerHTML = `<div class="ops-empty-note">No threats detected.</div>`;
     return;
   }
+  const icon = makeMapIcon("hexagon", "#E53935", 0).options.html;
   opsThreatsList.innerHTML = threats
-    .map((t) => `<div class="ops-readout-row"><span class="ops-readout-label">${escapeHtml(t.type)}</span><span class="ops-readout-value mono">${t.distanceNm < 10 ? t.distanceNm.toFixed(1) : Math.round(t.distanceNm)} NM</span></div>`)
+    .map((t) => `<div class="ops-readout-row"><span class="ops-readout-label ops-threat-label"><span class="ops-threat-icon">${icon}</span>${escapeHtml(t.type)}</span><span class="ops-readout-value mono">${t.distanceNm < 10 ? t.distanceNm.toFixed(1) : Math.round(t.distanceNm)} NM</span></div>`)
     .join("");
 }
 
@@ -1915,6 +1924,7 @@ function renderMissionInfoAndWeather(data) {
     missionWeatherQnh.textContent = "NA";
     missionWeatherVis.textContent = "NA";
   }
+  renderOpsWeatherTab(w);
 }
 
 function renderDcsBriefing(data) {
@@ -1930,6 +1940,7 @@ function renderDcsBriefing(data) {
     missionWeatherWind.textContent = "NA";
     missionWeatherQnh.textContent = "NA";
     missionWeatherVis.textContent = "NA";
+    renderOpsWeatherTab(null);
     return;
   }
   renderMissionInfoAndWeather(data);
@@ -1951,17 +1962,21 @@ function renderDcsBriefing(data) {
   if (!data.overview && !data.blue_task && !data.red_task) {
     html += `<div class="checklist-subnote">This mission doesn't have any briefing text authored.</div>`;
   }
-  if (data.weather) html += renderWeather(data.weather);
+  // Weather no longer duplicated here (see renderOpsWeatherTab() below,
+  // the ONE place the full grid renders now) - the briefing narrative
+  // panel already links to it via the compact Weather card's own "View
+  // Detailed Weather" button, and that button's own comment always said
+  // "not duplicating it" even though this full grid used to show up
+  // right here too until now.
   dcsBriefingContent.innerHTML = html;
 }
 
 // Real weather straight from the mission file - exists for every mission
-// regardless of whether any Situation/Task text was authored, so it's
-// shown even when the sections above are empty.
-function renderWeather(w) {
+// regardless of whether any Situation/Task text was authored. Shared by
+// the Ops Weather tab below (the ONE real consumer now).
+function weatherGridHtml(w) {
   const wind = (kt, dir) => (kt == null || dir == null) ? "?" : `${dir}° at ${kt} kt`;
   return `
-    <h3 class="checklist-title" style="margin-top:14px;">Weather${w.preset_name ? " — " + escapeHtml(w.preset_name) : ""}</h3>
     <div class="data-grid mono">
       <div class="data-cell">
         <div class="data-label">Temperature</div>
@@ -1988,6 +2003,25 @@ function renderWeather(w) {
         <div class="data-value">${w.visibility_nm ?? "?"} nm</div>
       </div>
     </div>`;
+}
+
+// The real Ops Weather destination - a genuine bug found live ("No
+// weather insights are populating into the weather tab"): the data
+// source (dcs_mission_briefing.py's _extract_weather()) and this exact
+// grid already existed and were already working elsewhere (the Mission
+// tab's compact Weather card, and formerly the briefing narrative panel
+// below it), but nothing had ever actually pointed this tab's own body
+// at that same data - it was still the placeholder written before that
+// data source was built. w is data.weather from the /api/dcs_briefing
+// payload - null/undefined whenever no mission is loaded, same real
+// absence-of-data signal every other Ops tab already honors.
+function renderOpsWeatherTab(w) {
+  if (!w) {
+    opsWeatherBody.innerHTML = `<div class="ops-empty-note">No mission weather detected yet — load into a mission in DCS.</div>`;
+    return;
+  }
+  const presetLine = w.preset_name ? `<div class="checklist-subnote mono">${escapeHtml(w.preset_name)}</div>` : "";
+  opsWeatherBody.innerHTML = `${presetLine}${weatherGridHtml(w)}`;
 }
 
 // -----------------------------------------------------------------------
