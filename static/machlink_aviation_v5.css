@@ -1255,14 +1255,13 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
 .ops-events-panel .panel-title { margin-bottom: clamp(2px, 0.5vh, 6px) !important; font-size: clamp(9px, 0.85vh, 12px) !important; }
 /* A distinct recessed display well, not lines drawn straight onto the
    panel's own raised chassis background - same --screen/--bezel
-   treatment as the map/kneeboard/checklist wells elsewhere. Rebuilt as a
-   genuine LED-style horizontal sports ticker (explicit user request,
-   replacing the old wrapping grid of event cards) - overflow:hidden here
-   is what turns this into a clipped single-line viewport; the actual
-   scrolling happens on #ops-events-track inside it (see its own comment
-   below and renderLiveEvents() in app.js), never on this element itself,
-   so there's still nothing here for the "no scrollbar" rule above to
-   conflict with - it never scrolls, it animates. */
+   treatment as the map/kneeboard/checklist wells elsewhere. A carousel
+   now (explicit follow-up request: "fix the ticker so it's like a
+   carousel," replacing this session's own earlier continuous-scroll
+   marquee) - one event card at a time (renderCarouselCard() in app.js),
+   advancing on a JS interval rather than a CSS scroll animation, so
+   overflow:hidden here is just an ordinary safety clip now, not load-
+   bearing the way it was for clipping a continuously-translating track. */
 #ops-events-list {
   max-height: clamp(28px, 4.5vh, 56px) !important;
   overflow: hidden !important;
@@ -1274,61 +1273,55 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
   margin-top: 4px !important;
   display: flex !important;
   align-items: center !important;
+  justify-content: space-between !important;
+  gap: 10px !important;
 }
 .ops-events-empty {
   color: var(--ink-dim) !important;
   font-family: var(--font-mono) !important;
   font-size: clamp(10px, 1.1vh, 13px) !important;
 }
-/* The actual moving content - rendered by renderLiveEvents() as the same
-   card list twice, back to back, so the keyframe below (a constant
-   translateX(-50%), i.e. exactly one copy's width) loops with no visible
-   seam. width:max-content lets it size to its own real (double) content
-   width rather than being clamped to the viewport's width, which the
-   translateX math depends on. animation-play-state pauses on hover so a
-   specific event can actually be read instead of only glimpsed mid-scroll. */
-#ops-events-track {
+/* Small position indicators, real sports-ticker/carousel convention -
+   clickable (renderCarouselCard() in app.js binds a click-to-jump
+   handler per dot), not just decorative. Only rendered at all when
+   there's more than one major event to page through. */
+.ops-carousel-dots {
   display: flex !important;
-  flex-wrap: nowrap !important;
-  /* center, not baseline - baseline alignment across items with
-     different font-sizes (the small mono time vs the big VT323 text)
-     doesn't just align them, it makes the FLEX CONTAINER's own cross-size
-     the sum of the tallest ascent + tallest descent across all of them,
-     which came out taller than any single item's own line-box (a real
-     bug found live via scrollHeight vs clientHeight - the ticker text
-     was being clipped top/bottom by #ops-events-list's own fixed
-     max-height even after tightening line-height). Center sidesteps that
-     entirely. */
   align-items: center !important;
-  gap: clamp(20px, 2.2vw, 32px) !important;
-  width: max-content !important;
-  animation: ops-ticker-scroll 22s linear infinite !important;
+  gap: 5px !important;
+  flex: 0 0 auto !important;
 }
-#ops-events-list:hover #ops-events-track { animation-play-state: paused !important; }
-@keyframes ops-ticker-scroll {
-  from { transform: translateX(0); }
-  to { transform: translateX(-50%); }
+.ops-carousel-dot {
+  width: clamp(5px, 0.5vh, 7px) !important;
+  height: clamp(5px, 0.5vh, 7px) !important;
+  border-radius: 50% !important;
+  background: var(--ink-faint) !important;
+  cursor: pointer !important;
+  transition: background-color .15s ease !important;
 }
+.ops-carousel-dot:hover { background: var(--ink-dim) !important; }
+.ops-carousel-dot.active { background: var(--signal) !important; box-shadow: 0 0 5px rgba(62,224,138,.7) !important; }
 /* VT323 - the retro LCD/pixel-style Google Font already loaded in
    index.html's <head> (alongside Oswald/Geist) - reused here rather than
-   adding a new font, for the actual "LED style font" look requested. Each
-   card is bare text now (no border/background/padding - the old boxed-
-   card look doesn't read as a ticker), separated by a small round dot
-   like a real sports-ticker divider, colored per event category the same
-   way the old cards' left-border accent did. */
+   adding a new font, for the LED-style look. Bare text (no border/
+   background/padding - the old boxed-card look doesn't read as a
+   ticker), a brief fade-in on every insert (renderCarouselCard() replaces
+   this element's innerHTML on each advance, which is what re-triggers
+   the animation - a mutated existing node wouldn't restart it) instead
+   of the old continuous scroll, so each new event still reads as
+   "arriving," not just appearing. */
 .ops-event-card {
-  flex: 0 0 auto !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
   display: flex !important;
   /* style.css's original .ops-event-card rule (the old stacked-card
-     layout this ticker replaces) sets flex-direction:column without
-     !important - since row is v5's own initial/default value, nothing
-     here was overriding it, so it kept winning (a real bug found live:
-     time+text were stacking vertically - textH + gap + timeH added up to
-     exactly the card's measured height - instead of sitting side by side,
-     which is what actually blew the card past #ops-events-list's fixed
-     max-height, not the separator or any font-size/line-height value). */
+     layout this ticker replaced twice ago) sets flex-direction:column
+     without !important - since row is v5's own initial/default value,
+     nothing here was overriding it, so it kept winning (a real bug found
+     live: time+text stacking vertically instead of side by side, which
+     blew the card past #ops-events-list's own fixed max-height). */
   flex-direction: row !important;
-  align-items: center !important; /* not baseline - see #ops-events-track's own comment on why */
+  align-items: center !important;
   gap: 8px !important;
   padding: 0 !important;
   border: 0 !important;
@@ -1344,29 +1337,29 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
      both spans below) keeps each line close to the font's actual glyph
      height instead. */
   line-height: 1 !important;
+  animation: ops-event-card-in .25s ease-out !important;
 }
-/* A real element (see renderLiveEvents() in app.js), not a ::before on
-   .ops-event-card - a generated-content pseudo-element on a flex-
-   container parent becomes its own anonymous flex item (confirmed live:
-   it computed display:block), and that item's box came out far taller
-   than its own 1-line content, stretching the whole track/card cross-
-   size well past what #ops-events-list's fixed max-height allows (a
-   real bug found live via scrollHeight vs clientHeight). A plain sibling
-   span sidesteps that flex-item sizing quirk entirely - #ops-events-track's
-   own gap already spaces it from its neighbors, so it needs no margin. */
-.ops-event-sep {
-  flex: 0 0 auto !important;
-  color: var(--ink-faint) !important;
-  font-size: clamp(12px, 1.4vh, 16px) !important;
-  line-height: 1 !important;
+@keyframes ops-event-card-in {
+  from { opacity: 0; transform: translateY(3px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 .ops-event-time {
+  flex: 0 0 auto !important;
   font-family: var(--font-mono) !important;
   font-size: clamp(10px, 1.2vh, 14px) !important;
   color: var(--ink-dim) !important;
   letter-spacing: .04em !important;
 }
+/* flex:1 1 auto + min-width:0 + the overflow/ellipsis trio - this (not
+   .ops-event-card, which just holds it alongside the fixed-width time
+   span) is the one piece that should actually shrink/truncate if a long
+   event description doesn't fit next to the carousel dots, e.g. "player
+   Maverick (New F-16C Block 50) — AIM-120C". */
 .ops-event-text {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
   font-family: "VT323", var(--font-mono) !important;
   font-size: clamp(16px, 2.4vh, 24px) !important;
   letter-spacing: .06em !important;
@@ -1396,15 +1389,13 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
   color: var(--amber) !important;
   text-shadow: 0 0 5px rgba(255,176,32,.8), 0 0 14px rgba(255,176,32,.4) !important;
 }
-/* Respect a real accessibility preference - a continuously scrolling
-   marquee is exactly the kind of motion prefers-reduced-motion exists to
-   suppress. renderLiveEvents() in app.js checks the same media query and
-   skips building the duplicate copy in that case, so switching the
-   animation off here is enough - there's no second copy left to create a
-   static overlapping pile out of. */
+/* Respect a real accessibility preference - restartCarouselTimer() in
+   app.js checks the same media query and simply never sets up the
+   auto-advance interval in that case (stays on the newest major event,
+   dots still clickable for manual paging), so the fade-in transition
+   below is the only remaining motion to suppress here. */
 @media (prefers-reduced-motion: reduce) {
-  #ops-events-list { overflow: auto !important; }
-  #ops-events-track { animation: none !important; flex-wrap: wrap !important; width: auto !important; }
+  .ops-event-card { animation: none !important; }
 }
 
 /* Hook warning/cautions become avionics annunciators. */

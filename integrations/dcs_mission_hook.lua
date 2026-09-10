@@ -230,6 +230,13 @@ function eventHandler:onHit(event)
 			info.shooterRelation = (myCoalition == shooterCoalition) and "friendly" or "enemy"
 		end
 		info.shooterCategory = category_label(event.initiator)
+		-- Unit:getPlayerName() - the same real, documented DCS API
+		-- is_player_unit() already uses to tell the player's OWN unit
+		-- apart from AI - nil for an AI-controlled shooter, a real
+		-- callsign/name for a human one. Explicit user request: "know
+		-- what player or ai is causing the actions reported by the
+		-- ticker."
+		info.shooterPlayerName = safe_call(event.initiator, "getPlayerName")
 	end
 	if event.weapon then
 		info.weaponType = safe_call(event.weapon, "getTypeName")
@@ -246,6 +253,7 @@ function eventHandler:onHit(event)
 		{"shooterName", info.shooterName},
 		{"shooterRelation", info.shooterRelation},
 		{"shooterCategory", info.shooterCategory},
+		{"shooterPlayerName", info.shooterPlayerName},
 		{"weaponType", info.weaponType},
 	})
 end
@@ -260,6 +268,9 @@ function eventHandler:onKill(event)
 		{"targetType", safe_call(event.target, "getTypeName")},
 		{"targetCategory", category_label(event.target)},
 		{"targetCategoryDetail", kill_category_detail(event.target)},
+		-- nil for an AI kill, a real callsign for a PvP one - same API/
+		-- same reasoning as onHit()'s shooterPlayerName above.
+		{"targetPlayerName", safe_call(event.target, "getPlayerName")},
 	}
 	local myCoalition = safe_call(event.initiator, "getCoalition")
 	local targetCoalition = safe_call(event.target, "getCoalition")
@@ -328,12 +339,14 @@ function eventHandler:checkShotAtPlayer(event)
 			info.shooterRelation = (myCoalition == shooterCoalition) and "friendly" or "enemy"
 		end
 		info.shooterCategory = category_label(event.initiator)
+		info.shooterPlayerName = safe_call(event.initiator, "getPlayerName")
 	end
 	ml_send({
 		{"type", "missile_launch_warning"},
 		{"shooterName", info.shooterName},
 		{"shooterRelation", info.shooterRelation},
 		{"shooterCategory", info.shooterCategory},
+		{"shooterPlayerName", info.shooterPlayerName},
 		{"weaponType", safe_call(event.weapon, "getTypeName")},
 	})
 end
@@ -371,6 +384,7 @@ function eventHandler:onLoss(event, kind)
 		fields[#fields + 1] = {"shooterName", hit.shooterName}
 		fields[#fields + 1] = {"shooterRelation", hit.shooterRelation}
 		fields[#fields + 1] = {"shooterCategory", hit.shooterCategory}
+		fields[#fields + 1] = {"shooterPlayerName", hit.shooterPlayerName}
 		fields[#fields + 1] = {"weaponType", hit.weaponType}
 	end
 	ml_send(fields)

@@ -29,6 +29,7 @@ from integrations.dcs_flight_tracker import (
 )
 from integrations.dcs_combat_events import LiveEventStore, start_combat_event_listener
 from integrations.dcs_map_data import MapDataStore, start_map_data_watcher
+from integrations.dcs_pretense_events import start_pretense_zone_watcher
 from integrations.logbook_stats import compute_stats as compute_logbook_stats
 from integrations.dcs_kneeboard import (
     find_dcs_install,
@@ -472,6 +473,12 @@ if __name__ == "__main__":
     start_crash_watchdog(flight_tracker)
     start_combat_event_listener(flight_tracker, live_event_store, explicit_path=dcs_cfg.get("mission_events_path") or None)
     start_map_data_watcher(map_data_store, explicit_path=dcs_cfg.get("map_data_path") or None)
+    # Optional - only ever does anything if the loaded mission is running
+    # Pretense (see dcs_pretense_events.py's own docstring). Started
+    # unconditionally, same as every other watcher here; harmless no-op
+    # every poll for any other mission, since its own stats file simply
+    # won't exist.
+    start_pretense_zone_watcher(map_data_store, live_event_store, explicit_path=dcs_cfg.get("pretense_stats_path") or None)
     start_mission_briefing_watcher(state, explicit_log_path=dcs_cfg.get("log_path") or None)
     start_msfs_watcher(state, poll_interval_seconds=msfs_cfg.get("poll_interval_seconds", 5))
 
