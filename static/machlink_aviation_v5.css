@@ -956,7 +956,6 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
 /* Mission Info's cells hold short text, not big numerics - the mockup's
    own DataCell/InfoField distinction. */
 .mission-card .data-grid.cols-3 .data-value { font-size: clamp(8px, min(1vw, 0.77vh), 13px) !important; text-transform: none !important; }
-.mission-card .data-grid.cols-3 .detection-value-row { min-height: 0 !important; }
 .mission-info-substatus { margin-top: 2px !important; font-size: clamp(7px, min(0.7vw, 0.91vh), 11px) !important; color: var(--ink-dim) !important; }
 
 /* Flight Data's fuel bar - a real percentage-width fill, not decoration -
