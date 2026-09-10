@@ -691,11 +691,30 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
    bigger than the original square pass, plus a real popout (EXPAND
    button, openMapPopout() in app.js) for whenever compact isn't enough -
    "best of everything" instead of picking one size. */
+/* Requested as a flat +25% over the previous pass's 230px/36vh/580px
+   (previewed against a real screenshot first, before touching any code).
+   The floor/ceiling did go up +25% (230->288, 580->725), but the actual
+   RENDERED size doesn't scale with the clamp() the way that implies -
+   flex-grow (the leading "3") only adds whatever's genuinely left over
+   in #ops-tab-mission after .mission-bottom-row's own real, non-shrinking
+   content need is met, and a bigger basis here means LESS of that
+   leftover exists to hand out, not more (confirmed live: naively raising
+   vh to actually hit +25% at 1920x1080 caused a real 49-112px overflow -
+   .mission-bottom-row clipped off the tab's own bottom edge - at
+   1600x900 and 1366x768, the two most common laptop sizes). 38vh here is
+   calibrated against 1366x768 specifically (the tightest real-world fit
+   in this file's whole history), zero overflow confirmed there and at
+   1024x768/1600x900/1920x1080/phone - the honest tradeoff is the map
+   ends up meaningfully bigger at tighter windows (roughly +15% at
+   1366x768) but only marginally bigger at 1920x1080 (~502px ->
+   ~511px) rather than +25% everywhere, since #ops-tab-mission's real
+   height budget - not this clamp() alone - is what ultimately governs
+   how big the map can get without pushing real content off-screen. */
 .mission-top-row {
   display: flex !important;
   gap: 10px !important;
-  flex: 3 0 clamp(230px, 36vh, 580px) !important;
-  min-height: clamp(230px, 36vh, 580px) !important;
+  flex: 3 0 clamp(288px, 38vh, 725px) !important;
+  min-height: clamp(288px, 38vh, 725px) !important;
 }
 /* flex:0 0 auto (no longer growing to fill leftover row width) +
    aspect-ratio:1 together with the row's default align-items:stretch is
