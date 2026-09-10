@@ -677,118 +677,69 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
 }
 .ink-faint { color: var(--ink-faint) !important; }
 
-/* ---- Mission tab composition: map + stacked telemetry cards, then a
-   bottom row, then the existing real briefing content. Every card below
-   is a plain .sub-panel/.panel-title (the same raised-chassis look used
-   everywhere else in the app), just with tighter padding since these are
-   dashboard tiles, not full narrative panels. ---- */
-/* flex-shrink:0 (the middle "0" below), never flex:X 1 auto -
-   #ops-tab-mission (this row's own parent) is a bounded box with its own
-   overflow-y:auto, the one single scroll region meant to hold every bit
-   of Mission tab content that doesn't fit. If this row were allowed to
-   flex-shrink, a tall .mission-right-col (3 stacked cards) would get
-   squeezed down to this row's min-height floor instead of its own
-   natural content height, overflowing that squeezed box with
-   overflow:visible - real content spilling downward and visually
-   overlapping .mission-bottom-row below it (a real bug found live).
-   Never shrinking below natural size and letting any real shortfall
-   overflow #ops-tab-mission's own bound instead is what keeps everything
-   reachable via one clean scroll, with nothing overlapping.
-   flex-GROW is allowed (the leading "3") though, unlike shrink - with the
-   old full-width "Begin Mission" placeholder banner gone (it's a small
-   tab-strip hint now, #ops-tabs-hint), and the SimBrief/DCS-briefing
-   panels usually hidden too (no sim detected), this row and
-   .mission-bottom-row below are often the only real content in
-   #ops-tab-mission - growing to fill whatever room that leaves (map
-   included, and every card continues to adjust size with the window per
-   the same design constraint the rest of Mission's cards already follow)
-   instead of leaving it blank is the whole point. Roughly proportional
-   to the two rows' natural heights (460:334) so growth doesn't skew
-   oddly toward one row. */
-/* The floor itself is now viewport-HEIGHT-fluid too (clamp against vh,
-   not a flat 460px) - a short browser window used to leave this pinned
-   at 460px regardless (flex-shrink:0, see above), which combined with
-   the tabs strip + Recent Events below could genuinely need more height
-   than a short window actually has, pushing this tab's own
-   overflow-y:auto scroll into play with no obvious scrollbar - Next
-   Waypoint and the bottom row would scroll out of view and Recent
-   Events would sit directly against the cut edge, reading as "something
-   is covering the cards" rather than "scroll for more" (a real bug
-   reported live). Shrinking the floor with the window's actual height
-   keeps everything fitting without scrolling for most real window
-   sizes, the same "just scale" rule already applied to width. */
-.mission-top-row {
+/* ---- Mission tab composition: a big full-width map, then a row of
+   telemetry cards, then a bottom row, then the existing real briefing
+   content. Every card below is a plain .sub-panel/.panel-title (the same
+   raised-chassis look used everywhere else in the app), just with
+   tighter padding since these are dashboard tiles, not full narrative
+   panels. ----
+   Map + cards used to share one row (map's leftover width, cards in a
+   narrow stacked column beside it). Explicit user request (a screenshot
+   with the intended map footprint circled) to make the map dominant -
+   its own full-width row now, with Flight Data/Mission Info/Next
+   Waypoint moved to a row of their own underneath instead of squeezed
+   beside it. This also made the old "square the map" fix (aspect-ratio
+   forcing exact 1:1) the wrong tool - a full-width square would be far
+   too tall - so map sizing goes back to a height-driven clamp(), just
+   with much bigger numbers than before. */
+/* Height-driven, not aspect-ratio - a fluid floor/ceiling against
+   viewport height, the same clamp()-against-vh pattern already proven
+   out everywhere else in this tab. "Dominant" mostly comes from width
+   now, not an oversized height claim - this row went from sharing width
+   with a side column (map got maybe 70% of it) to the FULL width of the
+   tab, which alone is a large, obvious size jump. A first pass ALSO
+   pushed the height ceiling way up (54vh/680px) without checking it
+   against what .mission-telemetry-row/.mission-bottom-row/Recent Events
+   below it actually need - flex-shrink:0 everywhere in this tab means
+   none of them can shrink to make room, so that just clipped the bottom
+   row clean off the bottom of #ops-tab-mission at common sizes like
+   1920x1080 (found live via scrollHeight vs clientHeight, not just a
+   screenshot - the row was fully rendered, 174px tall, sitting far
+   below the tab's own visible/clipped bottom edge). This floor/ceiling
+   is sized to leave real room for those rows' own natural heights at
+   1920x1080/1600x900/1366x768 - flex-grow (leading "3", the largest
+   share of any three rows sharing #ops-tab-mission - see
+   .mission-telemetry-row/.mission-bottom-row's own flex weights) is what
+   lets it claim a fair, non-starving amount of extra height when the
+   window has room to spare, instead of a flat vh number assuming
+   nothing else needs any of that height. */
+.mission-map-col {
+  flex: 3 0 clamp(140px, 19vh, 480px) !important;
+  min-height: clamp(140px, 19vh, 480px) !important;
+  width: 100% !important;
   display: flex !important;
-  gap: 10px !important;
-  flex: 3 0 clamp(190px, 30vh, 460px) !important;
-  min-height: clamp(190px, 30vh, 460px) !important;
+  flex-direction: column !important;
+  padding: 8px !important;
 }
-/* Square, not "however much width is left over" - explicit user request
-   ("relatively square... right now it is very rectangular making it
-   difficult to see" on a 27" monitor, where .mission-right-col's old
-   fixed ~280-400px band left the map eating all the rest of a very wide
-   row while .mission-top-row's own height stayed capped around 460px, so
-   the map rendered roughly 4-5x wider than it was tall). flex:0 0 auto
-   (no longer growing to fill leftover row width) + aspect-ratio:1
-   together with the row's default align-items:stretch is what actually
-   makes this square: the stretched height (from .mission-top-row's own
-   clamp()'d height) is the definite dimension, and aspect-ratio derives
-   this column's width from THAT instead of from flex-grow - so the map
-   stays square at every window size the row's height already scales to,
-   not just one. .mission-right-col below now grows into whatever width
-   this leaves instead of the other way around. */
-.mission-map-col { flex: 0 0 auto !important; aspect-ratio: 1 / 1 !important; min-width: 0 !important; display: flex !important; flex-direction: column !important; padding: 8px !important; }
-/* No overflow-y:auto here on purpose - setting one gives this box an
-   automatic minimum size of 0 for its OWN parent's (.mission-top-row)
-   sizing decision, which let the row settle at its small min-height
-   floor instead of stretching to fit these 3 stacked cards, forcing an
-   awkward second, nested scrollbar independent of the one below (a real
-   bug found live). #ops-tab-mission's own overflow-y:auto is the single,
-   outermost scroll for all of Mission's content - letting this column
-   size to its natural content height instead feeds that one scroll
-   region correctly instead of fighting it with a second one.
-   No gap, no justify-content:space-between (that used to spread any
-   leftover height as dead gaps BETWEEN the 3 cards when .mission-top-row
-   grows taller than their natural stacked height, which read as
-   "wasted space" - explicit feedback). Flight Data and Mission Info
-   (the two with real data grids) now grow to soak up that leftover
-   height themselves instead - see their own flex:1 1 auto rules below -
-   so all 3 cards sit flush against each other with nothing wasted
-   between them, and the extra room actually enlarges the cards
-   (bigger data-grid cells) rather than padding empty space around them. */
-/* Fluid width, not a fixed 400px that jumps to a different breakpoint
-   value or stacks under the map at some fixed cutoff - shrinks smoothly
-   with the window (down to a 230px floor) instead, same "stays put, just
-   scales" rule as everything else; the corresponding card text/paddings
-   below scale down with it via their own clamp()s so nothing overflows
-   as this narrows. Only the phone breakpoint actually stacks this under
-   the map (see its own rule). */
-/* flex-GROW now enabled (the leading "1") - with the map fixed to a
-   square (see .mission-map-col above) instead of eating all leftover row
-   width itself, something has to claim that freed width or it's just
-   blank space next to a narrower column, the exact "wasted space" this
-   file's own history keeps explicitly rejecting. clamp(280px, 24vw,
-   400px) stays as the flex-basis (shrink floor at 280px, same starting
-   preferred width as before) - grow is what's new. */
-.mission-right-col { flex: 1 1 clamp(280px, 24vw, 400px) !important; min-width: 0 !important; display: flex !important; flex-direction: column !important; justify-content: flex-start !important; gap: 0 !important; overflow: hidden !important; }
-/* Flight Data/Mission Info grow to fill whatever height the column has
-   beyond the 3 cards' natural need, splitting it evenly between them -
-   Next Waypoint (a real, often-empty "no active waypoint" state, not a
-   dense data grid) stays its own natural size rather than stretching
-   into a big empty box. Each is its own flex column internally so its
-   data-grid can grow/center within the extra room instead of just
-   padding empty space below it (see the .data-grid rule right after). */
+/* Flight Data / Mission Info / Next Waypoint - a row of 3 equal-width
+   cards below the map now, not a narrow vertical stack beside it. Real
+   gap + each card's own full corner radius (like .mission-bottom-row
+   below), not the old "flush/no-gap, squared-off touching edges" look -
+   that was specifically an answer to a cramped ~300-400px-wide column;
+   these are full, independently-sized cards now, so there's no reason to
+   fight their normal spacing. flex-shrink:0 (never shrink below natural
+   content) - same "let it overflow this tab's own outer scroll instead
+   of squeezing an individual card's content" reasoning #ops-tab-mission's
+   own comment above already established for the row this replaces. */
+.mission-telemetry-row { display: flex !important; gap: 10px !important; flex: 1 0 auto !important; }
+.mission-telemetry-row .mission-card { flex: 1 1 0 !important; min-width: 0 !important; }
+/* Each card's own data-grid can still grow to fill extra vertical room
+   inside that card (e.g. if Next Waypoint's shorter empty-state content
+   makes the row's tallest card shorter than Flight Data/Mission Info's
+   natural grid height, or vice versa via align-items:stretch's default
+   equal-height row) rather than leaving dead space under it. */
 .mission-flightdata-card, .mission-info-card { display: flex !important; flex-direction: column !important; }
 .mission-flightdata-card .data-grid, .mission-info-card .data-grid { flex: 1 1 auto !important; align-content: space-evenly !important; }
-/* Square off the touching edges - with zero gap between them (see
-   .mission-right-col above), each card's own 7px corner radius on every
-   side would otherwise leave a small rounded notch of the chassis
-   background peeking through at every seam. Rounded only on the two
-   outer edges (top of the first card, bottom of the last) reads as one
-   continuous block, which is the actual point of removing the gap. */
-.mission-flightdata-card { border-bottom-left-radius: 0 !important; border-bottom-right-radius: 0 !important; }
-.mission-info-card { border-radius: 0 !important; }
-.mission-waypoint-card { border-top-left-radius: 0 !important; border-top-right-radius: 0 !important; }
 /* overflow:hidden on the card itself - if this card's own content still
    doesn't fit its allotted space at a truly extreme window size, it
    gets cropped cleanly at THIS box's own bordered edge (the card's
@@ -798,34 +749,12 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
    clip (confirmed via hit-testing to already be pixel-accurate), but
    content escaping an individual card's rounded/bordered box first. */
 .mission-card { padding: clamp(6px, min(1vw, 0.56vh), 10px) !important; flex: 0 0 auto !important; overflow: hidden !important; }
-/* Overrides .mission-card's own flex:0 0 auto above (same specificity,
-   source order breaks the tie - this MUST stay below it) - Flight Data
-   and Mission Info grow to fill whatever height .mission-right-col has
-   beyond the 3 cards' natural need, splitting it evenly between them, so
-   nothing is left as dead space after Next Waypoint either (a real bug
-   found live: removing the old inter-card gap without this just moved
-   the "wasted space" complaint to below the last card instead of fixing
-   it). Next Waypoint (a real, often-empty "no active waypoint" state,
-   not a dense data grid) keeps .mission-card's own natural sizing rather
-   than stretching into a big empty box. */
-/* flex-SHRINK allowed here (the middle "1"), unlike most of this file's
-   other flex items - if .mission-right-col's actual height (stretched
-   from .mission-top-row, not driven by these cards' own needs) ends up
-   smaller than these two cards' combined natural+grown size, letting
-   them shrink instead of forcing a flex:...0... floor is what keeps
-   Next Waypoint from being pushed past the column's own bottom edge
-   into the bottom row below it (a real overlap found live at 1366x768,
-   right after fixing the "wasted space after Next Waypoint" bug above -
-   .mission-card's own overflow:hidden safely crops each card's internal
-   content at its own border if it's ever squeezed below what its
-   data-grid needs, rather than the whole column overflowing). */
-.mission-flightdata-card, .mission-info-card { flex: 1 1 auto !important; }
 /* CURRENT LOADOUT's own h4 - the app-wide .checklist-title (used
    everywhere from Hangar to Flight School) stays full-size there; only
    scoped down here where it shares a short window's squeeze with the
    rest of the Aircraft card. */
 .mission-aircraft-card .checklist-title { margin: clamp(4px, 0.6vh, 8px) 0 clamp(3px, 0.4vh, 6px) !important; font-size: clamp(9px, 0.8vh, 11px) !important; }
-/* Same flex-grow reasoning as .mission-top-row above - fills the room
+/* Same flex-grow reasoning as .mission-map-col above - fills the room
    the removed placeholder banner used to leave blank instead of it, via
    grid-template-rows:1fr below (a plain grid row otherwise sizes to
    content and ignores extra container height, leaving it blank under
@@ -838,8 +767,14 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
    Leaflet map itself (tiles/markers/zoom) is completely untouched, only
    its surrounding chrome changes. */
 .ops-map-home {
+  /* No min-height of its own (removed - see the phone-breakpoint comment
+     a few lines down for the bug this caused) - .mission-map-col is the
+     one place map height is actually decided now (a clamp() sized
+     against what #ops-tab-mission's OTHER rows need too, not just this
+     box in isolation); flex:1 1 auto + min-height:0 just fills whatever
+     that gives it. */
   flex: 1 1 auto !important;
-  min-height: clamp(150px, 25vh, 380px) !important;
+  min-height: 0 !important;
   background: var(--screen) !important;
   border: 1px solid rgba(0,0,0,.7) !important;
   border-radius: var(--radius-md) !important;
@@ -935,9 +870,9 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
 /* flex:0 0 auto - these (SimBrief/DCS briefing/the placeholder) are also
    direct children of #ops-tab-mission's flex column now that the Mission
    tab holds the map+cards above them too; same "don't let it shrink
-   below natural content size" reasoning as .mission-top-row/
-   .mission-bottom-row, even though as the last child there's nothing
-   below it to visually overlap if it did. */
+   below natural content size" reasoning as .mission-map-col/
+   .mission-telemetry-row/.mission-bottom-row, even though as the last
+   child there's nothing below it to visually overlap if it did. */
 .simbrief-panel { padding: 12px !important; flex: 0 0 auto !important; }
 .simbrief-btn, .logbook-btn, .ask-btn {
   background-color: #23282a !important;
@@ -961,14 +896,14 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
    gets this treatment (grouped with .detection-label/.ops-readout-label
    above), so only the grid/cell/value need it. */
 /* vw term nudged up (0.7->0.8vw, 0.9->1.0vw), vh term left exactly as
-   before - the square map (see .mission-map-col) freed up WIDTH for
-   .mission-right-col, not height, and an earlier pass that raised both
-   terms here caused real clipping at 1366x768 (measured via
-   scrollHeight-vs-clientHeight, same method as this file's other
-   clipping fixes) - vh is the binding term in min() at nearly every real
-   window size already (see .data-value's own comment), so touching it
-   is what ate the extra height these cards didn't actually have to
-   spare. */
+   before - Flight Data/Mission Info/Next Waypoint have real extra width
+   to spend now (see .mission-telemetry-row above), not extra height, and
+   an earlier pass that raised both terms here caused real clipping at
+   1366x768 (measured via scrollHeight-vs-clientHeight, same method as
+   this file's other clipping fixes) - vh is the binding term in min() at
+   nearly every real window size already (see .data-value's own comment),
+   so touching it is what ate the extra height these cards didn't
+   actually have to spare. */
 .data-grid { display: grid !important; grid-template-columns: repeat(2, 1fr) !important; gap: clamp(5px, min(0.8vw, 0.39vh), 9px) clamp(6px, min(1vw, 0.49vh), 11px) !important; }
 .data-grid.cols-3 { grid-template-columns: repeat(3, 1fr) !important; }
 .data-grid.cols-4 { grid-template-columns: repeat(4, 1fr) !important; }
@@ -991,15 +926,15 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
 .data-cell.span-2 { grid-column: span 2 !important; }
 .data-value {
   font-family: var(--font-mono) !important;
-  /* Ceiling and vw term raised from the pre-square-map values (11-19px,
-     1.4vw/1.05vh) - .mission-right-col routinely has real extra width to
-     spend now (see its own comment above). vh term only nudged slightly
+  /* Ceiling and vw term raised from the original values (11-19px,
+     1.4vw/1.05vh) - these cards routinely have real extra width to spend
+     now (see .mission-telemetry-row above). vh term only nudged slightly
      (1.05->1.15vh) rather than matching the vw jump - a first pass that
      raised both aggressively clipped real content at 1366x768 (measured
      via scrollHeight-vs-clientHeight); vh is the binding min() term at
      nearly every real window size (width almost always outpaces height
      on a real monitor), so it's what actually controls whether this
-     fits, and the square map only freed up width, not height. */
+     fits, and the telemetry row only freed up width, not height. */
   font-size: clamp(11px, min(1.7vw, 1.15vh), 21px) !important;
   font-weight: 600 !important;
   color: var(--signal) !important;
@@ -1098,7 +1033,18 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
 
 .mission-recentflights-card { display: flex !important; flex-direction: column !important; }
 .mission-flights-table-wrap { overflow-x: auto !important; }
-.mission-flights-table { width: 100% !important; border-collapse: collapse !important; font-family: var(--font-mono) !important; font-size: clamp(9px, 0.85vw, 11.5px) !important; }
+/* table-layout:fixed + max-width:0 on th/td below - the standard pair
+   needed to make text-overflow:ellipsis actually work inside a <table>
+   (auto layout otherwise sizes columns to fit content first, ignoring
+   ellipsis entirely). Without this, a narrow Recent Flights column (this
+   card only gets ~1/3.3 of .mission-bottom-row's width) let a long
+   result like "CRASH (unconfirmed)" wrap onto 2 lines instead of
+   truncating, growing the whole row - and by extension
+   .mission-bottom-row's and #ops-tab-mission's own height - well past
+   what the tab actually had room for at some real window sizes (a real
+   bug found live via scrollHeight vs clientHeight at 1024x768, not
+   obvious from a screenshot alone). */
+.mission-flights-table { width: 100% !important; table-layout: fixed !important; border-collapse: collapse !important; font-family: var(--font-mono) !important; font-size: clamp(9px, 0.85vw, 11.5px) !important; }
 .mission-flights-table th {
   text-align: left !important;
   padding-bottom: clamp(2px, 0.4vh, 6px) !important;
@@ -1112,6 +1058,12 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
 }
 .mission-flights-table th.mission-flights-result, .mission-flights-table td.mission-flights-result { text-align: right !important; }
 .mission-flights-table td { padding: clamp(2px, min(0.6vw, 0.39vh), 7px) 0 !important; color: var(--ink); border-bottom: 1px solid rgba(255,255,255,.05) !important; }
+.mission-flights-table th, .mission-flights-table td {
+  max-width: 0 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
 .mission-flights-table tr:last-child td { border-bottom: 0 !important; }
 .mission-flights-row { cursor: pointer !important; }
 .mission-flights-row:hover td:not(.mission-flights-result) { color: var(--signal) !important; }
@@ -1395,20 +1347,37 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
   .ops-tabs { overflow-x: auto !important; flex-wrap: nowrap !important; margin-bottom: 8px !important; }
   .ops-tab-btn { flex: 0 0 auto !important; white-space: nowrap !important; }
   #ops-tab-mission { min-height: 54vh !important; }
-  .ops-map-home { min-height: 42vh !important; }
-  /* The one place map-beside-cards actually stops making sense and a
-     genuinely different (stacked) layout takes over, per the user's own
-     call - everywhere wider than this just scales the side-by-side
-     layout down via the clamp()s above instead of reflowing it. */
-  .mission-top-row { flex-direction: column !important; min-height: 0 !important; }
-  /* Square (aspect-ratio:1, see the base rule) only makes sense in the
-     desktop side-by-side layout, where it's solving "the map is way
-     wider than it is tall". Stacked here with the column now full-width
-     instead of squeezed beside the map, a forced 1:1 box would instead
-     make the map as tall as a phone screen is wide - actively worse on a
-     narrow phone, so this reverts to the old natural-height behavior. */
-  .mission-map-col { aspect-ratio: unset !important; flex: 0 0 auto !important; min-height: 340px !important; }
-  .mission-right-col { flex: 0 0 auto !important; width: 100% !important; justify-content: flex-start !important; }
+  /* .ops-map-home used to need its own min-height:42vh here (a leftover
+     from when .mission-map-col's phone rule gave it a bare 340px floor
+     with no real vh-scaling of its own) - now that .mission-map-col's
+     BASE rule already clamp()s against vh (and applies at every width,
+     phone included - see below), a second independent height demand on
+     the inner box only risked it overflowing whatever the outer wrapper
+     actually had room for, which is exactly what happened live: at
+     400x800, .mission-map-col's own budget came out to ~152px but this
+     42vh forced the inner map box to 336px anyway, visibly overflowing
+     past its own wrapper's bottom edge into - overlapping - the
+     telemetry row below (a real bug found live via direct
+     getBoundingClientRect() comparison, not just a screenshot). Removed;
+     .ops-map-home now just fills whatever .mission-map-col gives it (see
+     its own base rule). */
+  /* The map is already its own full-width row at every width (see the
+     base .mission-map-col rule) - nothing to reflow there for phones.
+     The telemetry row is the one place 3-abreast still doesn't fit a
+     phone's width - stacked here instead, same call the map/cards split
+     itself already made at the base rules. */
+  .mission-telemetry-row { flex-direction: column !important; }
+  /* .mission-telemetry-row .mission-card's base flex:1 1 0 is the
+     standard "equal columns" trick for the desktop ROW layout (zero
+     basis + equal grow splits WIDTH evenly) - left alone here, the SAME
+     rule applies to the stacked COLUMN direction above and splits HEIGHT
+     evenly instead, squeezing all 3 cards down toward that shared zero
+     basis instead of each one's own natural content height (a real bug
+     found live: the 3 titles rendered stacked almost on top of each
+     other, each card crushed to a sliver). flex:0 0 auto here restores
+     .mission-card's own normal natural-height stacking, same as every
+     other card in this tab. */
+  .mission-telemetry-row .mission-card { flex: 0 0 auto !important; }
   /* 4/3-column telemetry grids stop fitting phone width - drop to 2. */
   .data-grid.cols-4, .data-grid.cols-3 { grid-template-columns: repeat(2, 1fr) !important; }
   .mission-bottom-row { grid-template-columns: 1fr !important; grid-template-rows: none !important; }
