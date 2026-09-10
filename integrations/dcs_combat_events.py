@@ -101,6 +101,7 @@ def _dispatch(payload, flight_tracker, live_events):
             shooter_name=payload.get("shooterName"),
             shooter_relation=payload.get("shooterRelation"),
             shooter_category=payload.get("shooterCategory"),
+            shooter_category_detail=payload.get("shooterCategoryDetail"),
             weapon_type=payload.get("weaponType"),
         )
         live_events.add(

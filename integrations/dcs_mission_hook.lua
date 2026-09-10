@@ -178,6 +178,33 @@ local function kill_category_detail(unit)
 	return nil
 end
 
+-- Separate from kill_category_detail() above on purpose, not a refactor
+-- opportunity: this one distinguishes "manpad" as its own bucket (checked
+-- before the broader SAM_ATTRIBUTES, since a MANPAD unit - e.g. an Igla/
+-- Stinger-armed soldier - carries BOTH "MANPADS" and a generic SAM-family
+-- attribute like "IR Guided SAM" in DCS's own attribute tree) for the
+-- explicit request "Ground units can be grouped by either Sam, Vehicle,
+-- or Manpad" on the Logbook's new "what killed the player" breakdown
+-- (see onHit/onLoss below). Reusing kill_category_detail() itself for
+-- that would have quietly changed what "sam" means for every OTHER
+-- consumer of that function too - the live map's SAM icon shape/
+-- engagement-range rings and the existing "kills by type" stat - none of
+-- which were asked to change here, so this stays its own thing instead of
+-- risking an unasked-for regression to already-working features.
+-- "MANPADS" is DCS's own documented Mission Editor attribute-filter name
+-- for this unit class, but hasn't been confirmed against a real live loss
+-- yet - flag if a real MANPAD unit doesn't actually carry this tag.
+local MANPADS_ATTRIBUTES = {"MANPADS"}
+
+local function shooter_category_detail(unit)
+	if not unit then return nil end
+	if has_any_attribute(unit, MANPADS_ATTRIBUTES) then return "manpad" end
+	if has_any_attribute(unit, SAM_ATTRIBUTES) then return "sam" end
+	if has_any_attribute(unit, VEHICLE_ATTRIBUTES) then return "vehicle" end
+	if has_any_attribute(unit, SOFT_TARGET_ATTRIBUTES) then return "soft_target" end
+	return nil
+end
+
 local eventHandler = {}
 
 function eventHandler:onEvent(event)
@@ -230,6 +257,13 @@ function eventHandler:onHit(event)
 			info.shooterRelation = (myCoalition == shooterCoalition) and "friendly" or "enemy"
 		end
 		info.shooterCategory = category_label(event.initiator)
+		-- "sam" / "vehicle" / "manpad" / "soft_target", or nil - see
+		-- shooter_category_detail() above for why this is its own function
+		-- rather than reusing kill_category_detail(). Explicit request: a
+		-- losses-by-cause breakdown that can tell a SAM site, a vehicle-
+		-- mounted gun, and a MANPAD soldier apart instead of lumping every
+		-- ground_unit shooter together.
+		info.shooterCategoryDetail = shooter_category_detail(event.initiator)
 		-- Unit:getPlayerName() - the same real, documented DCS API
 		-- is_player_unit() already uses to tell the player's OWN unit
 		-- apart from AI - nil for an AI-controlled shooter, a real
@@ -253,6 +287,7 @@ function eventHandler:onHit(event)
 		{"shooterName", info.shooterName},
 		{"shooterRelation", info.shooterRelation},
 		{"shooterCategory", info.shooterCategory},
+		{"shooterCategoryDetail", info.shooterCategoryDetail},
 		{"shooterPlayerName", info.shooterPlayerName},
 		{"weaponType", info.weaponType},
 	})
@@ -384,6 +419,7 @@ function eventHandler:onLoss(event, kind)
 		fields[#fields + 1] = {"shooterName", hit.shooterName}
 		fields[#fields + 1] = {"shooterRelation", hit.shooterRelation}
 		fields[#fields + 1] = {"shooterCategory", hit.shooterCategory}
+		fields[#fields + 1] = {"shooterCategoryDetail", hit.shooterCategoryDetail}
 		fields[#fields + 1] = {"shooterPlayerName", hit.shooterPlayerName}
 		fields[#fields + 1] = {"weaponType", hit.weaponType}
 	end

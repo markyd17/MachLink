@@ -936,12 +936,24 @@ function renderPilotSummaryStats(s) {
       <div class="data-cell"><div class="data-label">Longest Sortie</div><div class="data-value">${s.longest_sortie_minutes ?? "—"} min</div></div>
       <div class="data-cell"><div class="data-label">Most Kills (1 Sortie)</div><div class="data-value">${s.most_kills_in_one_sortie}</div></div>
     </div>
-    <h4 class="checklist-title">FLIGHT HOURS BY AIRFRAME</h4>
-    <div class="debrief-cause mono">${escapeHtml(joinHours(s.flight_hours_by_airframe))}</div>
-    <h4 class="checklist-title">KILLS BY TYPE</h4>
-    <div class="debrief-cause mono">${escapeHtml(joinCounts(s.kills_by_type))}${s.total_friendly_fire_kills ? ` — ${s.total_friendly_fire_kills} friendly fire` : ""}</div>
-    <h4 class="checklist-title">LOSSES BY AIRFRAME</h4>
-    <div class="debrief-cause mono">${escapeHtml(joinCounts(s.losses_by_airframe))}</div>`;
+    <div class="pilot-breakdown-grid">
+      <div class="pilot-breakdown-block">
+        <h4 class="checklist-title">FLIGHT HOURS BY AIRFRAME</h4>
+        <div class="debrief-cause mono">${escapeHtml(joinHours(s.flight_hours_by_airframe))}</div>
+      </div>
+      <div class="pilot-breakdown-block">
+        <h4 class="checklist-title">KILLS BY TYPE</h4>
+        <div class="debrief-cause mono">${escapeHtml(joinCounts(s.kills_by_type))}${s.total_friendly_fire_kills ? ` — ${s.total_friendly_fire_kills} friendly fire` : ""}</div>
+      </div>
+      <div class="pilot-breakdown-block">
+        <h4 class="checklist-title">LOSSES BY AIRFRAME</h4>
+        <div class="debrief-cause mono">${escapeHtml(joinCounts(s.losses_by_airframe))}</div>
+      </div>
+      <div class="pilot-breakdown-block">
+        <h4 class="checklist-title">LOSSES BY CAUSE</h4>
+        <div class="debrief-cause mono">${escapeHtml(joinCounts(s.losses_by_cause))}</div>
+      </div>
+    </div>`;
 }
 
 // Reopens a past sortie's full detail on top of whichever overlay it was

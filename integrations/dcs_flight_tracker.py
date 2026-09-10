@@ -155,6 +155,7 @@ class FlightTracker:
         self.shooter_name = None
         self.shooter_relation = None
         self.shooter_category = None
+        self.shooter_category_detail = None
         self.weapon_type = None
         # Accumulated across the whole flight via Phase 2 combat events -
         # see on_kill/on_hit/on_shot. Never completes anything on their
@@ -294,6 +295,7 @@ class FlightTracker:
             "shooter_name": self.shooter_name,
             "shooter_relation": self.shooter_relation,
             "shooter_category": self.shooter_category,
+            "shooter_category_detail": self.shooter_category_detail,
             "weapon_type": self.weapon_type,
             "kills": list(self.kills),
             "hits_taken": list(self.hits_taken),
@@ -403,7 +405,7 @@ class FlightTracker:
             # after this one.
 
     def on_combat_loss(self, kind, shooter_name=None, shooter_relation=None,
-                        shooter_category=None, weapon_type=None):
+                        shooter_category=None, shooter_category_detail=None, weapon_type=None):
         """Called from the Phase 2 combat-event hook when the player's own
         unit was destroyed (kind="dead", by a weapon), crashed
         (kind="crash", terrain/water, no weapon), or the pilot ejected
@@ -443,11 +445,12 @@ class FlightTracker:
             self.shooter_name = shooter_name
             self.shooter_relation = shooter_relation
             self.shooter_category = shooter_category
+            self.shooter_category_detail = shooter_category_detail
             self.weapon_type = weapon_type
             _debug_log(
                 f"COMBAT LOSS ({kind}) shooter={shooter_name!r} "
                 f"relation={shooter_relation!r} category={shooter_category!r} "
-                f"weapon={weapon_type!r}"
+                f"category_detail={shooter_category_detail!r} weapon={weapon_type!r}"
             )
             self._complete(now)
 
