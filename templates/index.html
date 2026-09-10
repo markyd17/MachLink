@@ -289,7 +289,7 @@
                  mission file's own authored weather (renderDcsBriefing()
                  in app.js), so they're real but only update once per
                  mission, not tick-by-tick like the rest of this card. -->
-            <section class="sub-panel mission-card">
+            <section class="sub-panel mission-card mission-flightdata-card">
               <h2 class="panel-title">Flight Data</h2>
               <div class="data-grid mono cols-4">
                 <div class="data-cell"><div class="data-label">Altitude</div><div class="data-value" id="ops-altitude-value">&mdash;</div></div>
@@ -319,7 +319,7 @@
                  Package/Task/TOT have no concept anywhere in MachLink (no
                  flight-package/tasking data exists) - omitted rather than
                  faked. -->
-            <section class="sub-panel mission-card">
+            <section class="sub-panel mission-card mission-info-card">
               <h2 class="panel-title">Mission Info</h2>
               <div class="data-grid mono cols-3">
                 <div class="data-cell"><div class="data-label">Mission Name</div><div class="data-value" id="mission-name-value">NA</div></div>
@@ -339,7 +339,7 @@
                  next one" against your live position) - a real, present
                  card with an honest empty state, never invented BRG/DIST/
                  ETE numbers. -->
-            <section class="sub-panel mission-card">
+            <section class="sub-panel mission-card mission-waypoint-card">
               <h2 class="panel-title">Next Waypoint</h2>
               <div class="ops-empty-note">No active waypoint.</div>
             </section>
