@@ -219,19 +219,12 @@
            the id-by-id notes below) or shows an honest NA/-- placeholder -
            never an invented number, same standard as the rest of Ops. -->
       <div class="ops-tab-panel" id="ops-tab-mission">
-        <!-- Real-time launch warning - explicit user request ("if an
-             enemy has fired on you"), inspired by DCS MovingMap's own
-             feature set. Driven entirely by the same /api/live_events
-             poll the ticker below already runs (updateMissileWarningBanner()
-             in app.js checks for a recent "missile_launch_warning" event on
-             every poll) - no separate endpoint or poll loop for this one
-             signal. Auto-hides once that event ages out (see the same
-             function), same "shows only while genuinely current" rule
-             #map-paused-badge already follows. -->
-        <div class="ops-missile-warning" id="ops-missile-warning" hidden>
-          <span>⚠</span>
-          <span id="ops-missile-warning-text"></span>
-        </div>
+        <!-- The full-width overlay banner that used to live here (real-time
+             launch warning across the top of the map) was removed per
+             explicit follow-up ("eliminate that") - the Mission Info
+             card's own LAUNCH annunciator below (#mission-launch-indicator)
+             and the ticker's own missile_launch_warning entry already
+             cover the same signal, so nothing is lost. -->
         <div class="mission-top-row">
           <!-- Real Leaflet map, internals completely unchanged (tiles,
                markers, zoom, KEY, RECENTER) - only its home moved from the
@@ -361,20 +354,21 @@
                   <div class="data-value" id="mission-info-status-value">NA</div>
                   <div class="mission-info-substatus mono" id="ops-sortie-time-value"></div>
                 </div>
+                <!-- Real annunciator, not just another data-cell's text -
+                     explicit request for "a bar... that flashes red when
+                     an enemy has launched on you", modeled on a real
+                     jet's RWR launch light (always physically present,
+                     dim/off by default, lit only when there's something
+                     to warn about). Moved into the grid beside Status per
+                     explicit follow-up ("move that launch bar next to the
+                     status box... adjust it to fit within the card") -
+                     the .data-cell class gives it the exact same border/
+                     background/padding as every other cell here so it
+                     sits flush with the grid instead of as a separate
+                     full-width bar; machlink_aviation_v5.css layers the
+                     annunciator coloring/flash on top of that. -->
+                <div class="data-cell mission-launch-indicator" id="mission-launch-indicator">LAUNCH</div>
               </div>
-              <!-- Real annunciator, not another data-cell - explicit
-                   request for "a new bar... that flashes red when an
-                   enemy has launched on you", modeled on a real jet's
-                   RWR launch light (always physically present, dim/off
-                   by default, illuminated only when there's something to
-                   warn about) rather than the full-width overlay banner
-                   above the map (#ops-missile-warning in app.js), which
-                   this is IN ADDITION to, not a replacement for - same
-                   underlying "missile_launch_warning" event/same 15s
-                   display window (updateMissileWarningBanner()'s own
-                   MISSILE_WARNING_DISPLAY_SECONDS), just a second, more
-                   permanent-looking indicator scoped to this card. -->
-              <div class="mission-launch-indicator" id="mission-launch-indicator">LAUNCH</div>
             </section>
 
             <!-- NEXT WAYPOINT - no waypoint/route-leg concept exists
