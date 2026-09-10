@@ -65,6 +65,7 @@ const missionStartTimeValue = document.getElementById("mission-start-time-value"
 const missionInfoStatusValue = document.getElementById("mission-info-status-value");
 const missionAircraftName = document.getElementById("mission-aircraft-name");
 const missionAircraftEmpty = document.getElementById("mission-aircraft-empty");
+const missionAircraftThumb = document.getElementById("mission-aircraft-thumb");
 const missionWeatherTheatre = document.getElementById("mission-weather-theatre");
 const missionWeatherTemp = document.getElementById("mission-weather-temp");
 const missionWeatherPreset = document.getElementById("mission-weather-preset");
@@ -357,6 +358,44 @@ function updateDetectionIndicators(data) {
   airframeDetectedValue.className = airframeCls;
 }
 
+// Real thumbnail per detected DCS airframe - explicit request: "when
+// detecting the airframe in use pull the appropriate thumbnail and
+// display it." Best-effort keyword match against DCS's own aircraft type
+// string (data.aircraft, from Export.lua - see pollStatus() below), same
+// "not exhaustive, matched on real data where possible" spirit as
+// SUPPORT_TYPE_KEYWORDS/kill_category_detail's attribute lists elsewhere
+// in this app. Only a10/ah64/f16/fa18 are actually CONFIRMED against a
+// real live session (data/aircraft/*.json, data/bindings_live/*.json,
+// data/flight_log.json all show "A-10C_2"/"AH-64D_BLK_II"/"F-16c_50"/
+// "FA-18C_hornet" from real flights) - the rest are standard, widely-
+// documented DCS module type names but UNVERIFIED here; flag if a real
+// detection doesn't actually match one. No entry at all for an MSFS
+// aircraft or an unrecognized DCS module - thumbnailForAircraft() returns
+// null and the image just stays hidden rather than guessing or showing
+// a broken/wrong picture.
+const AIRFRAME_THUMBNAILS = [
+  { keywords: ["a-10", "a10"], file: "a10-thumb.png" },
+  { keywords: ["ah-64", "ah64"], file: "ah64-thumb.png" },
+  { keywords: ["f-16", "f16"], file: "f16-thumb.png" },
+  { keywords: ["fa-18", "f/a-18", "f-18", "hornet"], file: "fa18-thumb.png" },
+  { keywords: ["av-8b", "av8b", "harrier"], file: "av8b-thumb.png" },
+  { keywords: ["f-14", "f14", "tomcat"], file: "f14-thumb.png" },
+  { keywords: ["f-15e", "f15e", "strike eagle"], file: "f15e-thumb.png" },
+  { keywords: ["f-4e", "f4e", "phantom"], file: "f4e-thumb.png" },
+  { keywords: ["f-5e", "f5e", "tiger"], file: "f5e-thumb.png" },
+  { keywords: ["jf-17", "jf17", "thunder"], file: "jf17-thumb.png" },
+  { keywords: ["ka-50", "ka50", "black shark"], file: "ka50-thumb.png" },
+  { keywords: ["m-2000", "m2000", "mirage"], file: "m2000-thumb.png" },
+  { keywords: ["mig-21", "mig21"], file: "mig21-thumb.png" },
+];
+
+function thumbnailForAircraft(aircraft) {
+  if (!aircraft) return null;
+  const a = aircraft.toLowerCase();
+  const match = AIRFRAME_THUMBNAILS.find((entry) => entry.keywords.some((kw) => a.includes(kw)));
+  return match ? `/static/airframe-thumbnails/${match.file}` : null;
+}
+
 async function pollStatus() {
   try {
     const res = await fetch("/api/status");
@@ -376,6 +415,15 @@ async function pollStatus() {
     const aircraftText = data.aircraft ? data.aircraft.toUpperCase() : "NA";
     missionAircraftValue.textContent = aircraftText;
     missionAircraftName.textContent = aircraftText;
+    const thumb = thumbnailForAircraft(data.aircraft);
+    if (thumb) {
+      if (missionAircraftThumb.getAttribute("src") !== thumb) missionAircraftThumb.src = thumb;
+      missionAircraftThumb.alt = aircraftText;
+      missionAircraftThumb.hidden = false;
+    } else {
+      missionAircraftThumb.hidden = true;
+      missionAircraftThumb.removeAttribute("src");
+    }
 
     // SimBrief has no DCS-mission equivalent - a real DCS mission already
     // carries its own authored briefing, so that's what fills this slot

@@ -396,18 +396,28 @@
           <!-- AIRCRAFT (the mockup's "Quick Aircraft", renamed per
                instruction) - the real detected airframe plus your actual
                current ordnance (Unit:getAmmo(), not Flight School's
-               static reference loadout). No aircraft photo or prev/next
-               carousel - MachLink only ever tracks the one aircraft
-               you're actually in, so there's nothing real for either to
-               show or page through. -->
+               static reference loadout). No prev/next carousel -
+               MachLink only ever tracks the one aircraft you're actually
+               in, so there's nothing real to page through. A real
+               thumbnail per detected airframe DOES exist now (explicit
+               follow-up, once real images were provided) - see
+               thumbnailForAircraft() in app.js; #mission-aircraft-thumb
+               just stays hidden for an aircraft with no matching image
+               (an MSFS aircraft, or a DCS module not in that list)
+               rather than showing a wrong or broken picture. -->
           <section class="sub-panel mission-card mission-aircraft-card">
             <h2 class="panel-title">Aircraft</h2>
             <div class="mission-aircraft-name" id="mission-aircraft-name">NA</div>
             <h4 class="checklist-title">CURRENT LOADOUT</h4>
-            <section class="simbrief-panel" id="ops-loadout-panel" hidden>
-              <div id="ops-loadout-content" class="simbrief-content"></div>
-            </section>
-            <div class="ops-empty-note" id="mission-aircraft-empty">No loadout data.</div>
+            <div class="mission-aircraft-body">
+              <img class="mission-aircraft-thumb" id="mission-aircraft-thumb" alt="" hidden>
+              <div class="mission-aircraft-loadout-col">
+                <section class="simbrief-panel" id="ops-loadout-panel" hidden>
+                  <div id="ops-loadout-content" class="simbrief-content"></div>
+                </section>
+                <div class="ops-empty-note" id="mission-aircraft-empty">No loadout data.</div>
+              </div>
+            </div>
           </section>
 
           <!-- WEATHER - the same real per-mission weather already parsed

@@ -1181,6 +1181,35 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
 }
 .mission-aircraft-card .simbrief-panel { padding: 0 !important; background: none !important; border: 0 !important; box-shadow: none !important; }
 .mission-aircraft-card #ops-loadout-content { max-height: 130px !important; overflow-y: auto !important; }
+/* Thumbnail sits beside the loadout details, not above/below them -
+   explicit request. Sized to roughly match #ops-loadout-content's own
+   130px cap just above so the two sit at a comparable visual weight.
+   object-fit:cover on a real square (1024x1024) source image, so it
+   never distorts regardless of the clamp()'d box size. Hidden entirely
+   (see thumbnailForAircraft() in app.js) for an aircraft with no
+   matching real image - the loadout column just takes the full row
+   instead of leaving an empty/broken image box. */
+.mission-aircraft-body { display: flex !important; gap: clamp(8px, 1.2vw, 14px) !important; align-items: flex-start !important; min-height: 0 !important; }
+.mission-aircraft-thumb {
+  flex: 0 0 auto !important;
+  /* Ceiling matched to the loadout column's own real natural height
+     (measured live at ~117px next to it, not guessed) rather than the
+     130px #ops-loadout-content cap just above - that cap is a max-
+     height/scroll limit for a LONG loadout, not this column's typical
+     actual height, so matching it made the thumbnail taller than its
+     neighbor actually needs and pushed .mission-bottom-row's shared
+     grid row height up with it (a real, measured few px of otherwise-
+     unnecessary overflow at 1920x1080/1366x768 - re-verify this number
+     if the card's other content changes). */
+  width: clamp(64px, 9vw, 108px) !important;
+  aspect-ratio: 1 / 1 !important;
+  object-fit: cover !important;
+  border-radius: var(--radius-sm) !important;
+  border: 1px solid rgba(0,0,0,.6) !important;
+  background: var(--screen) !important;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.03), 0 2px 6px rgba(0,0,0,.5) !important;
+}
+.mission-aircraft-loadout-col { flex: 1 1 auto !important; min-width: 0 !important; }
 
 .mission-weather-card #mission-weather-theatre { color: var(--ink-dim) !important; font-size: 11px !important; text-transform: none !important; letter-spacing: 0 !important; margin-left: 6px !important; }
 .mission-wx-grid { display: grid !important; grid-template-columns: repeat(2, 1fr) !important; gap: clamp(4px, min(0.8vw, 0.56vh), 10px) clamp(6px, min(1.1vw, 0.77vh), 14px) !important; margin: 3px 0 clamp(3px, min(0.8vw, 0.56vh), 10px) !important; }
