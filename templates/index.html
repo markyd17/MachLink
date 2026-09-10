@@ -362,6 +362,19 @@
                   <div class="mission-info-substatus mono" id="ops-sortie-time-value"></div>
                 </div>
               </div>
+              <!-- Real annunciator, not another data-cell - explicit
+                   request for "a new bar... that flashes red when an
+                   enemy has launched on you", modeled on a real jet's
+                   RWR launch light (always physically present, dim/off
+                   by default, illuminated only when there's something to
+                   warn about) rather than the full-width overlay banner
+                   above the map (#ops-missile-warning in app.js), which
+                   this is IN ADDITION to, not a replacement for - same
+                   underlying "missile_launch_warning" event/same 15s
+                   display window (updateMissileWarningBanner()'s own
+                   MISSILE_WARNING_DISPLAY_SECONDS), just a second, more
+                   permanent-looking indicator scoped to this card. -->
+              <div class="mission-launch-indicator" id="mission-launch-indicator">LAUNCH</div>
             </section>
 
             <!-- NEXT WAYPOINT - no waypoint/route-leg concept exists
