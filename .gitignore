@@ -7,6 +7,7 @@ config.yaml
 machlink.log
 data/flight_log.json
 data/flight_debug.log
+data/mission_briefing_debug.log
 __pycache__/
 *.pyc
 

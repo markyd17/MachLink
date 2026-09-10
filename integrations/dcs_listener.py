@@ -43,6 +43,15 @@ def start_dcs_listener(state, flight_tracker=None, port=39234):
                         state.game = "dcs"
                         state.aircraft = payload["aircraft"]
                         state.last_game_signal_at = time.time()
+                        # Export callbacks keep firing on DCS's render loop
+                        # even while paused (see dcs_export_hook.lua's own
+                        # comment on DCS.getPause()) - so this keeps
+                        # updating (and last_game_signal_at above keeps
+                        # refreshing) right through a pause, unlike the
+                        # mission hook's own sim-time-gated snapshot writer.
+                        # None (older DCS, no DCS.getPause()) is treated as
+                        # "unknown," never as "paused."
+                        state.dcs_paused = bool(payload.get("paused")) if "paused" in payload else None
                         mission_name = (state.dcs_mission_briefing or {}).get("sortie")
                     _debug_log(
                         f"RECV aircraft={payload.get('aircraft')!r} "

@@ -90,6 +90,7 @@ const mapRecenterBtn = document.getElementById("map-recenter");
 const mapRangeLabel = document.getElementById("map-range-label");
 const mapKeyToggle = document.getElementById("map-key-toggle");
 const mapLegend = document.getElementById("map-legend");
+const mapPausedBadge = document.getElementById("map-paused-badge");
 const kneeboardPageLabel = document.getElementById("kneeboard-page-label");
 const kneeboardPageArea = document.getElementById("kneeboard-page-area");
 const kneeboardImage = document.getElementById("kneeboard-image");
@@ -190,6 +191,13 @@ deviceModalBody.addEventListener("click", (e) => {
 });
 
 let lastAircraft = null;
+// True/False from DCS.getPause() (see dcs_export_hook.lua's own comment on
+// why Export callbacks - unlike the mission hook's snapshot writer - keep
+// updating through a pause), null if unknown. Read by
+// updateOpsSituationalAwareness() below so a paused, still-connected
+// session shows its real last-known values instead of blanking to "—"
+// the moment the mission hook's own 5s staleness window passes.
+let dcsPaused = null;
 let lastChecklistData = null;
 let sections = [];       // [{id, label}] - only the ones the loaded aircraft actually has data for
 let activeSectionId = null;
@@ -344,6 +352,7 @@ async function pollStatus() {
     const data = await res.json();
 
     updateDetectionIndicators(data);
+    dcsPaused = data.dcs_paused ?? null;
 
     if (data.aircraft !== lastAircraft) {
       lastAircraft = data.aircraft;
@@ -585,21 +594,38 @@ function formatLiveEvent(e) {
   return { time, cls: "", text: e.kind || "Event" };
 }
 
+// LED-style horizontal sports ticker (explicit user request, replacing the
+// old wrapping grid of cards) - a single line that scrolls continuously via
+// the #ops-events-track CSS animation (@keyframes ops-ticker-scroll in
+// machlink_aviation_v5.css), which only ever translates by exactly -50%.
+// Rendering the same card list TWICE back to back, concatenated in one
+// track, is what makes that loop seamless: the instant the first copy has
+// scrolled fully past, the second (identical) copy is sitting at the exact
+// start position, so the reset from -50% back to 0% is invisible - there's
+// no visible "snap" or gap the way a single un-duplicated copy would show.
 function renderLiveEvents(events) {
   if (!events.length) {
     opsEventsList.innerHTML = `<div class="ops-events-empty">No events yet this sortie.</div>`;
     return;
   }
-  // A wrapping row of compact cards (see .ops-event-card) rather than one
-  // full-width line per event - a short entry like "SHOT: AIM-120C" left
-  // most of the panel's width empty as a single-column list.
-  opsEventsList.innerHTML = events.slice().reverse().map((e) => {
+  // A real "•" span between cards (see .ops-event-sep's own comment in
+  // machlink_aviation_v5.css for why this isn't a CSS ::before instead),
+  // not before the very first card in the list.
+  const cardsHtml = events.slice().reverse().map((e, i) => {
     const { time, cls, text } = formatLiveEvent(e);
-    return `<div class="ops-event-card ${cls}">
+    const sep = i === 0 ? "" : `<span class="ops-event-sep">&bull;</span>`;
+    return `${sep}<div class="ops-event-card ${cls}">
       <span class="ops-event-time mono">${time}</span>
       <span class="ops-event-text">${escapeHtml(text)}</span>
     </div>`;
   }).join("");
+  // prefers-reduced-motion: reduce -> machlink_aviation_v5.css turns off
+  // #ops-events-track's animation entirely, so the duplicate copy would
+  // just sit there as static, confusing repeated content instead of
+  // serving its only purpose (a seamless loop point). Skipping it here
+  // keeps that case showing each real event exactly once.
+  const reducedMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  opsEventsList.innerHTML = `<div id="ops-events-track">${cardsHtml}${reducedMotion ? "" : cardsHtml}</div>`;
 }
 
 async function pollLiveEvents() {
@@ -1453,10 +1479,21 @@ function updateOpsSituationalAwareness(snapshot) {
   // exiting the aircraft (or closing DCS entirely) left every one of
   // these readouts frozen at their last real value, looking exactly like
   // live data (a real bug found live: fuel/heading still showing after
-  // leaving the aircraft). Treated the same as no data at all.
-  const fresh = available && !snapshot.stale;
+  // leaving the aircraft). Treated the same as no data at all - EXCEPT
+  // when DCS itself says it's paused (dcsPaused === true, from
+  // DCS.getPause() via dcs_export_hook.lua): the mission hook's own
+  // snapshot writer runs on sim-time (timer.scheduleFunction), which
+  // genuinely stops advancing while paused, so its 5s staleness window
+  // will always pass eventually during any real pause - eventhough
+  // you're still very much in the aircraft. Without this exception,
+  // simply pausing DCS blanked the entire Ops display (fuel, heading,
+  // loadout, threats, all of it) - a real bug found live. The Export
+  // hook's own signal keeps refreshing through a pause (see its comment),
+  // so dcsPaused itself is trustworthy even while this snapshot is stale.
+  const fresh = available && (!snapshot.stale || dcsPaused === true);
   const data = fresh ? (snapshot.data || {}) : null;
   const own = data && data.own && data.own.lat != null ? data.own : null;
+  mapPausedBadge.hidden = !(dcsPaused === true);
 
   // The map snapshot's own own/lat is a more reliable "are we actually in
   // a controlled unit" signal than the separate Export-hook telemetry
