@@ -93,6 +93,7 @@ const mapLegend = document.getElementById("map-legend");
 const mapPausedBadge = document.getElementById("map-paused-badge");
 const opsMissileWarning = document.getElementById("ops-missile-warning");
 const opsMissileWarningText = document.getElementById("ops-missile-warning-text");
+const missionLaunchIndicator = document.getElementById("mission-launch-indicator");
 const mapExpandBtn = document.getElementById("map-expand-btn");
 const mapPopoutOverlay = document.getElementById("map-popout-overlay");
 const mapPopoutBody = document.getElementById("map-popout-body");
@@ -639,7 +640,6 @@ function formatLiveEvent(e) {
 // by that description, so they're tracked for Debrief exactly as before
 // but no longer shown here).
 const MAJOR_EVENT_KINDS = new Set(["kill", "hit", "loss", "missile_launch_warning", "zone_capture"]);
-const CAROUSEL_INTERVAL_MS = 5000;
 let carouselEvents = [];
 let carouselIndex = 0;
 let carouselTimer = null;
@@ -669,11 +669,12 @@ function renderLiveEvents(events) {
   } else if (carouselIndex >= carouselEvents.length) {
     carouselIndex = 0; // the list shrank (older majors aged out of the 20-event window) past the current position
   }
-  renderCarouselCard();
-  restartCarouselTimer();
+  renderCarouselCard(); // schedules its own next advance internally now (dwell time depends on that specific card's own text length)
 }
 
 function renderCarouselCard() {
+  if (carouselTimer) clearTimeout(carouselTimer);
+  carouselTimer = null;
   if (!carouselEvents.length) {
     opsEventsList.innerHTML = `<div class="ops-events-empty">No major events yet this sortie.</div>`;
     return;
@@ -698,32 +699,78 @@ function renderCarouselCard() {
   opsEventsList.querySelectorAll(".ops-carousel-dot").forEach((dot) => {
     dot.addEventListener("click", () => {
       carouselIndex = Number(dot.dataset.index);
-      renderCarouselCard();
-      restartCarouselTimer(); // a manual jump gets its own full dwell time, not whatever was left on the interval that was already running
+      renderCarouselCard(); // a manual jump gets its own full dwell/scroll, not whatever was left on the previous card's timer
     });
   });
+  scheduleNextCarouselAdvance();
 }
 
-function restartCarouselTimer() {
-  if (carouselTimer) clearInterval(carouselTimer);
-  carouselTimer = null;
+// How fast the in-place scroll reveals hidden text, and the minimum time
+// any card (scrolling or not) stays up - explicit bug report: the old
+// fixed-width card just truncated ("...") anything too long to fit
+// instead of ever showing the rest of it. Text-overflow:ellipsis is gone
+// from .ops-event-text now (machlink_aviation_v5.css) - this measures the
+// REAL overflow in pixels and scrolls exactly that far, so the full text
+// is always eventually readable instead of silently cut off.
+const CAROUSEL_MIN_DWELL_MS = 5000;
+const CAROUSEL_SCROLL_PX_PER_SEC = 55;
+const CAROUSEL_SCROLL_END_HOLD_MS = 1200; // beat at the fully-scrolled position before advancing, so the tail end isn't just glimpsed then yanked away
+
+function scheduleNextCarouselAdvance() {
   // prefers-reduced-motion: reduce -> respected by simply never
-  // auto-advancing (stays on the newest major event) rather than
-  // animating between cards on a fixed interval - same accessibility
-  // exception the old marquee's own scrolling honored, adapted to this
-  // interaction model. Also paused, same as the marquee's own
-  // hover-to-pause, while the pointer is over the ticker (see the
-  // mouseenter/mouseleave listeners below) or there's nothing to cycle
-  // through.
+  // auto-advancing/auto-scrolling (stays on the newest major event, dots
+  // still clickable for manual paging) rather than animating on a timer -
+  // same accessibility exception the old marquee's own scrolling honored.
+  // Also skipped, same as the marquee's own hover-to-pause, while the
+  // pointer is over the ticker (see the mouseenter/mouseleave listeners
+  // below).
   const reducedMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  if (reducedMotion || carouselPaused || carouselEvents.length <= 1) return;
-  carouselTimer = setInterval(() => {
+  if (reducedMotion || carouselPaused) return;
+
+  let dwellMs = CAROUSEL_MIN_DWELL_MS;
+  let isScrolling = false;
+  const textEl = opsEventsList.querySelector(".ops-event-text");
+  if (textEl) {
+    // +2px slack against sub-pixel layout rounding falsely reading as
+    // "a little bit of overflow" on text that actually fits.
+    const overflowPx = textEl.scrollWidth - textEl.clientWidth - 2;
+    if (overflowPx > 0) {
+      const distance = overflowPx + 10; // a little past the last character, not stopping exactly flush with the viewport edge
+      const scrollDurationMs = Math.round((distance / CAROUSEL_SCROLL_PX_PER_SEC) * 1000);
+      textEl.style.setProperty("--scroll-distance", `-${distance}px`);
+      textEl.style.setProperty("--scroll-duration", `${scrollDurationMs}ms`);
+      textEl.classList.add("ops-text-scrolling");
+      dwellMs = Math.max(CAROUSEL_MIN_DWELL_MS, scrollDurationMs + CAROUSEL_SCROLL_END_HOLD_MS);
+      isScrolling = true;
+    }
+  }
+
+  if (carouselEvents.length <= 1) {
+    // Nothing to page to. A card whose text overflows still has to loop
+    // its own reveal (scroll to the end, hold, snap back to the start,
+    // repeat) - real bug caught in testing: this early-return used to
+    // fire before the overflow check ever ran, so the very first major
+    // event of a sortie (the single-card case, e.g. the first missile
+    // launch) would sit permanently clipped with no way to read the rest
+    // - exactly the "text cut short" report this whole rewrite exists to
+    // fix, just for the one-card carousel instead of the many-card one.
+    // A card that fits fully just sits still, same as before.
+    if (isScrolling) {
+      carouselTimer = setTimeout(() => {
+        textEl.classList.remove("ops-text-scrolling");
+        carouselTimer = setTimeout(scheduleNextCarouselAdvance, CAROUSEL_SCROLL_END_HOLD_MS);
+      }, dwellMs);
+    }
+    return;
+  }
+
+  carouselTimer = setTimeout(() => {
     carouselIndex = (carouselIndex + 1) % carouselEvents.length;
     renderCarouselCard();
-  }, CAROUSEL_INTERVAL_MS);
+  }, dwellMs);
 }
-opsEventsList.addEventListener("mouseenter", () => { carouselPaused = true; restartCarouselTimer(); });
-opsEventsList.addEventListener("mouseleave", () => { carouselPaused = false; restartCarouselTimer(); });
+opsEventsList.addEventListener("mouseenter", () => { carouselPaused = true; if (carouselTimer) clearTimeout(carouselTimer); carouselTimer = null; });
+opsEventsList.addEventListener("mouseleave", () => { carouselPaused = false; scheduleNextCarouselAdvance(); });
 
 // How long the banner stays up after a launch, once no NEWER launch event
 // has refreshed it - long enough to actually notice and react (a missile's
@@ -740,6 +787,14 @@ function updateMissileWarningBanner(events) {
   const recentLaunch = events
     .filter((e) => e.kind === "missile_launch_warning" && now - e.ts < MISSILE_WARNING_DISPLAY_SECONDS)
     .sort((a, b) => b.ts - a.ts)[0];
+  // Mission Info's own LAUNCH annunciator (explicit request: "a new bar
+  // in the Mission Info section that is just a Launch button that
+  // flashes red when an enemy has launched on you") - same underlying
+  // signal/same 15s window as the full-width banner below, just a
+  // second, always-present indicator (dim by default, .active flashes
+  // it) rather than an overlay that only exists while there's something
+  // to show, matching a real jet's RWR launch light more literally.
+  missionLaunchIndicator.classList.toggle("active", !!recentLaunch);
   if (!recentLaunch) {
     opsMissileWarning.hidden = true;
     return;
