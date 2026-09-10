@@ -64,8 +64,20 @@
      reference this instead of each hardcoding their own guess at
      header's height, which is exactly how they drifted out of sync
      before (header ended up ~85px tall in practice while #primary-nav
-     still assumed 74px, an 11px visible overlap between the two). */
-  --header-h: 78px;
+     still assumed 74px, an 11px visible overlap between the two).
+     92px, not the original 78px - #header-clock now stacks 3 real lines
+     (date/time/LOCAL) instead of 2, and header{align-items:stretch}
+     forces every header child's height to match this value exactly
+     regardless of what its own content needs (a real bug found live:
+     at a wide viewport, where #header-clock's own font-size clamps
+     reach their ceiling, the stretched box was shorter than its 3 lines
+     needed, and centered content with nowhere to go overflowed equally
+     top and bottom - the date rendering above the box's own background,
+     "LOCAL" below it, looking like they'd fallen outside the box
+     entirely because they had). Bumping this one shared value is enough
+     - nothing else needed a separate fix, that's the point of routing
+     every header-height-dependent value through it. */
+  --header-h: 98px;
   /* Same shared-variable idea as --header-h above, for the sidebar's
      width - #primary-nav's own `width` and #primary-content's
      `margin-left` (12px further out, matching the gap between them)
@@ -348,12 +360,12 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
 #header-clock {
   flex: 0 0 auto !important;
   min-width: clamp(120px, 10.5vw, 210px);
-  padding: clamp(6px, 0.7vw, 10px) clamp(14px, 1.8vw, 26px) !important;
+  padding: clamp(4px, 0.5vw, 7px) clamp(14px, 1.8vw, 26px) !important;
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
   justify-content: center !important;
-  gap: 2px !important;
+  gap: 1px !important;
 }
 #header-clock-date { font-family: var(--font-mono) !important; font-size: clamp(10px, 0.85vw, 13px) !important; color: var(--ink-faint) !important; }
 #header-clock-time { font-family: var(--font-mono) !important; font-size: clamp(18px, 1.7vw, 27px) !important; font-weight: 600 !important; letter-spacing: 0.02em !important; color: var(--signal) !important; text-shadow: 0 0 10px rgba(62, 224, 138, 0.55); }
