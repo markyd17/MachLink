@@ -883,7 +883,7 @@ async function loadPilotSummary() {
     cachedFlights = data.flights || [];
     renderPilotSummaryStats(data.summary);
     renderFlightRows(pilotSummaryFlightList, cachedFlights.slice(0, 5));
-    renderMissionRecentFlights(cachedFlights.slice(0, 5));
+    renderMissionRecentFlights(cachedFlights.slice(0, 4));
   } catch (e) {
     // transient - Hangar/Mission just keep showing whatever they last had
   }
