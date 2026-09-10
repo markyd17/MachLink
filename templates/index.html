@@ -227,6 +227,13 @@
           <section class="sub-panel ops-sitaware mission-map-col">
             <div class="ops-map-home" id="ops-map-home">
               <div id="map-controls-bar">
+                <!-- Real signal from DCS.getPause() (see
+                     dcs_export_hook.lua/updateOpsSituationalAwareness() in
+                     app.js) - shown whenever DCS itself reports paused, so
+                     a frozen map/readouts reads as "paused, still
+                     connected" instead of looking broken or like you've
+                     left the aircraft. -->
+                <span id="map-paused-badge" class="mono" hidden>⏸ PAUSED</span>
                 <!-- Live radius-to-edge of the current view, from actual
                      geodesic distance - updates on zoom/pan and every data
                      poll. Doubles as the mockup's "distance marker". -->
@@ -282,15 +289,17 @@
             <!-- FLIGHT DATA - live telemetry, the same real values the old
                  standalone strip above the tabs used to show, just moved
                  into this card (identical ids, so app.js's existing
-                 update logic is untouched). VS/G-Force have no field
-                 anywhere in dcs_export_hook.lua's telemetry - permanent,
-                 honest "--", never invented. OAT/Wind come from the
-                 mission file's own authored weather (renderDcsBriefing()
-                 in app.js), so they're real but only update once per
-                 mission, not tick-by-tick like the rest of this card. -->
+                 update logic is untouched). VS/G-Force were removed
+                 (explicit user request) since dcs_export_hook.lua's
+                 telemetry has no field for either - they only ever showed
+                 a permanent, honest "--", never real data. OAT/Wind come
+                 from the mission file's own authored weather
+                 (renderDcsBriefing() in app.js), so they're real but only
+                 update once per mission, not tick-by-tick like the rest
+                 of this card. -->
             <section class="sub-panel mission-card mission-flightdata-card">
               <h2 class="panel-title">Flight Data</h2>
-              <div class="data-grid mono cols-4">
+              <div class="data-grid mono cols-3">
                 <div class="data-cell"><div class="data-label">Altitude</div><div class="data-value" id="ops-altitude-value">&mdash;</div></div>
                 <div class="data-cell"><div class="data-label">IAS</div><div class="data-value" id="ops-speed-value">&mdash;</div></div>
                 <div class="data-cell"><div class="data-label">HDG</div><div class="data-value" id="ops-heading-value">&mdash;</div></div>
@@ -299,8 +308,6 @@
                   <div class="data-value" id="ops-fuel-value">&mdash;</div>
                   <div class="mission-fuel-bar"><div class="mission-fuel-bar-fill" id="ops-fuel-bar-fill" style="width:0%"></div></div>
                 </div>
-                <div class="data-cell"><div class="data-label">VS</div><div class="data-value ink-faint">--</div></div>
-                <div class="data-cell"><div class="data-label">G-Force</div><div class="data-value ink-faint">--</div></div>
                 <div class="data-cell"><div class="data-label">OAT</div><div class="data-value" id="ops-oat-value">&mdash;</div></div>
                 <div class="data-cell"><div class="data-label">Wind</div><div class="data-value" id="ops-wind-value">&mdash;</div></div>
               </div>

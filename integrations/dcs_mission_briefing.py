@@ -32,6 +32,27 @@ from pathlib import Path
 # since dcs.log lives under the same per-install Saved Games folder.
 _DCS_VARIANTS = ("DCS", "DCS.openbeta", "DCS.openbeta_server", "DCS.release_server")
 
+# Temporary diagnostic logging for the "Start Time never populates"
+# investigation - _lua_number's unscoped re.search over the WHOLE mission
+# file (unlike every other _lua_number call here, which is scoped to a
+# specific already-extracted sub-table like ["weather"]) risks matching an
+# unintended ["start_time"] occurrence, or none at all, in a real mission's
+# Lua - and no sample .miz exists in this repo to verify against. This logs
+# what the parser actually saw on the next real mission load so a genuine
+# fix can be made instead of a guess. Safe to delete this file any time;
+# it's recreated as needed. Same best-effort pattern as dcs_listener.py's
+# own DEBUG_LOG_PATH.
+_DEBUG_LOG_PATH = Path(__file__).parent.parent / "data" / "mission_briefing_debug.log"
+
+
+def _debug_log(line):
+    try:
+        _DEBUG_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
+        with open(_DEBUG_LOG_PATH, "a", encoding="utf-8") as f:
+            f.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} {line}\n")
+    except OSError:
+        pass  # diagnostic logging is best-effort - never worth crashing over
+
 _MISSION_LOAD_RE = re.compile(
     r'loading mission from:\s*"([^"]+\.miz)"|loadMission\s+(\S.*?\.miz)\s*$'
 )
@@ -121,7 +142,12 @@ def _lua_subtable(text, key):
 
 
 def _lua_number(text, key):
-    m = re.search(r'\["' + re.escape(key) + r'"\]\s*=\s*(-?[\d.]+)', text)
+    # Number pattern widened to accept scientific notation (e.g.
+    # "4.32e+04") on top of plain decimals - a strict superset of the old
+    # pattern, so this can't newly fail to match anything that used to
+    # match; only helps if a real mission's Lua serializer ever emits a
+    # value that way.
+    m = re.search(r'\["' + re.escape(key) + r'"\]\s*=\s*(-?[\d.]+(?:[eE][+-]?\d+)?)', text)
     return float(m.group(1)) if m else None
 
 
@@ -224,19 +250,44 @@ def parse_mission_briefing(miz_path):
         if 1 <= month <= 12:
             date_str = f"{day:02d} {_MONTH_ABBR[month]} {year}"
 
-    # ["start_time"] is a top-level field in every mission (seconds since
-    # midnight, mission-local time) - real authored data, not derived or
-    # guessed, same "send a ready-to-render value" pattern as weather's
-    # unit conversions below. Same single-regex-match approach already
-    # used for date/theatre above, so it'll pick up the first
-    # ["start_time"] in the file - fine in practice (this key isn't reused
-    # elsewhere in a mission the way something more generic like "name"
-    # would be), but flag it if a real mission ever proves otherwise.
-    start_time_seconds = _lua_number(mission_text, "start_time")
+    # ["start_time"] (seconds since midnight, mission-local time) turned
+    # out NOT to be the rarely-reused field this comment used to assume -
+    # confirmed live (see _DEBUG_LOG_PATH's own log from a real mission)
+    # against a real Quick Mission Builder .miz with 51 occurrences: the
+    # SAME key name DCS writes on every unit GROUP for that group's own
+    # spawn delay in seconds (almost always 0 - "spawn immediately"), and
+    # the OLD unscoped _lua_number() call here was matching the FIRST of
+    # those 50 nested group fields (giving a bogus but plausible-looking
+    # "00:00") instead of the one real mission-level value, which sat 50
+    # matches later in the file - this is exactly what "the start time
+    # never kicks off" was actually describing. What distinguishes them:
+    # every root-level field in a real DCS mission file (this one's own
+    # ["date"]/["theatre"]/etc. included) sits at exactly one tab of Lua
+    # table nesting, while a group's own start_time is buried 8 tabs deep
+    # - anchoring the match to "exactly one leading tab on its own line"
+    # is what actually targets the mission-level field instead of a
+    # group's. No fallback to the old unscoped match on a miss - a wrong
+    # group's spawn delay presented as the mission's start time is worse
+    # than an honest "NA".
+    root_start_time_match = re.search(
+        r'(?m)^\t\["start_time"\]\s*=\s*(-?[\d.]+(?:[eE][+-]?\d+)?)', mission_text
+    )
+    start_time_seconds = float(root_start_time_match.group(1)) if root_start_time_match else None
     start_time_of_day = None
     if start_time_seconds is not None:
         total_minutes = int(start_time_seconds // 60) % (24 * 60)
         start_time_of_day = f"{total_minutes // 60:02d}:{total_minutes % 60:02d}"
+    # See _DEBUG_LOG_PATH above - logs every real mission load (not just
+    # failures) with how many ["start_time"] occurrences the file actually
+    # has (nested group fields included) and what the depth-anchored match
+    # above actually landed on, so a mission that somehow doesn't follow
+    # this same one-tab-of-indentation convention is still visible instead
+    # of silently showing "NA" with no trace of why.
+    occurrences = len(re.findall(r'\["start_time"\]\s*=', mission_text))
+    _debug_log(
+        f"start_time: miz={miz_path} occurrences={occurrences} "
+        f"parsed_seconds={start_time_seconds!r} parsed_local={start_time_of_day!r}"
+    )
 
     return {
         "sortie": _resolve(mission_text, dictionary_text, "sortie"),

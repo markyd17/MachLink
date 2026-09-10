@@ -34,12 +34,33 @@ MachLink.lastSentModelTime = 0
 -- immediately, same as before this feature existed.
 MachLink.telemetryIntervalSeconds = 2.0
 
+-- DCS.getPause() is a real, documented Export-API function (available on
+-- modern DCS) - Export callbacks (LuaExportActivityNextEvent/
+-- LuaExportStart) keep firing on the render loop even while the sim is
+-- paused (position/telemetry just stop changing, since LoGetSelfData()
+-- etc. report the frozen state), unlike mission-side scripting
+-- (timer.scheduleFunction, which the mission hook's own snapshot writer
+-- uses) - THAT genuinely stops advancing during a pause, which is the
+-- real cause of a paused game going stale after ~5s and the frontend
+-- treating it as "you left the aircraft" (a real bug found live: pausing
+-- DCS blanked the whole Ops display, fuel/heading/loadout and all).
+-- Wrapped in pcall since DCS.getPause() might not exist on an older DCS
+-- version - paused just stays nil/omitted then, same graceful-degradation
+-- pattern as every other DCS API call in this file.
+local function ml_is_paused()
+    local ok, paused = pcall(function() return DCS.getPause() end)
+    if ok then return paused end
+    return nil
+end
+
 local function ml_send(aircraftName, agl, vel, vy)
     local ok, err = pcall(function()
         local msg = '{"game":"dcs","aircraft":"' .. tostring(aircraftName) .. '"'
         if agl ~= nil then msg = msg .. ',"agl":' .. tostring(agl) end
         if vel ~= nil then msg = msg .. ',"vel":' .. tostring(vel) end
         if vy ~= nil then msg = msg .. ',"vy":' .. tostring(vy) end
+        local paused = ml_is_paused()
+        if paused ~= nil then msg = msg .. ',"paused":' .. tostring(paused) end
         msg = msg .. '}'
         MachLink.udp:sendto(msg, "127.0.0.1", MachLink.port)
     end)

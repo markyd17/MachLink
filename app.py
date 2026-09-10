@@ -65,6 +65,13 @@ class AppState:
         # after you exit - a real bug found live (fuel/heading still
         # showing on Ops while not even in a mission).
         self.last_game_signal_at = None
+        # True/False from DCS.getPause() (see dcs_export_hook.lua), None if
+        # unknown (no signal yet, or an older DCS without that API) - used
+        # to tell the frontend a frozen map/Ops display is a deliberate
+        # pause (real, still-connected, values just aren't changing) rather
+        # than treating any staleness as "you left the aircraft" and
+        # blanking everything (a real bug found live).
+        self.dcs_paused = None
         self.msfs_available = False
         self.msfs_error = None
         self.dcs_hook = None
@@ -158,6 +165,7 @@ def api_status():
     with state.lock:
         game, aircraft = state.game, state.aircraft
         last_signal_at = state.last_game_signal_at
+        dcs_paused = state.dcs_paused
         msfs_available, msfs_error = state.msfs_available, state.msfs_error
         dcs_hook = state.dcs_hook
         dcs_mission_hook = state.dcs_mission_hook
@@ -171,12 +179,18 @@ def api_status():
     fresh = last_signal_at is not None and (time.time() - last_signal_at) <= GAME_SIGNAL_STALE_SECONDS
     if not fresh:
         game, aircraft = None, None
+        dcs_paused = None
 
     aircraft_data = load_aircraft_file(aircraft, game) if aircraft else None
     return jsonify({
         "game": game,
         "aircraft": aircraft,
         "aircraft_data_loaded": aircraft_data is not None,
+        # Real signal from DCS.getPause() (see dcs_export_hook.lua) - lets
+        # the frontend tell "paused, still connected, frozen on purpose"
+        # apart from "actually disconnected" instead of blanking the whole
+        # Ops display either way.
+        "dcs_paused": dcs_paused,
         "msfs_connection": {"available": msfs_available, "error": msfs_error},
         "dcs_hook": dcs_hook,
         "dcs_mission_hook": dcs_mission_hook,
