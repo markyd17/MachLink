@@ -873,22 +873,18 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
   box-shadow: var(--btn-selected-shadow) !important;
 }
 #map-viewport { min-height: 0 !important; }
-/* Was saturate/contrast/brightness (darkening Esri's light, busy World
-   Topo Map just enough to fit the avionics theme without actually
-   inverting it) - replaced along with the basemap itself (see
-   ensureLeafletMap() in app.js) with plain OpenStreetMap tiles, which
-   are light-colored with no dark variant available key-free. invert(1)
-   flips light-background-dark-text to dark-background-light-text (the
-   standard trick for adapting a light map to a dark theme);
-   hue-rotate(180deg) after it un-inverts color HUE specifically so
-   roads/water/parks don't come out looking like a color-negative photo
-   (blue water would otherwise invert to a jarring orange) while the
-   background/text inversion itself is kept; brightness/contrast tuned
-   down slightly so the result reads as "dark map," not "harsh photo
-   negative." This filters marker icons/popups too (unchanged from
-   before), so those inherit the same visual treatment as the tiles
-   underneath them rather than floating on top unfiltered. */
-#map-leaflet { filter: invert(1) hue-rotate(180deg) brightness(0.85) contrast(0.9) !important; }
+/* No filter here any more - went saturate/contrast/brightness (Esri
+   World Topo, light+busy) -> invert+hue-rotate (plain OpenStreetMap,
+   light with no dark variant available key-free, plus a real regression
+   that pass didn't catch: OSM's raw labels render in whatever local
+   script the region actually uses - Cyrillic, Arabic, etc, not English)
+   -> Esri's "Dark Gray Canvas" (see ensureLeafletMap() in app.js), which
+   is genuinely dark from the source AND uses Esri's own standardized
+   English labels. Nothing left to correct - friendly/detected marker
+   colors (#1E88E5/#E53935) already read clearly against a dark basemap
+   on their own, which is what actually made the earlier filters'
+   "filters markers too" side effect a real tradeoff worth noting each
+   time, not a free lunch. */
 /* Legend swatch for the SAM engagement ring (addSamRangeRing() in
    app.js) - same dashed-amber-outline look as the real ring, just a
    small hollow circle instead of .map-legend-color-dot's solid filled
