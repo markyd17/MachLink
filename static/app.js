@@ -62,7 +62,6 @@ const opsWindValue = document.getElementById("ops-wind-value");
 const missionNameValue = document.getElementById("mission-name-value");
 const missionAircraftValue = document.getElementById("mission-aircraft-value");
 const missionStartTimeValue = document.getElementById("mission-start-time-value");
-const missionInfoStatusLed = document.getElementById("mission-info-status-led");
 const missionInfoStatusValue = document.getElementById("mission-info-status-value");
 const missionAircraftName = document.getElementById("mission-aircraft-name");
 const missionAircraftEmpty = document.getElementById("mission-aircraft-empty");
@@ -442,9 +441,10 @@ async function pollDebriefStatus() {
     missionStatusValue.textContent = missionActive ? "IN PROGRESS" : "—";
     missionStatusValue.className = missionActive ? "status-block dcs mono" : "status-block idle mono";
     // Mission Info card's Status field - same signal as the header's
-    // MISSION pill above, not a second independent guess.
+    // MISSION pill above, not a second independent guess. Plain
+    // .data-value styling (no LED, no idle/dcs color switch) to match
+    // Mission Name/Aircraft/Start Time exactly, per explicit request.
     missionInfoStatusValue.textContent = missionActive ? "IN PROGRESS" : "NOT STARTED";
-    missionInfoStatusValue.className = missionActive ? "status-block dcs mono" : "status-block idle mono";
     if (data.altitude_ft != null) setDialValue(opsAltitudeValue, data.altitude_ft.toLocaleString(), "FT");
     else opsAltitudeValue.textContent = "—";
     if (data.speed_kt != null) setDialValue(opsSpeedValue, data.speed_kt, "KT");
