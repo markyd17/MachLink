@@ -138,6 +138,22 @@ def _dispatch(payload, flight_tracker, live_events):
     elif kind == "gun_start":
         flight_tracker.on_gun_start(weapon_type=payload.get("weaponType"))
         live_events.add("gun_start", weapon=payload.get("weaponType"))
+    elif kind == "missile_launch_warning":
+        # Real-time "something is guided at you right now" - not fed into
+        # flight_tracker (that's for the eventual Debrief report; this is
+        # purely a live warning, and whatever actually happens next - a
+        # hit, a miss, nothing - is already covered by the existing hit/
+        # dead/crash/ejected events on their own). live_events alone is
+        # enough here: app.js's own poll of /api/live_events (already
+        # running every ~3s whenever DCS is detected) is what the
+        # frontend's prominent warning banner keys off of directly,
+        # rather than a second dedicated endpoint/poll loop for one event
+        # kind.
+        live_events.add(
+            "missile_launch_warning", relation=payload.get("shooterRelation"),
+            category=payload.get("shooterCategory"), name=payload.get("shooterName"),
+            weapon=payload.get("weaponType"),
+        )
 
 
 def start_combat_event_listener(flight_tracker, live_events, explicit_path=None, poll_interval_seconds=0.5):

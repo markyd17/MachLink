@@ -665,7 +665,9 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
    there's nothing left needing to scroll at any realistic window size.
    overflow:hidden stays only as a silent last-resort clip for a
    genuinely extreme window, never a visible scrollbar. */
-#ops-tab-mission { display: flex !important; flex-direction: column !important; gap: clamp(6px, min(1vw, 0.56vh), 10px) !important; overflow: hidden !important; }
+/* position:relative added for .ops-missile-warning's own absolute
+   positioning (see that rule's comment) - nothing else here changes. */
+#ops-tab-mission { display: flex !important; flex-direction: column !important; gap: clamp(6px, min(1vw, 0.56vh), 10px) !important; overflow: hidden !important; position: relative !important; }
 #ops-tab-mission[hidden] { display: none !important; }
 .ops-tab-panel[hidden] { display: none !important; }
 
@@ -871,7 +873,35 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
   box-shadow: var(--btn-selected-shadow) !important;
 }
 #map-viewport { min-height: 0 !important; }
-#map-leaflet { filter: saturate(.72) contrast(1.05) brightness(.72) !important; }
+/* Was saturate/contrast/brightness (darkening Esri's light, busy World
+   Topo Map just enough to fit the avionics theme without actually
+   inverting it) - replaced along with the basemap itself (see
+   ensureLeafletMap() in app.js) with plain OpenStreetMap tiles, which
+   are light-colored with no dark variant available key-free. invert(1)
+   flips light-background-dark-text to dark-background-light-text (the
+   standard trick for adapting a light map to a dark theme);
+   hue-rotate(180deg) after it un-inverts color HUE specifically so
+   roads/water/parks don't come out looking like a color-negative photo
+   (blue water would otherwise invert to a jarring orange) while the
+   background/text inversion itself is kept; brightness/contrast tuned
+   down slightly so the result reads as "dark map," not "harsh photo
+   negative." This filters marker icons/popups too (unchanged from
+   before), so those inherit the same visual treatment as the tiles
+   underneath them rather than floating on top unfiltered. */
+#map-leaflet { filter: invert(1) hue-rotate(180deg) brightness(0.85) contrast(0.9) !important; }
+/* Legend swatch for the SAM engagement ring (addSamRangeRing() in
+   app.js) - same dashed-amber-outline look as the real ring, just a
+   small hollow circle instead of .map-legend-color-dot's solid filled
+   one, so the legend entry actually reads as "a ring," not another
+   solid-color contact dot. */
+.map-legend-ring-swatch {
+  width: clamp(9px, 0.75vw, 13px) !important;
+  height: clamp(9px, 0.75vw, 13px) !important;
+  border-radius: 50% !important;
+  border: 1.5px dashed #ffb020 !important;
+  display: inline-block !important;
+  box-sizing: border-box !important;
+}
 #map-legend {
   background: rgba(6,10,9,.82) !important;
   backdrop-filter: blur(4px);
@@ -961,6 +991,54 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
   background: var(--threat-soft) !important;
   color: var(--threat) !important;
   font-family: var(--font-mono) !important;
+}
+
+/* Same red threat language as .ops-threat-alert above, but a full-width
+   flashing banner rather than quiet colored text - a real launch warning
+   is the one thing on this whole tab that should be impossible to miss
+   at a glance, the way a real RWR launch light doesn't just tint the
+   panel. position:absolute (a first pass used normal flex flow instead,
+   with margin-bottom pushing .mission-top-row down - a real, measured
+   42px of new #ops-tab-mission overflow at 1366x768 the moment it
+   appeared, since every row below it was already using its full height
+   budget with nothing to spare) - overlaid on top of the map instead, so
+   showing it can never itself cause the exact "no overlap, ever"
+   overflow this file's whole history keeps guarding against. Genuinely
+   matches how a real HUD/RWR warning behaves too - it overlays the
+   display, it doesn't resize the cockpit around itself. */
+.ops-missile-warning {
+  position: absolute !important;
+  top: 8px !important;
+  left: 8px !important;
+  right: 8px !important;
+  z-index: 200 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: clamp(5px, 0.8vh, 9px) 12px !important;
+  border: 1px solid rgba(255,77,77,.6) !important;
+  border-radius: var(--radius-sm) !important;
+  background: var(--threat-soft) !important;
+  color: var(--threat) !important;
+  font-family: var(--font-display) !important;
+  font-weight: 700 !important;
+  letter-spacing: .06em !important;
+  text-transform: uppercase !important;
+  font-size: clamp(11px, 1.3vh, 15px) !important;
+  box-shadow: 0 4px 16px rgba(0,0,0,.5) !important;
+  animation: ops-missile-warning-flash 0.9s ease-in-out infinite !important;
+}
+.ops-missile-warning[hidden] { display: none !important; }
+@keyframes ops-missile-warning-flash {
+  0%, 100% { background: var(--threat-soft); box-shadow: none; }
+  50% { background: rgba(255,77,77,.28); box-shadow: 0 0 12px rgba(255,77,77,.5); }
+}
+/* Respect the same accessibility preference the ticker's own marquee
+   already does - a flashing banner is exactly the kind of motion
+   prefers-reduced-motion exists to suppress. Still just as visible
+   (solid red background, not a dim static state), just not animated. */
+@media (prefers-reduced-motion: reduce) {
+  .ops-missile-warning { animation: none !important; background: rgba(255,77,77,.28) !important; }
 }
 
 /* Make briefing content read like a mission card. */
@@ -1304,6 +1382,19 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
 .ops-event-card.ops-event-loss .ops-event-text {
   color: var(--threat) !important;
   text-shadow: 0 0 5px rgba(255,77,77,.8), 0 0 14px rgba(255,77,77,.4) !important;
+}
+/* Same red as hit/loss (this is at least as urgent - unlike those, it's
+   still actionable, not a past event) plus a slow pulse so it stands out
+   from a static ticker line while it's scrolling past, matching how a
+   real launch-warning indicator reads as "active," not just logged. */
+.ops-event-card.ops-event-launch .ops-event-text {
+  color: var(--threat) !important;
+  text-shadow: 0 0 5px rgba(255,77,77,.8), 0 0 14px rgba(255,77,77,.4) !important;
+  animation: ops-launch-pulse 1.1s ease-in-out infinite !important;
+}
+@keyframes ops-launch-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .55; }
 }
 .ops-event-card.ops-event-shot .ops-event-text {
   color: var(--amber) !important;

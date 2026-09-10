@@ -91,6 +91,8 @@ const mapRangeLabel = document.getElementById("map-range-label");
 const mapKeyToggle = document.getElementById("map-key-toggle");
 const mapLegend = document.getElementById("map-legend");
 const mapPausedBadge = document.getElementById("map-paused-badge");
+const opsMissileWarning = document.getElementById("ops-missile-warning");
+const opsMissileWarningText = document.getElementById("ops-missile-warning-text");
 const mapExpandBtn = document.getElementById("map-expand-btn");
 const mapPopoutOverlay = document.getElementById("map-popout-overlay");
 const mapPopoutBody = document.getElementById("map-popout-body");
@@ -596,6 +598,10 @@ function formatLiveEvent(e) {
     const desc = describeActor(e) || "unknown source";
     return { time, cls: "ops-event-hit", text: `HIT TAKEN from ${desc}` };
   }
+  if (e.kind === "missile_launch_warning") {
+    const desc = describeActor(e) || "unknown launcher";
+    return { time, cls: "ops-event-launch", text: `⚠ MISSILE LAUNCH: ${desc}` };
+  }
   if (e.kind === "loss") {
     const desc = describeActor(e);
     const verb = e.loss_kind === "dead" ? "SHOT DOWN" : e.loss_kind === "ejected" ? "EJECTED" : "CRASHED";
@@ -614,6 +620,13 @@ function formatLiveEvent(e) {
 // start position, so the reset from -50% back to 0% is invisible - there's
 // no visible "snap" or gap the way a single un-duplicated copy would show.
 function renderLiveEvents(events) {
+  // Called unconditionally, before the empty-events early return below -
+  // a fresh birth/respawn clears live_events back to [] server-side (see
+  // LiveEventStore's own docstring), and without this here first, a
+  // banner left over from the PREVIOUS life would never get told to hide
+  // (a real bug caught before it shipped: the early return skipped this
+  // call entirely whenever events was empty).
+  updateMissileWarningBanner(events);
   if (!events.length) {
     opsEventsList.innerHTML = `<div class="ops-events-empty">No events yet this sortie.</div>`;
     return;
@@ -636,6 +649,30 @@ function renderLiveEvents(events) {
   // keeps that case showing each real event exactly once.
   const reducedMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   opsEventsList.innerHTML = `<div id="ops-events-track">${cardsHtml}${reducedMotion ? "" : cardsHtml}</div>`;
+}
+
+// How long the banner stays up after a launch, once no NEWER launch event
+// has refreshed it - long enough to actually notice and react (a missile's
+// own flight time is often well under this for a short-range shot), short
+// enough that it doesn't sit there falsely implying "still incoming" for a
+// missile that hit, missed, or was defeated minutes ago. Purely a display
+// window, not DCS telling us the missile is gone - there's no real "the
+// threat has ended" signal to read from the API, so this is an honest
+// timeout, not a guess dressed up as knowledge.
+const MISSILE_WARNING_DISPLAY_SECONDS = 15;
+
+function updateMissileWarningBanner(events) {
+  const now = Date.now() / 1000;
+  const recentLaunch = events
+    .filter((e) => e.kind === "missile_launch_warning" && now - e.ts < MISSILE_WARNING_DISPLAY_SECONDS)
+    .sort((a, b) => b.ts - a.ts)[0];
+  if (!recentLaunch) {
+    opsMissileWarning.hidden = true;
+    return;
+  }
+  const desc = describeActor(recentLaunch) || "unknown launcher";
+  opsMissileWarningText.textContent = `MISSILE LAUNCH DETECTED — ${desc}`;
+  opsMissileWarning.hidden = false;
 }
 
 async function pollLiveEvents() {
@@ -1167,19 +1204,41 @@ function buildMapLegend() {
     <div class="map-legend-row map-legend-color-row">
       <span class="map-legend-swatch"><span class="map-legend-color-dot" style="background:#E53935;"></span></span><span>DETECTED</span>
     </div>
+    <div class="map-legend-row map-legend-color-row">
+      <span class="map-legend-swatch"><span class="map-legend-ring-swatch"></span></span><span>SAM RANGE (EST.)</span>
+    </div>
   `;
 }
 
-// Esri's World Topo Map, not plain OSM tiles - real terrain relief/
-// contour shading (DCS's own maps are terrain-heavy, so this reads much
-// closer to "a real map" than a flat street layer), and its place names
-// are Esri's own standardized English labels rather than raw OSM `name`
-// tags, which for a region like the Caucasus are often local-script only.
+// Plain OpenStreetMap standard tiles - replaced Esri's World Topo Map
+// here (explicit user feedback: "too hard to read and just plain ugly").
+// Esri Topo is a light, visually busy contour-shaded map, THEN darkened/
+// desaturated further by #map-leaflet's own CSS filter (machlink_
+// aviation_v5.css) to fit the avionics theme - stacking a heavy filter on
+// top of an already-detailed light basemap is exactly what made small
+// labels/roads hard to pick out. CARTO's Dark Matter tiles (genuinely
+// dark from the source) were tried first and looked right in an isolated
+// fetch test, but actually loading them into the live map showed a real
+// "API KEY REQUIRED" watermark baked into the tiles - their free
+// anonymous tier turned out to need a registered domain now, not just an
+// unauthenticated request succeeding. OSM's own standard tile server has
+// no such key/domain mechanic at all - the #map-leaflet CSS filter
+// (still needed here, unlike the Dark Matter attempt) does an invert +
+// hue-rotate to turn its light base dark instead, a well-known technique
+// for adapting a light-styled map to a dark theme. Also genuinely global
+// (real OpenStreetMap coverage) - covers every DCS theater (Caucasus,
+// Syria, Persian Gulf, Nevada, Normandy, Marianas, Sinai, Channel) the
+// same way, all real places DCS's own terrains are modeled on, with zero
+// per-theater setup. Free tile service, same "public tiles + attribution"
+// legal footing Esri's was on - not DCS's own copyrighted map assets
+// (see this session's own research: extracting those raised real EULA
+// concerns, so deliberately avoided instead of attempted).
 function ensureLeafletMap() {
   if (leafletMap) return;
   leafletMap = L.map(mapLeafletDiv, { center: [0, 0], zoom: 11 });
-  L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}", {
-    attribution: "Tiles &copy; Esri",
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution: "&copy; OpenStreetMap contributors",
+    subdomains: "abc",
     maxZoom: 19,
   }).addTo(leafletMap);
   dynamicLayer = L.layerGroup().addTo(leafletMap);
@@ -1211,6 +1270,85 @@ function addDynamicMarker(latlng, icon, popupHtml) {
     marker.on("popupclose", () => { openDynamicPopupCount = Math.max(0, openDynamicPopupCount - 1); });
   }
   return marker.addTo(dynamicLayer);
+}
+
+// SAM engagement range rings - explicit user request (inspired by DCS
+// MovingMap's own "engagement range circles centered on active SAM
+// launchers"). A deliberate exception to findSamThreats()'s own stricter
+// rule just above ("this app never asserts a number it can't back with
+// real data" - DCS's API has no per-SAM-type engagement envelope to
+// read) - unlike distance-to-contact, an engagement range genuinely
+// isn't something DCS's scripting API exposes at all, so the only way to
+// show one is a curated reference table, not a compromise on that rule
+// out of laziness. Ranges below are real-world PUBLISHED approximate max
+// engagement envelopes (commonly cited figures, e.g. Jane's/open-source
+// references) for each system's most capable missile - NOT pulled from
+// DCS, and DCS's own in-game modeling can differ from real-world specs
+// for game balance. Matched by SUBSTRING against the unit's real DCS
+// typeName (case-insensitive), not an exact-string table - DCS's unit
+// typeName strings for these systems haven't been confirmed against a
+// live session (no way to verify without one), so substring matching on
+// the recognizable system name (e.g. "kub", "buk", "s-300") is more
+// robust to an exact naming/casing detail being off than a brittle exact
+// match that could silently match nothing. A type matching none of these
+// just gets no ring at all - never a guessed default range.
+const SAM_ENGAGEMENT_RANGES_M = [
+  { match: "s-300", label: "S-300", rangeM: 75000 },
+  { match: "5p85", label: "S-300", rangeM: 75000 },
+  { match: "patriot", label: "Patriot", rangeM: 70000 },
+  { match: "buk", label: "SA-11 Buk", rangeM: 35000 },
+  { match: "s-75", label: "SA-2 Guideline", rangeM: 45000 },
+  { match: "sa-2", label: "SA-2 Guideline", rangeM: 45000 },
+  { match: "hawk", label: "MIM-23 Hawk", rangeM: 40000 },
+  { match: "nasams", label: "NASAMS", rangeM: 25000 },
+  { match: "s-125", label: "SA-3 Goa", rangeM: 25000 },
+  { match: "sa-3", label: "SA-3 Goa", rangeM: 25000 },
+  { match: "kub", label: "SA-6 Gainful", rangeM: 24000 },
+  { match: "2k12", label: "SA-6 Gainful", rangeM: 24000 },
+  { match: "tor", label: "SA-15 Gauntlet", rangeM: 12000 },
+  { match: "osa", label: "SA-8 Gecko", rangeM: 15000 },
+  { match: "roland", label: "Roland", rangeM: 8000 },
+  { match: "rapier", label: "Rapier", rangeM: 8000 },
+  { match: "tunguska", label: "SA-19 Grison", rangeM: 8000 },
+  { match: "2s6", label: "SA-19 Grison", rangeM: 8000 },
+  { match: "strela-10", label: "SA-13 Gopher", rangeM: 5000 },
+  { match: "avenger", label: "Avenger", rangeM: 5000 },
+];
+
+function samEngagementRangeM(typeName) {
+  if (!typeName) return null;
+  const lower = typeName.toLowerCase();
+  const entry = SAM_ENGAGEMENT_RANGES_M.find((e) => lower.includes(e.match));
+  return entry || null;
+}
+
+// Same amber/threat visual language as .ops-threat-alert - a filled ring
+// would obscure everything under it on a busy map, so just the outline
+// plus a very faint fill (enough to read as a zone, not enough to hide
+// contacts inside it).
+function addSamRangeRing(lat, lon, typeName) {
+  const entry = samEngagementRangeM(typeName);
+  if (!entry) return;
+  L.circle([lat, lon], {
+    radius: entry.rangeM,
+    color: "#ffb020",
+    weight: 1.5,
+    opacity: 0.7,
+    fillColor: "#ffb020",
+    fillOpacity: 0.05,
+    dashArray: "4 4",
+    // Non-interactive - a real engagement ring can span tens of km, so
+    // making the whole disc clickable would swallow clicks anywhere near
+    // the SAM instead of reaching its actual marker underneath. That
+    // also means a tooltip bound to hover would never fire (interactive:
+    // false sets pointer-events:none on the SVG path) - a first pass
+    // tried that anyway, dead code that could never show (caught by
+    // checking the actual DOM, not just "it compiled"). The range/label
+    // text lives in the SAM marker's own popup instead (see the caller
+    // below) - still reachable, just via the actual small icon rather
+    // than the whole ring.
+    interactive: false,
+  }).addTo(dynamicLayer);
 }
 
 function updateMapMarkers(snapshot) {
@@ -1275,8 +1413,17 @@ function updateMapMarkers(snapshot) {
     // hook). Never a raw dump of every enemy unit in the mission.
     (data.detected || []).forEach((u) => {
       if (u.lat == null || u.lon == null) return;
-      addDynamicMarker([u.lat, u.lon], makeMapIcon(shapeForUnit(u), "#E53935", u.heading),
-        escapeHtml(u.type || "Contact"));
+      // Estimated engagement range folded into the SAM's own popup text
+      // (reachable by clicking its actual icon) rather than a tooltip on
+      // the ring itself - see addSamRangeRing()'s own comment for why
+      // that can't work on a non-interactive ring.
+      let popupText = escapeHtml(u.type || "Contact");
+      if (u.categoryDetail === "sam") {
+        const range = samEngagementRangeM(u.type);
+        if (range) popupText += `<br><span class="mono">est. engagement range: ${Math.round(range.rangeM / 1852)} NM</span>`;
+        addSamRangeRing(u.lat, u.lon, u.type);
+      }
+      addDynamicMarker([u.lat, u.lon], makeMapIcon(shapeForUnit(u), "#E53935", u.heading), popupText);
     });
 
     // Airbases - color by actual friend/foe, shape by airdrome/ship/helipad
