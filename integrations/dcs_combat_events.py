@@ -106,7 +106,7 @@ def _dispatch(payload, flight_tracker, live_events):
         live_events.add(
             "loss", loss_kind=kind, relation=payload.get("shooterRelation"),
             category=payload.get("shooterCategory"), name=payload.get("shooterName"),
-            weapon=payload.get("weaponType"),
+            weapon=payload.get("weaponType"), player_name=payload.get("shooterPlayerName"),
         )
     elif kind == "hit":
         flight_tracker.on_hit(
@@ -118,6 +118,7 @@ def _dispatch(payload, flight_tracker, live_events):
         live_events.add(
             "hit", relation=payload.get("shooterRelation"), category=payload.get("shooterCategory"),
             name=payload.get("shooterName"), weapon=payload.get("weaponType"),
+            player_name=payload.get("shooterPlayerName"),
         )
     elif kind == "kill":
         flight_tracker.on_kill(
@@ -131,6 +132,7 @@ def _dispatch(payload, flight_tracker, live_events):
         live_events.add(
             "kill", relation=payload.get("targetRelation"), category=payload.get("targetCategory"),
             name=payload.get("targetName"), weapon=payload.get("weaponType"),
+            player_name=payload.get("targetPlayerName"),
         )
     elif kind == "shot":
         flight_tracker.on_shot(weapon_type=payload.get("weaponType"))
@@ -152,7 +154,7 @@ def _dispatch(payload, flight_tracker, live_events):
         live_events.add(
             "missile_launch_warning", relation=payload.get("shooterRelation"),
             category=payload.get("shooterCategory"), name=payload.get("shooterName"),
-            weapon=payload.get("weaponType"),
+            weapon=payload.get("weaponType"), player_name=payload.get("shooterPlayerName"),
         )
 
 

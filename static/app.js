@@ -575,8 +575,19 @@ function outcomeBadge(d) {
 // Builds "enemy ground unit (SA-9) — 9M31" from a {relation, category,
 // name, weapon} shape - shared by the loss cause line, kill list, and
 // hits-taken list so all three describe an actor/weapon the same way.
-function describeActor({ relation, category, name, weapon } = {}) {
-  const who = [relation, SHOOTER_CATEGORY_LABELS[category]].filter(Boolean).join(" ");
+// player_name (only ever present on live-ticker events - Debrief's own
+// hit/kill history doesn't carry it, so this falls back to the plain
+// category label there exactly as before, no behavior change) comes
+// straight from Unit:getPlayerName() in dcs_mission_hook.lua - real and
+// nil-when-AI, the same API is_player_unit() already used to tell the
+// player's own unit apart from AI, not a guess. Explicit user request:
+// "know what player or ai is causing the actions reported by the
+// ticker" - AI stays an explicit word here rather than just omitting
+// it, so "no player name" always reads as a confirmed answer, not a
+// missing one.
+function describeActor({ relation, category, name, weapon, player_name } = {}) {
+  const controller = player_name ? `player ${player_name}` : (SHOOTER_CATEGORY_LABELS[category] || "AI");
+  const who = [relation, controller].filter(Boolean).join(" ");
   if (!who) return null;
   return `${who}${name ? ` (${name})` : ""}${weapon ? ` — ${weapon}` : ""}`;
 }
@@ -607,49 +618,112 @@ function formatLiveEvent(e) {
     const verb = e.loss_kind === "dead" ? "SHOT DOWN" : e.loss_kind === "ejected" ? "EJECTED" : "CRASHED";
     return { time, cls: "ops-event-loss", text: desc ? `${verb} by ${desc}` : verb };
   }
+  if (e.kind === "zone_capture") {
+    // relation is null/undefined for a neutral capture or an unrecognized
+    // side string (see dcs_pretense_events.py's own defensive parsing) -
+    // an honest "captured" with no side label beats guessing one.
+    const side = e.relation === "friendly" ? "ops-event-kill" : e.relation === "enemy" ? "ops-event-loss" : "";
+    const by = e.new_side ? ` by ${e.new_side.toUpperCase()}` : "";
+    return { time, cls: side, text: `ZONE CAPTURED: ${e.name || "unknown zone"}${by}` };
+  }
   return { time, cls: "", text: e.kind || "Event" };
 }
 
-// LED-style horizontal sports ticker (explicit user request, replacing the
-// old wrapping grid of cards) - a single line that scrolls continuously via
-// the #ops-events-track CSS animation (@keyframes ops-ticker-scroll in
-// machlink_aviation_v5.css), which only ever translates by exactly -50%.
-// Rendering the same card list TWICE back to back, concatenated in one
-// track, is what makes that loop seamless: the instant the first copy has
-// scrolled fully past, the second (identical) copy is sitting at the exact
-// start position, so the reset from -50% back to 0% is invisible - there's
-// no visible "snap" or gap the way a single un-duplicated copy would show.
+// Major-events-only carousel - explicit follow-up request: "fix the
+// ticker so it's like a carousel" (a genuinely different interaction
+// model from this session's own earlier LED marquee - one event shown
+// at a time, advancing on an interval, not continuous horizontal
+// scroll) plus "should only report major events like waypoints
+// captured, mission events completed, kills, damage" (MAJOR_EVENT_KINDS
+// below - shot/gun_start/sortie_start are real events but not "major"
+// by that description, so they're tracked for Debrief exactly as before
+// but no longer shown here).
+const MAJOR_EVENT_KINDS = new Set(["kill", "hit", "loss", "missile_launch_warning", "zone_capture"]);
+const CAROUSEL_INTERVAL_MS = 5000;
+let carouselEvents = [];
+let carouselIndex = 0;
+let carouselTimer = null;
+let carouselNewestTs = null;
+let carouselPaused = false;
+
 function renderLiveEvents(events) {
-  // Called unconditionally, before the empty-events early return below -
-  // a fresh birth/respawn clears live_events back to [] server-side (see
+  // Called unconditionally, before any filtering/early-return below - a
+  // fresh birth/respawn clears live_events back to [] server-side (see
   // LiveEventStore's own docstring), and without this here first, a
   // banner left over from the PREVIOUS life would never get told to hide
-  // (a real bug caught before it shipped: the early return skipped this
-  // call entirely whenever events was empty).
+  // (a real bug caught before it shipped: an early return used to skip
+  // this call entirely whenever events was empty).
   updateMissileWarningBanner(events);
-  if (!events.length) {
-    opsEventsList.innerHTML = `<div class="ops-events-empty">No events yet this sortie.</div>`;
+  carouselEvents = events.filter((e) => MAJOR_EVENT_KINDS.has(e.kind)).slice().reverse(); // newest first
+  const newestTs = carouselEvents.length ? carouselEvents[0].ts : null;
+  // A genuinely new major event (including "list just became non-empty"
+  // or "list just emptied out on respawn") jumps straight to showing it
+  // instead of waiting out however far the carousel had already cycled -
+  // same "surface what's new immediately" reasoning the old marquee's
+  // own "newest event wins the popout" behavior never had to think about
+  // (it just scrolled everything continuously). A same-poll re-render
+  // with no actual change leaves the current position alone.
+  if (newestTs !== carouselNewestTs) {
+    carouselIndex = 0;
+    carouselNewestTs = newestTs;
+  } else if (carouselIndex >= carouselEvents.length) {
+    carouselIndex = 0; // the list shrank (older majors aged out of the 20-event window) past the current position
+  }
+  renderCarouselCard();
+  restartCarouselTimer();
+}
+
+function renderCarouselCard() {
+  if (!carouselEvents.length) {
+    opsEventsList.innerHTML = `<div class="ops-events-empty">No major events yet this sortie.</div>`;
     return;
   }
-  // A real "•" span between cards (see .ops-event-sep's own comment in
-  // machlink_aviation_v5.css for why this isn't a CSS ::before instead),
-  // not before the very first card in the list.
-  const cardsHtml = events.slice().reverse().map((e, i) => {
-    const { time, cls, text } = formatLiveEvent(e);
-    const sep = i === 0 ? "" : `<span class="ops-event-sep">&bull;</span>`;
-    return `${sep}<div class="ops-event-card ${cls}">
+  const e = carouselEvents[carouselIndex];
+  const { time, cls, text } = formatLiveEvent(e);
+  // Re-inserting a fresh element (innerHTML replace, not just updating
+  // text) is what re-triggers .ops-event-card's own CSS fade-in
+  // animation on every advance - a mutated existing node wouldn't restart it.
+  const dots = carouselEvents.length > 1
+    ? `<div class="ops-carousel-dots">${carouselEvents.map((_, i) =>
+        `<span class="ops-carousel-dot${i === carouselIndex ? " active" : ""}" data-index="${i}"></span>`
+      ).join("")}</div>`
+    : "";
+  opsEventsList.innerHTML = `
+    <div class="ops-event-card ${cls}">
       <span class="ops-event-time mono">${time}</span>
       <span class="ops-event-text">${escapeHtml(text)}</span>
-    </div>`;
-  }).join("");
-  // prefers-reduced-motion: reduce -> machlink_aviation_v5.css turns off
-  // #ops-events-track's animation entirely, so the duplicate copy would
-  // just sit there as static, confusing repeated content instead of
-  // serving its only purpose (a seamless loop point). Skipping it here
-  // keeps that case showing each real event exactly once.
-  const reducedMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  opsEventsList.innerHTML = `<div id="ops-events-track">${cardsHtml}${reducedMotion ? "" : cardsHtml}</div>`;
+    </div>
+    ${dots}
+  `;
+  opsEventsList.querySelectorAll(".ops-carousel-dot").forEach((dot) => {
+    dot.addEventListener("click", () => {
+      carouselIndex = Number(dot.dataset.index);
+      renderCarouselCard();
+      restartCarouselTimer(); // a manual jump gets its own full dwell time, not whatever was left on the interval that was already running
+    });
+  });
 }
+
+function restartCarouselTimer() {
+  if (carouselTimer) clearInterval(carouselTimer);
+  carouselTimer = null;
+  // prefers-reduced-motion: reduce -> respected by simply never
+  // auto-advancing (stays on the newest major event) rather than
+  // animating between cards on a fixed interval - same accessibility
+  // exception the old marquee's own scrolling honored, adapted to this
+  // interaction model. Also paused, same as the marquee's own
+  // hover-to-pause, while the pointer is over the ticker (see the
+  // mouseenter/mouseleave listeners below) or there's nothing to cycle
+  // through.
+  const reducedMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reducedMotion || carouselPaused || carouselEvents.length <= 1) return;
+  carouselTimer = setInterval(() => {
+    carouselIndex = (carouselIndex + 1) % carouselEvents.length;
+    renderCarouselCard();
+  }, CAROUSEL_INTERVAL_MS);
+}
+opsEventsList.addEventListener("mouseenter", () => { carouselPaused = true; restartCarouselTimer(); });
+opsEventsList.addEventListener("mouseleave", () => { carouselPaused = false; restartCarouselTimer(); });
 
 // How long the banner stays up after a launch, once no NEWER launch event
 // has refreshed it - long enough to actually notice and react (a missile's
