@@ -172,13 +172,15 @@
       </div>
 
       <!-- Sub-navigation within Ops itself, matching the mockup's tab
-           strip under the map. Real destinations only - every tab either
-           shows real data (reusing the exact same /api/map_data-derived
-           values the old single-page layout already computed, just
-           split/relabeled) or, for WEATHER (MachLink has no weather data
-           source anywhere in the codebase), an honest empty state rather
-           than invented numbers. See switchOpsTab() in app.js - same
-           show-one-hide-the-rest pattern as switchPrimarySection(). -->
+           strip under the map. Real destinations only - every tab shows
+           real data (reusing the exact same /api/map_data or
+           /api/dcs_briefing-derived values the old single-page layout
+           already computed, just split/relabeled), falling back to an
+           honest empty state rather than invented numbers only while no
+           mission is actually loaded. See switchOpsTab() in app.js - same
+           show-one-hide-the-rest pattern as switchPrimarySection().
+           Bullseye was a tab here too until it was folded into Mission
+           Info's own grid instead (explicit request). -->
       <div class="ops-tabs" id="ops-tabs">
         <button type="button" class="ops-tab-btn active" data-ops-tab="mission">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
@@ -196,10 +198,10 @@
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.2 12.27 20 6H4l1.8 6.27a1 1 0 0 0 .95.73h10.5a1 1 0 0 0 .96-.73Z"/><path d="M8 13v9"/><path d="M16 22v-9"/><path d="m9 6 1 7"/><path d="m15 6-1 7"/><path d="M12 6V2"/><path d="M13 2h-2"/></svg>
           <span>Airfields</span>
         </button>
-        <button type="button" class="ops-tab-btn" data-ops-tab="bullseye">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="22" x2="18" y1="12" y2="12"/><line x1="6" x2="2" y1="12" y2="12"/><line x1="12" x2="12" y1="6" y2="2"/><line x1="12" x2="12" y1="22" y2="18"/></svg>
-          <span>Bullseye</span>
-        </button>
+        <!-- Bullseye tab eliminated per explicit request - the same real
+             #ops-bullseye-call now lives as a data-cell in Mission Info's
+             own grid instead (between Status and the LAUNCH indicator) -
+             see that grid further down. -->
         <!-- Real signal, same one the old full-width "Begin Mission to
              Fetch Data" banner used to gate on - shown exactly while
              neither SimBrief nor a DCS mission briefing has anything yet
@@ -354,6 +356,12 @@
                   <div class="data-value" id="mission-info-status-value">NA</div>
                   <div class="mission-info-substatus mono" id="ops-sortie-time-value"></div>
                 </div>
+                <!-- Bullseye tab eliminated per explicit request - same
+                     real bearing/range call (updateOpsSituationalAwareness()
+                     in app.js, unchanged - only its home moved), now
+                     living here between Status and Launch instead of its
+                     own destination. -->
+                <div class="data-cell"><div class="data-label">Bullseye</div><div class="data-value" id="ops-bullseye-call">&mdash;</div></div>
                 <!-- Real annunciator, not just another data-cell's text -
                      explicit request for "a bar... that flashes red when
                      an enemy has launched on you", modeled on a real
@@ -494,14 +502,23 @@
         </section>
       </div>
 
-      <!-- WEATHER - genuinely no data source for this anywhere in
-           MachLink today. A real, present, clickable destination (not
-           omitted) with an honest empty state, rather than inventing
-           numbers to fill it. -->
+      <!-- WEATHER - real data DOES exist (the mission file's own
+           ["weather"] table - see dcs_mission_briefing.py's
+           _extract_weather(), already used by the Mission tab's compact
+           Weather card and this tab's own "View Detailed Weather" button)
+           - this destination was just never actually wired up to show it,
+           left as a stale placeholder from before that data source was
+           built. Real bug reported live: "No weather insights are
+           populating into the weather tab." renderOpsWeatherTab() in
+           app.js now fills #ops-weather-body with the same real grid the
+           Debrief/briefing panel already builds via weatherGridHtml() -
+           one shared renderer, not two that could drift apart. -->
       <div class="ops-tab-panel" id="ops-tab-weather" hidden>
         <section class="sub-panel">
           <h2 class="panel-title">Weather</h2>
-          <div class="ops-empty-note">No weather data source configured.</div>
+          <div id="ops-weather-body">
+            <div class="ops-empty-note">No mission weather detected yet — load into a mission in DCS.</div>
+          </div>
         </section>
       </div>
 
@@ -528,18 +545,6 @@
             <span class="ops-readout-value mono" id="ops-nearest-support">&mdash;</span>
           </div>
           <div id="ops-airfields-list"></div>
-        </section>
-      </div>
-
-      <!-- BULLSEYE - the same real bullseye call, given its own
-           destination. -->
-      <div class="ops-tab-panel" id="ops-tab-bullseye" hidden>
-        <section class="sub-panel">
-          <h2 class="panel-title">Bullseye</h2>
-          <div class="ops-readout-row">
-            <span class="ops-readout-label">BULLSEYE</span>
-            <span class="ops-readout-value mono" id="ops-bullseye-call">&mdash;</span>
-          </div>
         </section>
       </div>
 
