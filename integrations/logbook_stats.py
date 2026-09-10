@@ -20,6 +20,7 @@ DETAIL_LABELS = {
     "sam": "SAM",
     "vehicle": "Vehicle",
     "soft_target": "Soft Target",
+    "manpad": "Manpad",
 }
 
 
@@ -39,6 +40,31 @@ def _kill_bucket(kill):
     return CATEGORY_LABELS.get(category, category or "Unknown")
 
 
+def _loss_bucket(flight):
+    """The losses-by-cause bucket for one lost flight: the finer sam/
+    vehicle/manpad ground-shooter detail where DCS's attribute tags
+    matched one (see dcs_mission_hook.lua's shooter_category_detail - a
+    separate function from kills' own kill_category_detail, deliberately
+    not shared, so its "manpad" bucket only affects this stat), else
+    "Air" for an airplane/helicopter shooter (explicit request: "air and
+    ground units that have killed the player aircraft" - a coarse bucket
+    here, not broken out by specific airframe type the way kills are,
+    since that's genuinely what was asked for), else the coarse shooter
+    category, else "Unknown" - a flight lost to a timeout-inferred crash
+    (no combat event ever confirmed a cause - see FlightTracker's own
+    on_combat_loss docstring) has no shooter info at all, and that's an
+    honest gap to show, not a bug to paper over with a guess."""
+    detail = flight.get("shooter_category_detail")
+    if detail:
+        return DETAIL_LABELS.get(detail, detail)
+    category = flight.get("shooter_category")
+    if category in ("airplane", "helicopter"):
+        return "Air"
+    if category:
+        return CATEGORY_LABELS.get(category, category)
+    return "Unknown"
+
+
 def _empty_summary():
     return {
         "total_sorties": 0,
@@ -48,6 +74,7 @@ def _empty_summary():
         "total_friendly_fire_kills": 0,
         "kills_by_type": {},
         "losses_by_airframe": {},
+        "losses_by_cause": {},
         "avg_kills_per_sortie": 0.0,
         "avg_landing_rate_fpm": None,
         "avg_landing_grade": None,
@@ -90,6 +117,19 @@ def compute_stats(flights):
             aircraft = f.get("aircraft") or "Unknown"
             losses_by_airframe[aircraft] = losses_by_airframe.get(aircraft, 0) + 1
 
+    # What actually killed the player, not which of their own airframes
+    # was lost (that's losses_by_airframe above) - explicit request: "air
+    # and ground units that have killed the player aircraft... Ground
+    # units can be grouped by either Sam, Vehicle, or Manpad." Includes
+    # "Unknown" for a timeout-inferred crash with no confirmed shooter -
+    # an honest majority case for most pilots (DCS gives no cause signal
+    # to read there at all), not something to quietly drop from the count.
+    losses_by_cause = {}
+    for f in flights:
+        if f.get("crashed"):
+            bucket = _loss_bucket(f)
+            losses_by_cause[bucket] = losses_by_cause.get(bucket, 0) + 1
+
     landing_rates = [f["landing_rate_fpm"] for f in flights if f.get("landing_rate_fpm") is not None]
     avg_landing_rate_fpm = round(sum(landing_rates) / len(landing_rates), 0) if landing_rates else None
 
@@ -103,6 +143,7 @@ def compute_stats(flights):
         "total_friendly_fire_kills": friendly_fire_kills,
         "kills_by_type": kills_by_type,
         "losses_by_airframe": losses_by_airframe,
+        "losses_by_cause": losses_by_cause,
         "avg_kills_per_sortie": round(total_kills / total_sorties, 2),
         "avg_landing_rate_fpm": avg_landing_rate_fpm,
         "avg_landing_grade": grade_landing_rate(avg_landing_rate_fpm) if avg_landing_rate_fpm is not None else None,
