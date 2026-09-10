@@ -1290,13 +1290,16 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
 .ops-events-panel .panel-title { margin-bottom: clamp(2px, 0.5vh, 6px) !important; font-size: clamp(9px, 0.85vh, 12px) !important; }
 /* A distinct recessed display well, not lines drawn straight onto the
    panel's own raised chassis background - same --screen/--bezel
-   treatment as the map/kneeboard/checklist wells elsewhere. A carousel
-   now (explicit follow-up request: "fix the ticker so it's like a
-   carousel," replacing this session's own earlier continuous-scroll
-   marquee) - one event card at a time (renderCarouselCard() in app.js),
-   advancing on a JS interval rather than a CSS scroll animation, so
-   overflow:hidden here is just an ordinary safety clip now, not load-
-   bearing the way it was for clipping a continuously-translating track. */
+   treatment as the map/kneeboard/checklist wells elsewhere. Back to a
+   real continuous marquee (explicit follow-up: "you just added pages to
+   it... I want a continuous scroll using the whole length of the
+   ticker" - the one-card-at-a-time carousel this replaces read as
+   paging, not scrolling, and its own per-card scroll-on-overflow hack
+   only ever animated inside a narrow flex slot shared with position
+   dots, never the ticker bar's full width). #ops-events-list is the
+   fixed-size masking viewport - overflow:hidden is load-bearing again,
+   clipping #ops-events-track (built fresh in app.js's renderTicker())
+   as it continuously translates. */
 #ops-events-list {
   max-height: clamp(28px, 4.5vh, 56px) !important;
   overflow: hidden !important;
@@ -1308,119 +1311,76 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
   margin-top: 4px !important;
   display: flex !important;
   align-items: center !important;
-  justify-content: space-between !important;
-  gap: 10px !important;
 }
 .ops-events-empty {
   color: var(--ink-dim) !important;
   font-family: var(--font-mono) !important;
   font-size: clamp(10px, 1.1vh, 13px) !important;
-}
-/* Small position indicators, real sports-ticker/carousel convention -
-   clickable (renderCarouselCard() in app.js binds a click-to-jump
-   handler per dot), not just decorative. Only rendered at all when
-   there's more than one major event to page through. */
-.ops-carousel-dots {
-  display: flex !important;
-  align-items: center !important;
-  gap: 5px !important;
-  flex: 0 0 auto !important;
-}
-.ops-carousel-dot {
-  width: clamp(5px, 0.5vh, 7px) !important;
-  height: clamp(5px, 0.5vh, 7px) !important;
-  border-radius: 50% !important;
-  background: var(--ink-faint) !important;
-  cursor: pointer !important;
-  transition: background-color .15s ease !important;
-}
-.ops-carousel-dot:hover { background: var(--ink-dim) !important; }
-.ops-carousel-dot.active { background: var(--signal) !important; box-shadow: 0 0 5px rgba(62,224,138,.7) !important; }
-/* VT323 - the retro LCD/pixel-style Google Font already loaded in
-   index.html's <head> (alongside Oswald/Geist) - reused here rather than
-   adding a new font, for the LED-style look. Bare text (no border/
-   background/padding - the old boxed-card look doesn't read as a
-   ticker), a brief fade-in on every insert (renderCarouselCard() replaces
-   this element's innerHTML on each advance, which is what re-triggers
-   the animation - a mutated existing node wouldn't restart it) instead
-   of the old continuous scroll, so each new event still reads as
-   "arriving," not just appearing. */
-.ops-event-card {
-  flex: 1 1 auto !important;
-  min-width: 0 !important;
-  display: flex !important;
-  /* style.css's original .ops-event-card rule (the old stacked-card
-     layout this ticker replaced twice ago) sets flex-direction:column
-     without !important - since row is v5's own initial/default value,
-     nothing here was overriding it, so it kept winning (a real bug found
-     live: time+text stacking vertically instead of side by side, which
-     blew the card past #ops-events-list's own fixed max-height). */
-  flex-direction: row !important;
-  align-items: center !important;
-  gap: 8px !important;
-  padding: 0 !important;
-  border: 0 !important;
-  background: none !important;
-  box-shadow: none !important;
   white-space: nowrap !important;
-  /* VT323's own default line-height is unusually tall (~1.5x its
-     font-size, measured live at ~32px for 21.6px text) - left alone, that
-     alone was taller than #ops-events-list's whole clamped max-height,
-     so the text was getting vertically cropped by this list's own
-     overflow:hidden (a real bug found live via scrollHeight vs
-     clientHeight, not just a screenshot). A tight 1 here (inherited by
-     both spans below) keeps each line close to the font's actual glyph
-     height instead. */
-  line-height: 1 !important;
-  animation: ops-event-card-in .25s ease-out !important;
 }
-@keyframes ops-event-card-in {
-  from { opacity: 0; transform: translateY(3px); }
-  to { opacity: 1; transform: translateY(0); }
+/* The translating element itself. Always holds two back-to-back
+   identical copies of the event list (see renderTicker() in app.js) -
+   that's what makes the -50% keyframe below a seamless loop: the moment
+   it wraps from 100% back to 0%, copy two is sitting pixel-identical to
+   where copy one started, so there's no visible jump-cut no matter how
+   many events are queued. Duration comes from --ticker-duration, set
+   inline per render (app.js measures the real content width so the
+   scroll SPEED stays constant regardless of queue length, rather than
+   every render taking the same total time to loop) - !important here is
+   safe because the value it reads, not this rule, is what changes. */
+#ops-events-track {
+  display: flex !important;
+  align-items: center !important;
+  white-space: nowrap !important;
+  animation: ops-ticker-scroll var(--ticker-duration, 20s) linear infinite !important;
 }
-.ops-event-time {
+@keyframes ops-ticker-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+#ops-events-list:hover #ops-events-track {
+  animation-play-state: paused !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  #ops-events-track { animation: none !important; }
+}
+/* Each event is one inline unit (time + text together, flowing as a
+   single line) instead of two separately flex-laid-out children fighting
+   over the same row - that separate-children layout was the real cause
+   of a reported bug ("the time stamp is overlapping the text"): giving
+   .ops-event-text its own translateX while .ops-event-time sat fixed in
+   the same flex row could clip/overlap once the text's own overflow
+   math ran long. Time and text can't overlap here because they're not
+   independently positioned at all - just two inline spans one after the
+   other, moving together as part of the same flowing line. */
+.ops-ticker-item {
+  display: inline-flex !important;
+  align-items: baseline !important;
+  flex: 0 0 auto !important;
+  gap: 8px !important;
+  padding-right: 44px !important; /* breathing room before the next event, so consecutive items never visually run together */
+}
+.ops-ticker-time {
   flex: 0 0 auto !important;
   font-family: var(--font-mono) !important;
   font-size: clamp(10px, 1.2vh, 14px) !important;
   color: var(--ink-dim) !important;
   letter-spacing: .04em !important;
 }
-/* flex:1 1 auto + min-width:0 - this (not .ops-event-card, which just
-   holds it alongside the fixed-width time span) is the piece that has
-   real width constraints imposed on it by the carousel dots sharing the
-   row, e.g. "player Maverick (New F-16C Block 50) — AIM-120C" next to 4
-   dots. No text-overflow:ellipsis any more - that just truncated
-   anything too long to fit and never showed the rest (a real bug
-   reported live: "part of the text... is cut short"). overflow:hidden
-   stays (this is still a clipping viewport), but scheduleNextCarouselAdvance()
-   in app.js measures the real leftover scrollWidth and, when there's a
-   genuine overflow, sets --scroll-distance/--scroll-duration and adds
-   .ops-text-scrolling below to reveal the rest via an in-place scroll
-   instead of hiding it - short text that already fits never gets the
-   class at all and just sits still. */
-.ops-event-text {
-  flex: 1 1 auto !important;
-  min-width: 0 !important;
-  overflow: hidden !important;
+/* VT323 - the retro LCD/pixel-style Google Font already loaded in
+   index.html's <head> (alongside Oswald/Geist) - reused here rather than
+   adding a new font, for the LED-style look. */
+.ops-ticker-text {
   font-family: "VT323", var(--font-mono) !important;
   font-size: clamp(16px, 2.4vh, 24px) !important;
   letter-spacing: .06em !important;
   text-transform: uppercase !important;
   color: var(--signal) !important;
   text-shadow: 0 0 5px rgba(62,224,138,.8), 0 0 14px rgba(62,224,138,.4) !important;
+  line-height: 1 !important;
 }
-.ops-event-text.ops-text-scrolling {
-  animation: ops-event-text-scroll var(--scroll-duration, 3s) linear forwards !important;
-}
-@keyframes ops-event-text-scroll {
-  from { transform: translateX(0); }
-  to { transform: translateX(var(--scroll-distance, 0px)); }
-}
-@media (prefers-reduced-motion: reduce) {
-  .ops-event-text.ops-text-scrolling { animation: none !important; }
-}
-.ops-event-card.ops-event-hit .ops-event-text,
-.ops-event-card.ops-event-loss .ops-event-text {
+.ops-ticker-item.ops-event-hit .ops-ticker-text,
+.ops-ticker-item.ops-event-loss .ops-ticker-text {
   color: var(--threat) !important;
   text-shadow: 0 0 5px rgba(255,77,77,.8), 0 0 14px rgba(255,77,77,.4) !important;
 }
@@ -1428,7 +1388,7 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
    still actionable, not a past event) plus a slow pulse so it stands out
    from a static ticker line while it's scrolling past, matching how a
    real launch-warning indicator reads as "active," not just logged. */
-.ops-event-card.ops-event-launch .ops-event-text {
+.ops-ticker-item.ops-event-launch .ops-ticker-text {
   color: var(--threat) !important;
   text-shadow: 0 0 5px rgba(255,77,77,.8), 0 0 14px rgba(255,77,77,.4) !important;
   animation: ops-launch-pulse 1.1s ease-in-out infinite !important;
@@ -1437,17 +1397,12 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
   0%, 100% { opacity: 1; }
   50% { opacity: .55; }
 }
-.ops-event-card.ops-event-shot .ops-event-text {
+.ops-ticker-item.ops-event-shot .ops-ticker-text {
   color: var(--amber) !important;
   text-shadow: 0 0 5px rgba(255,176,32,.8), 0 0 14px rgba(255,176,32,.4) !important;
 }
-/* Respect a real accessibility preference - restartCarouselTimer() in
-   app.js checks the same media query and simply never sets up the
-   auto-advance interval in that case (stays on the newest major event,
-   dots still clickable for manual paging), so the fade-in transition
-   below is the only remaining motion to suppress here. */
 @media (prefers-reduced-motion: reduce) {
-  .ops-event-card { animation: none !important; }
+  .ops-ticker-item.ops-event-launch .ops-ticker-text { animation: none !important; }
 }
 
 /* Hook warning/cautions become avionics annunciators. */

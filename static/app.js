@@ -630,21 +630,35 @@ function formatLiveEvent(e) {
   return { time, cls: "", text: e.kind || "Event" };
 }
 
-// Major-events-only carousel - explicit follow-up request: "fix the
-// ticker so it's like a carousel" (a genuinely different interaction
-// model from this session's own earlier LED marquee - one event shown
-// at a time, advancing on an interval, not continuous horizontal
-// scroll) plus "should only report major events like waypoints
-// captured, mission events completed, kills, damage" (MAJOR_EVENT_KINDS
-// below - shot/gun_start/sortie_start are real events but not "major"
-// by that description, so they're tracked for Debrief exactly as before
-// but no longer shown here).
+// Major-events-only marquee. Two explicit follow-up reports killed the
+// carousel this replaces: "you just added pages to it" (advancing on a
+// timer one card at a time doesn't read as scrolling at all) and "I want
+// a continuous scroll using the whole length of the ticker" (the
+// carousel's own per-card scroll-on-overflow hack only ever revealed one
+// card's text inside a narrow flex slot it shared with the position
+// dots, never the ticker bar's actual full width). This goes back to a
+// real continuously-translating track - like the session's very first
+// ticker attempt, but keeping everything learned since: major-events-
+// only filtering, player/AI attribution, and (see machlink_aviation_v5.css)
+// time+text simply flowing inline together instead of two separately
+// laid-out flex children that could end up overlapping.
 const MAJOR_EVENT_KINDS = new Set(["kill", "hit", "loss", "missile_launch_warning", "zone_capture"]);
-let carouselEvents = [];
-let carouselIndex = 0;
-let carouselTimer = null;
-let carouselNewestTs = null;
-let carouselPaused = false;
+const TICKER_PX_PER_SEC = 70; // constant scroll SPEED regardless of how much is queued - a 5-event queue moves the same px/sec as a 1-event queue, not the same total loop duration
+let tickerNewestTs = null; // only rebuild/restart the marquee when the underlying major-event set actually changed - a same-poll re-render of unchanged data would otherwise yank a mid-scroll animation back to frame 0 every ~3s
+let tickerRenderId = 0; // guards the document.fonts.ready remeasure below against landing on a track a later render already replaced
+
+// Kick off VT323's own download as early as possible (module init, not
+// first ticker render) - real bug caught in testing: the very first time
+// the ticker ever renders real content in a session, VT323 may still be
+// mid-swap-in, so measuring .ops-ticker-text's width against whatever
+// wider fallback font (var(--font-mono)) is showing in the meantime
+// badly miscalibrates the scroll speed (measured live: ~35% too slow,
+// since the fallback rendered noticeably wider than VT323's own compact
+// glyphs). Firing this at load time means VT323 is almost always already
+// cached by the time a sortie's first major event actually happens.
+if (window.document && document.fonts && document.fonts.load) {
+  document.fonts.load('24px "VT323"').catch(() => {});
+}
 
 function renderLiveEvents(events) {
   // Called unconditionally, before any filtering/early-return below - a
@@ -654,123 +668,55 @@ function renderLiveEvents(events) {
   // (a real bug caught before it shipped: an early return used to skip
   // this call entirely whenever events was empty).
   updateMissileWarningBanner(events);
-  carouselEvents = events.filter((e) => MAJOR_EVENT_KINDS.has(e.kind)).slice().reverse(); // newest first
-  const newestTs = carouselEvents.length ? carouselEvents[0].ts : null;
-  // A genuinely new major event (including "list just became non-empty"
-  // or "list just emptied out on respawn") jumps straight to showing it
-  // instead of waiting out however far the carousel had already cycled -
-  // same "surface what's new immediately" reasoning the old marquee's
-  // own "newest event wins the popout" behavior never had to think about
-  // (it just scrolled everything continuously). A same-poll re-render
-  // with no actual change leaves the current position alone.
-  if (newestTs !== carouselNewestTs) {
-    carouselIndex = 0;
-    carouselNewestTs = newestTs;
-  } else if (carouselIndex >= carouselEvents.length) {
-    carouselIndex = 0; // the list shrank (older majors aged out of the 20-event window) past the current position
-  }
-  renderCarouselCard(); // schedules its own next advance internally now (dwell time depends on that specific card's own text length)
+  // events arrives oldest-first (LiveEventStore.recent() - a plain deque
+  // appended to in arrival order) - kept as-is so the ticker reads left-
+  // to-right the way it happened, newest emerging last.
+  const majorEvents = events.filter((e) => MAJOR_EVENT_KINDS.has(e.kind));
+  const newestTs = majorEvents.length ? majorEvents[majorEvents.length - 1].ts : null;
+  if (newestTs === tickerNewestTs) return; // nothing new since the last render - leave the running scroll alone rather than restarting it
+  tickerNewestTs = newestTs;
+  renderTicker(majorEvents);
 }
 
-function renderCarouselCard() {
-  if (carouselTimer) clearTimeout(carouselTimer);
-  carouselTimer = null;
-  if (!carouselEvents.length) {
+function renderTicker(majorEvents) {
+  if (!majorEvents.length) {
     opsEventsList.innerHTML = `<div class="ops-events-empty">No major events yet this sortie.</div>`;
     return;
   }
-  const e = carouselEvents[carouselIndex];
-  const { time, cls, text } = formatLiveEvent(e);
-  // Re-inserting a fresh element (innerHTML replace, not just updating
-  // text) is what re-triggers .ops-event-card's own CSS fade-in
-  // animation on every advance - a mutated existing node wouldn't restart it.
-  const dots = carouselEvents.length > 1
-    ? `<div class="ops-carousel-dots">${carouselEvents.map((_, i) =>
-        `<span class="ops-carousel-dot${i === carouselIndex ? " active" : ""}" data-index="${i}"></span>`
-      ).join("")}</div>`
-    : "";
-  opsEventsList.innerHTML = `
-    <div class="ops-event-card ${cls}">
-      <span class="ops-event-time mono">${time}</span>
-      <span class="ops-event-text">${escapeHtml(text)}</span>
-    </div>
-    ${dots}
-  `;
-  opsEventsList.querySelectorAll(".ops-carousel-dot").forEach((dot) => {
-    dot.addEventListener("click", () => {
-      carouselIndex = Number(dot.dataset.index);
-      renderCarouselCard(); // a manual jump gets its own full dwell/scroll, not whatever was left on the previous card's timer
-    });
-  });
-  scheduleNextCarouselAdvance();
-}
-
-// How fast the in-place scroll reveals hidden text, and the minimum time
-// any card (scrolling or not) stays up - explicit bug report: the old
-// fixed-width card just truncated ("...") anything too long to fit
-// instead of ever showing the rest of it. Text-overflow:ellipsis is gone
-// from .ops-event-text now (machlink_aviation_v5.css) - this measures the
-// REAL overflow in pixels and scrolls exactly that far, so the full text
-// is always eventually readable instead of silently cut off.
-const CAROUSEL_MIN_DWELL_MS = 5000;
-const CAROUSEL_SCROLL_PX_PER_SEC = 55;
-const CAROUSEL_SCROLL_END_HOLD_MS = 1200; // beat at the fully-scrolled position before advancing, so the tail end isn't just glimpsed then yanked away
-
-function scheduleNextCarouselAdvance() {
-  // prefers-reduced-motion: reduce -> respected by simply never
-  // auto-advancing/auto-scrolling (stays on the newest major event, dots
-  // still clickable for manual paging) rather than animating on a timer -
-  // same accessibility exception the old marquee's own scrolling honored.
-  // Also skipped, same as the marquee's own hover-to-pause, while the
-  // pointer is over the ticker (see the mouseenter/mouseleave listeners
-  // below).
-  const reducedMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  if (reducedMotion || carouselPaused) return;
-
-  let dwellMs = CAROUSEL_MIN_DWELL_MS;
-  let isScrolling = false;
-  const textEl = opsEventsList.querySelector(".ops-event-text");
-  if (textEl) {
-    // +2px slack against sub-pixel layout rounding falsely reading as
-    // "a little bit of overflow" on text that actually fits.
-    const overflowPx = textEl.scrollWidth - textEl.clientWidth - 2;
-    if (overflowPx > 0) {
-      const distance = overflowPx + 10; // a little past the last character, not stopping exactly flush with the viewport edge
-      const scrollDurationMs = Math.round((distance / CAROUSEL_SCROLL_PX_PER_SEC) * 1000);
-      textEl.style.setProperty("--scroll-distance", `-${distance}px`);
-      textEl.style.setProperty("--scroll-duration", `${scrollDurationMs}ms`);
-      textEl.classList.add("ops-text-scrolling");
-      dwellMs = Math.max(CAROUSEL_MIN_DWELL_MS, scrollDurationMs + CAROUSEL_SCROLL_END_HOLD_MS);
-      isScrolling = true;
-    }
+  const itemsHtml = majorEvents.map((e) => {
+    const { time, cls, text } = formatLiveEvent(e);
+    return `<span class="ops-ticker-item ${cls}"><span class="ops-ticker-time mono">${time}</span><span class="ops-ticker-text">${escapeHtml(text)}</span></span>`;
+  }).join("");
+  // A brand-new #ops-events-track element (innerHTML replace of the
+  // whole viewport, not a mutation of an existing node) is what makes
+  // its CSS animation start fresh at 0% - the same "re-insert to
+  // restart" idiom the old per-card fade-in used, just applied to the
+  // marquee's own translate now. Two back-to-back identical copies of
+  // the list is what makes the -50% keyframe in machlink_aviation_v5.css
+  // a seamless loop: the instant it wraps from 100% back to 0%, copy two
+  // is sitting exactly where copy one started, so there's no visible
+  // jump-cut regardless of how many events are actually queued.
+  opsEventsList.innerHTML = `<div id="ops-events-track">${itemsHtml}${itemsHtml}</div>`;
+  const track = document.getElementById("ops-events-track");
+  const renderId = ++tickerRenderId;
+  const applyDuration = () => {
+    if (renderId !== tickerRenderId) return; // a newer major event already replaced this track - don't touch it
+    const oneCopyWidth = track.scrollWidth / 2;
+    const durationSec = Math.max(4, oneCopyWidth / TICKER_PX_PER_SEC);
+    track.style.setProperty("--ticker-duration", `${durationSec}s`);
+  };
+  applyDuration();
+  // Correct the guess above once VT323 is actually settled, for the rare
+  // first-render-of-session race the document.fonts.load() call near the
+  // top of this section is mostly there to avoid in the first place.
+  if (document.fonts && document.fonts.status !== "loaded") {
+    document.fonts.ready.then(applyDuration);
   }
-
-  if (carouselEvents.length <= 1) {
-    // Nothing to page to. A card whose text overflows still has to loop
-    // its own reveal (scroll to the end, hold, snap back to the start,
-    // repeat) - real bug caught in testing: this early-return used to
-    // fire before the overflow check ever ran, so the very first major
-    // event of a sortie (the single-card case, e.g. the first missile
-    // launch) would sit permanently clipped with no way to read the rest
-    // - exactly the "text cut short" report this whole rewrite exists to
-    // fix, just for the one-card carousel instead of the many-card one.
-    // A card that fits fully just sits still, same as before.
-    if (isScrolling) {
-      carouselTimer = setTimeout(() => {
-        textEl.classList.remove("ops-text-scrolling");
-        carouselTimer = setTimeout(scheduleNextCarouselAdvance, CAROUSEL_SCROLL_END_HOLD_MS);
-      }, dwellMs);
-    }
-    return;
-  }
-
-  carouselTimer = setTimeout(() => {
-    carouselIndex = (carouselIndex + 1) % carouselEvents.length;
-    renderCarouselCard();
-  }, dwellMs);
 }
-opsEventsList.addEventListener("mouseenter", () => { carouselPaused = true; if (carouselTimer) clearTimeout(carouselTimer); carouselTimer = null; });
-opsEventsList.addEventListener("mouseleave", () => { carouselPaused = false; scheduleNextCarouselAdvance(); });
+// Hover-to-pause is plain CSS now (#ops-events-list:hover #ops-events-track
+// in machlink_aviation_v5.css sets animation-play-state:paused) - a
+// continuous CSS animation doesn't need a JS timer to pause/resume the
+// way the old per-card setTimeout schedule did.
 
 // How long the banner stays up after a launch, once no NEWER launch event
 // has refreshed it - long enough to actually notice and react (a missile's
