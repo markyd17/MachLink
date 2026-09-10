@@ -219,15 +219,19 @@
            the id-by-id notes below) or shows an honest NA/-- placeholder -
            never an invented number, same standard as the rest of Ops. -->
       <div class="ops-tab-panel" id="ops-tab-mission">
-        <!-- Real Leaflet map, internals completely unchanged (tiles,
-             markers, zoom, KEY, RECENTER) - only its home moved from the
-             old Route tab. See switchOpsTab()'s leafletMap.invalidateSize()
-             call, now keyed off "mission" instead of "route". Its own
-             full-width row now (not squeezed beside the telemetry cards) -
-             explicit user request to make the map dominant, the cards
-             below adjusted to fit around it instead. -->
-        <section class="sub-panel ops-sitaware mission-map-col">
-          <div class="ops-map-home" id="ops-map-home">
+        <div class="mission-top-row">
+          <!-- Real Leaflet map, internals completely unchanged (tiles,
+               markers, zoom, KEY, RECENTER) - only its home moved from the
+               old Route tab. See switchOpsTab()'s leafletMap.invalidateSize()
+               call, now keyed off "mission" instead of "route". Square, not
+               full-width - explicit user request/correction: "like the MFD
+               in the F16... square and readable", not a wide hero panel.
+               EXPAND opens #map-popout-overlay below, which simply
+               reparents this whole .ops-map-home (map + KEY/RECENTER/badge
+               all included, nothing duplicated) into a much bigger square
+               overlay - see openMapPopout()/closeMapPopout() in app.js. -->
+          <section class="sub-panel ops-sitaware mission-map-col">
+            <div class="ops-map-home" id="ops-map-home">
               <div id="map-controls-bar">
                 <!-- Real signal from DCS.getPause() (see
                      dcs_export_hook.lua/updateOpsSituationalAwareness() in
@@ -247,6 +251,12 @@
                      panning). -->
                 <button type="button" id="map-key-toggle" class="active">KEY</button>
                 <button type="button" id="map-recenter">RECENTER</button>
+                <!-- Square is deliberately compact/readable (MFD-style,
+                     explicit request) - this is the other half of "best of
+                     everything": pop out to a much bigger square overlay
+                     on demand instead of permanently sacrificing the
+                     compact default. -->
+                <button type="button" id="map-expand-btn" title="Expand map">⛶ EXPAND</button>
               </div>
               <!-- Everything drawn here comes straight from /api/map_data
                    (dcs_mission_hook.lua's own snapshot) - own position,
@@ -287,7 +297,7 @@
             </div>
           </section>
 
-          <div class="mission-telemetry-row">
+          <div class="mission-right-col">
             <!-- FLIGHT DATA - live telemetry, the same real values the old
                  standalone strip above the tabs used to show, just moved
                  into this card (identical ids, so app.js's existing
@@ -352,6 +362,7 @@
               <div class="ops-empty-note">No active waypoint.</div>
             </section>
           </div>
+        </div>
 
         <div class="mission-bottom-row">
           <!-- AIRCRAFT (the mockup's "Quick Aircraft", renamed per
@@ -677,6 +688,26 @@
       <div id="logbook-body">
         <div id="logbook-flight-list"></div>
       </div>
+    </div>
+  </div>
+
+  <!-- Map "MFD popout" - same convention as debrief/logbook overlays
+       above (full-window semi-transparent backdrop, a close button in a
+       header). #map-popout-body starts empty; openMapPopout()/
+       closeMapPopout() in app.js move the ENTIRE real #ops-map-home div
+       in and back out on open/close (not a second map, not duplicated
+       KEY/RECENTER/paused-badge controls - the exact same live Leaflet
+       instance and its exact same controls, just in a much bigger square
+       box) - explicit request: square + readable by default like an
+       aircraft MFD, with a way to pop out bigger on demand instead of
+       permanently trading the compact default away. -->
+  <div id="map-popout-overlay" hidden>
+    <div id="map-popout-panel">
+      <div id="map-popout-header">
+        <span id="map-popout-title">MISSION MAP</span>
+        <button type="button" id="map-popout-close" aria-label="Close">&times;</button>
+      </div>
+      <div id="map-popout-body"></div>
     </div>
   </div>
 

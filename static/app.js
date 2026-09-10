@@ -91,6 +91,16 @@ const mapRangeLabel = document.getElementById("map-range-label");
 const mapKeyToggle = document.getElementById("map-key-toggle");
 const mapLegend = document.getElementById("map-legend");
 const mapPausedBadge = document.getElementById("map-paused-badge");
+const mapExpandBtn = document.getElementById("map-expand-btn");
+const mapPopoutOverlay = document.getElementById("map-popout-overlay");
+const mapPopoutBody = document.getElementById("map-popout-body");
+const mapPopoutClose = document.getElementById("map-popout-close");
+// Fixed home to always return #ops-map-home to on close - querying this
+// once up front rather than at close time, since by then #ops-map-home
+// has actually been MOVED into the popout and no longer has a useful
+// parent of its own to remember.
+const mapHomeHostEl = document.querySelector(".mission-map-col");
+const mapHomeEl = document.getElementById("ops-map-home");
 const kneeboardPageLabel = document.getElementById("kneeboard-page-label");
 const kneeboardPageArea = document.getElementById("kneeboard-page-area");
 const kneeboardImage = document.getElementById("kneeboard-image");
@@ -781,10 +791,14 @@ debriefOverlay.addEventListener("click", (e) => {
 });
 // Debrief can be open on top of Logbook (reopening a past sortie from
 // the Hangar tab) - Escape closes whichever's topmost rather than both.
+// Map popout is its own separate stack (never opened on top of either of
+// these, or vice versa) - checked independently rather than folded into
+// the same if/else chain above.
 document.addEventListener("keydown", (e) => {
   if (e.key !== "Escape") return;
   if (!debriefOverlay.hidden) { debriefOverlay.hidden = true; return; }
   if (!logbookOverlay.hidden) { logbookOverlay.hidden = true; }
+  if (!mapPopoutOverlay.hidden) closeMapPopout();
 });
 
 function formatFlightDate(unixSeconds) {
@@ -1309,10 +1323,10 @@ async function pollMapData() {
 // ----------------------------------------------------------------------
 // OPS SITUATIONAL AWARENESS - a bullseye call for your own position, the
 // nearest friendly divert airbase, and a contact-type breakdown, next to
-// the real map itself (permanently in #ops-map-home - no expand/full-
-// screen mode). Every number here comes straight from data.own/
-// data.airbases/data.detected/data.bullseye - nothing computed here is a
-// guess, just bearing/distance math on real positions.
+// the real map itself (lives in #ops-map-home - see openMapPopout() below
+// for the one way it ever leaves there). Every number here comes straight
+// from data.own/data.airbases/data.detected/data.bullseye - nothing
+// computed here is a guess, just bearing/distance math on real positions.
 // ----------------------------------------------------------------------
 
 // Nearest airbase belonging to the player's OWN coalition (data.myCoalition -
@@ -1578,6 +1592,40 @@ mapRecenterBtn.addEventListener("click", () => {
 mapKeyToggle.addEventListener("click", () => {
   mapLegend.hidden = !mapLegend.hidden;
   mapKeyToggle.classList.toggle("active", !mapLegend.hidden);
+});
+
+// "MFD popout" - explicit request: keep the Mission tab's own map compact
+// and square (like a real aircraft MFD), but let it pop out to a much
+// bigger square overlay on demand instead of permanently trading the
+// compact default away for size. Reparents the ENTIRE real #ops-map-home
+// (map-controls-bar - KEY/RECENTER/EXPAND/paused badge/range label -
+// map-viewport, all of it) into #map-popout-body and back on close,
+// rather than standing up a second Leaflet instance or duplicating any
+// controls - there's still only ever one real map/one set of controls,
+// just relocated. leafletMap.invalidateSize() (same call/same
+// setTimeout(...,0)-after-layout pattern switchOpsTab() already uses
+// elsewhere in this file) is required after each move - Leaflet caches
+// its container's pixel size and won't notice it changed on its own.
+function openMapPopout() {
+  mapPopoutBody.appendChild(mapHomeEl);
+  mapPopoutOverlay.hidden = false;
+  // Hidden while already popped out - EXPAND makes no sense to offer a
+  // second time from inside the thing it opened (moves along with
+  // #ops-map-home automatically since it's part of the same subtree that
+  // just relocated, so nothing extra to track here).
+  mapExpandBtn.hidden = true;
+  if (leafletMap) setTimeout(() => leafletMap.invalidateSize(), 0);
+}
+function closeMapPopout() {
+  mapHomeHostEl.appendChild(mapHomeEl);
+  mapPopoutOverlay.hidden = true;
+  mapExpandBtn.hidden = false;
+  if (leafletMap) setTimeout(() => leafletMap.invalidateSize(), 0);
+}
+mapExpandBtn.addEventListener("click", openMapPopout);
+mapPopoutClose.addEventListener("click", closeMapPopout);
+mapPopoutOverlay.addEventListener("click", (e) => {
+  if (e.target === mapPopoutOverlay) closeMapPopout();
 });
 
 // The Mission tab's compact Weather card links out to the real Weather
@@ -2271,9 +2319,10 @@ setInterval(pollStatus, 3000);
 // only ever fetched on a Hangar nav-in.
 loadPilotSummary();
 
-// The map lives permanently in Ops's #ops-map-home - no expand/full-screen
-// mode, just one map, one home - so it's built up front instead of
-// waiting for a click, since Ops is the default landing tab.
+// The map lives in Ops's #ops-map-home by default (openMapPopout() below
+// can move it into #map-popout-body and back, but it's still ever only
+// one real map/one Leaflet instance) - built up front instead of waiting
+// for a click, since Ops is the default landing tab.
 ensureLeafletMap();
 buildMapLegend();
 

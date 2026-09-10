@@ -461,14 +461,15 @@ header {
    bezel corner", never as a status. Reused on the modal overlays below
    (#debrief-panel/#logbook-panel/#device-modal) so every card-like
    surface in the app shares the same frame language. */
-.sub-panel, .panel, #debrief-panel, #logbook-panel, #device-modal {
+.sub-panel, .panel, #debrief-panel, #logbook-panel, #device-modal, #map-popout-panel {
   position: relative;
 }
 .sub-panel::before, .sub-panel::after,
 .panel::before, .panel::after,
 #debrief-panel::before, #debrief-panel::after,
 #logbook-panel::before, #logbook-panel::after,
-#device-modal::before, #device-modal::after {
+#device-modal::before, #device-modal::after,
+#map-popout-panel::before, #map-popout-panel::after {
   content: "";
   position: absolute;
   width: 11px;
@@ -478,13 +479,15 @@ header {
   pointer-events: none;
 }
 .sub-panel::before, .panel::before,
-#debrief-panel::before, #logbook-panel::before, #device-modal::before {
+#debrief-panel::before, #logbook-panel::before, #device-modal::before,
+#map-popout-panel::before {
   top: -1px;
   left: -1px;
   border-width: 2px 0 0 2px;
 }
 .sub-panel::after, .panel::after,
-#debrief-panel::after, #logbook-panel::after, #device-modal::after {
+#debrief-panel::after, #logbook-panel::after, #device-modal::after,
+#map-popout-panel::after {
   bottom: -1px;
   right: -1px;
   border-width: 0 2px 2px 0;
