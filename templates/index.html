@@ -219,6 +219,19 @@
            the id-by-id notes below) or shows an honest NA/-- placeholder -
            never an invented number, same standard as the rest of Ops. -->
       <div class="ops-tab-panel" id="ops-tab-mission">
+        <!-- Real-time launch warning - explicit user request ("if an
+             enemy has fired on you"), inspired by DCS MovingMap's own
+             feature set. Driven entirely by the same /api/live_events
+             poll the ticker below already runs (updateMissileWarningBanner()
+             in app.js checks for a recent "missile_launch_warning" event on
+             every poll) - no separate endpoint or poll loop for this one
+             signal. Auto-hides once that event ages out (see the same
+             function), same "shows only while genuinely current" rule
+             #map-paused-badge already follows. -->
+        <div class="ops-missile-warning" id="ops-missile-warning" hidden>
+          <span>⚠</span>
+          <span id="ops-missile-warning-text"></span>
+        </div>
         <div class="mission-top-row">
           <!-- Real Leaflet map, internals completely unchanged (tiles,
                markers, zoom, KEY, RECENTER) - only its home moved from the

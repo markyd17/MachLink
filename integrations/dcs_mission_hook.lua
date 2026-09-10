@@ -278,16 +278,63 @@ function eventHandler:onKill(event)
 end
 
 function eventHandler:onShot(event)
-	if not event.initiator or not is_player_unit(event.initiator) then
-		return  -- only the player's own shots matter for the Debrief
+	-- Two independent concerns share this one event, not an if/elseif -
+	-- checkShotAtPlayer() below needs to run regardless of who fired, so
+	-- it can't be an else-branch of the player's-own-shot check.
+	if event.initiator and is_player_unit(event.initiator) then
+		local weaponType = nil
+		if event.weapon then
+			weaponType = safe_call(event.weapon, "getTypeName")
+		end
+		ml_send({
+			{"type", "shot"},
+			{"weaponType", weaponType},
+		})
 	end
-	local weaponType = nil
-	if event.weapon then
-		weaponType = safe_call(event.weapon, "getTypeName")
+	self:checkShotAtPlayer(event)
+end
+
+-- Real-time launch warning - explicit user request ("if an enemy has
+-- fired on you"), inspired by DCS MovingMap's own feature set. Separate
+-- from onHit()'s existing damage-taken tracking (which only fires once
+-- the weapon actually CONNECTS, moments after launch) and separate from
+-- onShot()'s player-shot tracking above (which only cares about shots
+-- THE PLAYER fired, not shots fired AT them) - this is the one place a
+-- launch itself, not its outcome, gets reported. Weapon:getTarget() is a
+-- real, documented DCS API (used by community RWR-simulation scripts the
+-- same way) but hasn't been confirmed against a real live session here -
+-- flag if a real launch ever proves it behaves differently. Returns nil
+-- for unguided ordnance (bombs/dumb rockets have no seeker/target to
+-- read), which is correct, not a bug - there's genuinely nothing to warn
+-- about beyond what onHit() already covers for those once/if they land.
+function eventHandler:checkShotAtPlayer(event)
+	if not MachLinkMission.playerUnit or not event.weapon then return end
+	local okExist, exists = pcall(function() return MachLinkMission.playerUnit:isExist() end)
+	if not okExist or not exists then return end
+
+	local okTarget, target = pcall(function() return event.weapon:getTarget() end)
+	if not okTarget or not target then return end
+
+	local okTid, targetId = pcall(function() return target:getID() end)
+	local okPid, playerId = pcall(function() return MachLinkMission.playerUnit:getID() end)
+	if not okTid or not okPid or targetId ~= playerId then return end
+
+	local info = {}
+	if event.initiator then
+		info.shooterName = safe_call(event.initiator, "getName")
+		local myCoalition = safe_call(MachLinkMission.playerUnit, "getCoalition")
+		local shooterCoalition = safe_call(event.initiator, "getCoalition")
+		if myCoalition ~= nil and shooterCoalition ~= nil then
+			info.shooterRelation = (myCoalition == shooterCoalition) and "friendly" or "enemy"
+		end
+		info.shooterCategory = category_label(event.initiator)
 	end
 	ml_send({
-		{"type", "shot"},
-		{"weaponType", weaponType},
+		{"type", "missile_launch_warning"},
+		{"shooterName", info.shooterName},
+		{"shooterRelation", info.shooterRelation},
+		{"shooterCategory", info.shooterCategory},
+		{"weaponType", safe_call(event.weapon, "getTypeName")},
 	})
 end
 
