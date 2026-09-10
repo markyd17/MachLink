@@ -339,56 +339,25 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
 
 /* Stays visible and shrinks at every desktop/tablet width now (it used
    to just vanish at 1300px) - real wall-clock time is exactly the kind
-   of thing that should never disappear, only get smaller. */
+   of thing that should never disappear, only get smaller. Expanded to
+   take the width the motto text and the header's own (redundant -
+   Settings already has a real destination in the left nav) settings
+   icon used to occupy, now that both are gone - date on top (bigger,
+   for legibility), time centered and bigger too since there's real
+   room for it now, LOCAL centered below. */
 #header-clock {
   flex: 0 0 auto !important;
-  min-width: clamp(90px, 7.8vw, 150px);
-  padding: clamp(4px, 0.5vw, 6px) clamp(8px, 1.2vw, 16px) !important;
+  min-width: clamp(120px, 10.5vw, 210px);
+  padding: clamp(6px, 0.7vw, 10px) clamp(14px, 1.8vw, 26px) !important;
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
   justify-content: center !important;
-  gap: 1px !important;
+  gap: 2px !important;
 }
-#header-clock-time { font-family: var(--font-mono) !important; font-size: clamp(15px, 1.4vw, 22px) !important; font-weight: 600 !important; letter-spacing: 0.02em !important; color: var(--signal) !important; text-shadow: 0 0 10px rgba(62, 224, 138, 0.55); }
+#header-clock-date { font-family: var(--font-mono) !important; font-size: clamp(10px, 0.85vw, 13px) !important; color: var(--ink-faint) !important; }
+#header-clock-time { font-family: var(--font-mono) !important; font-size: clamp(18px, 1.7vw, 27px) !important; font-weight: 600 !important; letter-spacing: 0.02em !important; color: var(--signal) !important; text-shadow: 0 0 10px rgba(62, 224, 138, 0.55); }
 #header-clock .detection-label { margin-top: 2px; }
-#header-clock-date { font-family: var(--font-mono) !important; font-size: clamp(7px, 0.5vw, 9px) !important; color: var(--ink-faint) !important; }
-
-/* Stays visible at every desktop/tablet width now too (used to vanish
-   at 1700px) - pure decoration, but "stays put, just scales" applies to
-   it exactly the same as everything else the user actually looks at. */
-#header-motto {
-  flex: 0 0 auto !important;
-  display: flex !important;
-  align-items: center !important;
-  padding: clamp(4px, 0.5vw, 8px) clamp(8px, 1vw, 14px) !important;
-  font-family: var(--font-display) !important;
-  text-transform: uppercase !important;
-  letter-spacing: 0.09em !important;
-  font-size: clamp(7px, 0.55vw, 10px) !important;
-  line-height: 1.35 !important;
-  color: var(--ink-dim) !important;
-}
-
-.header-icon-btn {
-  flex: 0 0 auto !important;
-  width: 48px !important;
-  margin: 2px !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  border-radius: var(--radius-md) !important;
-  border: 1px solid rgba(0, 0, 0, 0.6) !important;
-  background-color: #23282a !important;
-  background-image: var(--btn-face) !important;
-  box-shadow: var(--btn-face-shadow) !important;
-  color: var(--ink-dim) !important;
-  cursor: pointer !important;
-  transition: color 0.15s ease !important;
-}
-.header-icon-btn:hover { color: var(--ink) !important; background-image: var(--btn-face-hover) !important; }
-.header-icon-btn:active { background-image: var(--btn-face-pressed) !important; box-shadow: var(--btn-face-shadow-pressed) !important; }
-.header-icon-btn:focus-visible { outline: none !important; box-shadow: var(--btn-focus-ring), var(--btn-face-shadow) !important; }
 
 /* ---------- Desktop shell: left mission nav (v0's Sidebar) ---------- */
 #primary-nav {
@@ -1203,7 +1172,6 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
   #detection-status { flex-basis: 100% !important; width: 100% !important; }
   .detection-indicator, .status-pill-btn { min-width: 78px !important; padding: 7px 10px !important; }
   #header-clock { padding: 6px 12px !important; flex-basis: 100% !important; flex-direction: row !important; gap: 8px !important; }
-  #header-motto { display: none !important; }
   #primary-nav {
     position: sticky !important;
     top: 62px !important;

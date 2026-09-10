@@ -90,17 +90,16 @@
     <!-- Real wall-clock time, computed client-side (tickHeaderClock() in
          app.js) - not app/mission state, so "no fabricated data" doesn't
          apply to it; it's just never wrong the way a fabricated status
-         value could be. -->
+         value could be. Date above, time centered, LOCAL below - the
+         motto text and the header's own settings icon that used to sit
+         to the right of this are gone (pure decoration, and a duplicate
+         of the real Settings destination already in the left nav), so
+         this box gets that width back instead. -->
     <div id="header-clock" class="recessed-dark">
+      <span id="header-clock-date" class="mono"></span>
       <span id="header-clock-time" class="mono"></span>
       <span class="detection-label">LOCAL</span>
-      <span id="header-clock-date" class="mono"></span>
     </div>
-    <!-- Pure flavor, no functionality - matches v0's verb list. -->
-    <div id="header-motto">FLY<br>PLAN<br>TRACK<br>IMPROVE</div>
-    <button type="button" id="settings-btn" class="header-icon-btn" data-section="settings" aria-label="Settings">
-      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"/><circle cx="12" cy="12" r="3"/></svg>
-    </button>
   </header>
 
   <!-- Primary nav - Ops / Hangar / Flight School / Debrief / Kneeboard /
