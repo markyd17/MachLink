@@ -3,7 +3,6 @@ const airframeDetectedValue = document.getElementById("airframe-detected-value")
 const missionStatusValue = document.getElementById("mission-status-value");
 const simbriefStatusValue = document.getElementById("simbrief-status-value");
 const datalinkStatusValue = document.getElementById("datalink-status-value");
-const settingsBtn = document.getElementById("settings-btn");
 const primaryNavBtns = document.querySelectorAll(".primary-nav-btn");
 const primarySections = {
   ops: document.getElementById("section-ops"),
@@ -138,7 +137,6 @@ function switchPrimarySection(id) {
 primaryNavBtns.forEach((btn) => {
   btn.addEventListener("click", () => switchPrimarySection(btn.dataset.section));
 });
-settingsBtn.addEventListener("click", () => switchPrimarySection("settings"));
 debriefPill.addEventListener("click", () => switchPrimarySection("debrief"));
 
 // ----------------------------------------------------------------------
