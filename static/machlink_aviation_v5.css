@@ -1407,6 +1407,21 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
   height: calc(100vh - var(--header-h) - 52px) !important;
   padding: 0 !important;
 }
+/* Without this, the browser's own [hidden]{display:none} UA rule loses
+   to the unqualified #section-flightschool rule just above (an
+   unconditional id selector + !important beats a plain attribute
+   selector with no !important) - the exact bug #section-ops[hidden]
+   above already exists to prevent for that section, recurring here
+   because this rule was added afterward without its own [hidden]
+   companion. Real regression found live, caused by the very fix just
+   above: switching to ANY other section left Flight School's content
+   fully visible (hidden="true" but computed display:flex) sitting on
+   top of/above whatever the newly active section actually was - with
+   Settings specifically (barely any content of its own), that read as
+   "Settings doesn't open its own page, it just adds a bar at the bottom"
+   because Flight School's leaked content was filling the screen with
+   Settings' own small panel pushed down below the fold. */
+#section-flightschool[hidden] { display: none !important; }
 .mfd-tabs { display: flex !important; flex: 0 0 auto !important; gap: 6px !important; margin-bottom: 8px !important; }
 .mfd-tabs > * {
   border-radius: var(--radius-md) !important;
