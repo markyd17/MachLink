@@ -549,6 +549,10 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
   text-transform: uppercase !important;
   color: var(--ink) !important;
 }
+/* Scoped to the Mission cards specifically (not every .panel-title app-
+   wide) - their titles shrink with a short window too, same min(vw,vh)
+   idiom as the data cells they sit above. */
+.mission-card .panel-title { margin-bottom: clamp(4px, min(0.8vw, 0.8vh), 10px) !important; font-size: clamp(10px, min(1vw, 1vh), 13px) !important; }
 
 /* ---------- OPS ---------- */
 /* flex, not grid - this used to be display:grid with a fixed
@@ -608,7 +612,7 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
   display: flex !important;
   gap: 6px !important;
   flex-wrap: wrap !important;
-  padding: 6px !important;
+  padding: clamp(3px, 0.5vh, 6px) !important;
 }
 /* DEFAULT: dark raised charcoal face (was missing entirely before -
    that's why these turned white: with no author background, the
@@ -635,9 +639,9 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
   font-family: var(--font-display) !important;
   text-transform: uppercase !important;
   letter-spacing: .09em !important;
-  font-size: clamp(.62rem, .8vw, .78rem) !important;
+  font-size: clamp(.62rem, min(.8vw, .8vh), .78rem) !important;
   font-weight: 600 !important;
-  padding: clamp(6px, 0.9vw, 10px) clamp(10px, 1.6vw, 18px) !important;
+  padding: clamp(4px, min(0.9vw, 0.55vh), 10px) clamp(10px, 1.6vw, 18px) !important;
   cursor: pointer !important;
 }
 .ops-tab-btn:hover { color: var(--ink) !important; background-image: var(--btn-face-hover) !important; }
@@ -674,18 +678,13 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
    Mission needs to fill the remaining Ops height for the map. [hidden]
    variants MUST come after the unqualified rule and win on specificity
    (id+attribute beats id alone) - same bug pattern flagged above. */
-#ops-tab-mission { display: flex !important; flex-direction: column !important; gap: 10px !important; overflow-y: auto !important; }
-/* A real, visible scrollbar - the floors above keep this from ever
-   scrolling at most window sizes now, but a genuinely short/cramped
-   window still can need it, and the OS-default scrollbar on this dark
-   theme is nearly invisible, which is exactly how "content is scrolled
-   out of view" reads as "something is covering the cards" instead (the
-   bug this was reported as). Thin and signal-tinted, same idiom as
-   every other real control in this file, not a generic gray bar. */
-#ops-tab-mission::-webkit-scrollbar { width: 8px; }
-#ops-tab-mission::-webkit-scrollbar-track { background: var(--bezel); }
-#ops-tab-mission::-webkit-scrollbar-thumb { background: var(--chassis-hi); border-radius: 4px; }
-#ops-tab-mission::-webkit-scrollbar-thumb:hover { background: var(--signal-dim); }
+/* No scrollbar, ever - explicitly rejected. Every card's own size is
+   instead made to actually shrink with the window (map/row floors and
+   card internals below all clamp() against vh as well as vw now), so
+   there's nothing left needing to scroll at any realistic window size.
+   overflow:hidden stays only as a silent last-resort clip for a
+   genuinely extreme window, never a visible scrollbar. */
+#ops-tab-mission { display: flex !important; flex-direction: column !important; gap: clamp(6px, min(1vw, 0.8vh), 10px) !important; overflow: hidden !important; }
 #ops-tab-mission[hidden] { display: none !important; }
 .ops-tab-panel[hidden] { display: none !important; }
 
@@ -740,8 +739,8 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
 .mission-top-row {
   display: flex !important;
   gap: 10px !important;
-  flex: 3 0 clamp(260px, 46vh, 460px) !important;
-  min-height: clamp(260px, 46vh, 460px) !important;
+  flex: 3 0 clamp(220px, 40vh, 460px) !important;
+  min-height: clamp(220px, 40vh, 460px) !important;
 }
 .mission-map-col { flex: 1 1 auto !important; min-width: 0 !important; display: flex !important; flex-direction: column !important; padding: 8px !important; }
 /* No overflow-y:auto here on purpose - setting one gives this box an
@@ -766,8 +765,13 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
    below scale down with it via their own clamp()s so nothing overflows
    as this narrows. Only the phone breakpoint actually stacks this under
    the map (see its own rule). */
-.mission-right-col { flex: 0 0 clamp(280px, 24vw, 400px) !important; min-width: 0 !important; display: flex !important; flex-direction: column !important; justify-content: space-between !important; gap: 10px !important; }
-.mission-card { padding: 12px !important; flex: 0 0 auto !important; }
+.mission-right-col { flex: 0 0 clamp(280px, 24vw, 400px) !important; min-width: 0 !important; display: flex !important; flex-direction: column !important; justify-content: space-between !important; gap: clamp(6px, min(1vw, 0.8vh), 10px) !important; }
+.mission-card { padding: clamp(6px, min(1vw, 0.8vh), 10px) !important; flex: 0 0 auto !important; }
+/* CURRENT LOADOUT's own h4 - the app-wide .checklist-title (used
+   everywhere from Hangar to Flight School) stays full-size there; only
+   scoped down here where it shares a short window's squeeze with the
+   rest of the Aircraft card. */
+.mission-aircraft-card .checklist-title { margin: clamp(4px, 0.6vh, 8px) 0 clamp(3px, 0.4vh, 6px) !important; font-size: clamp(9px, 0.8vh, 11px) !important; }
 /* Same flex-grow reasoning as .mission-top-row above - fills the room
    the removed placeholder banner used to leave blank instead of it, via
    grid-template-rows:1fr below (a plain grid row otherwise sizes to
@@ -775,14 +779,14 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
    the cards rather than growing them - grid items default to
    align-self:stretch, so a `1fr` row genuinely makes all 3 cards taller,
    not just the row's own empty box). */
-.mission-bottom-row { display: grid !important; grid-template-columns: 1.3fr 1fr 1fr !important; grid-template-rows: 1fr !important; gap: 10px !important; flex: 2 0 auto !important; }
+.mission-bottom-row { display: grid !important; grid-template-columns: 1.3fr 1fr 1fr !important; grid-template-rows: 1fr !important; gap: clamp(6px, min(1vw, 0.8vh), 10px) !important; flex: 2 0 auto !important; }
 
 /* Make the map visually dominant, v0's recessed "screen" bezel - the
    Leaflet map itself (tiles/markers/zoom) is completely untouched, only
    its surrounding chrome changes. */
 .ops-map-home {
   flex: 1 1 auto !important;
-  min-height: clamp(200px, 38vh, 380px) !important;
+  min-height: clamp(170px, 33vh, 380px) !important;
   background: var(--screen) !important;
   border: 1px solid rgba(0,0,0,.7) !important;
   border-radius: var(--radius-md) !important;
@@ -888,20 +892,27 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
    recessed-display look, not just the new cards. .data-label already
    gets this treatment (grouped with .detection-label/.ops-readout-label
    above), so only the grid/cell/value need it. */
-.data-grid { display: grid !important; grid-template-columns: repeat(2, 1fr) !important; gap: 8px 10px !important; }
+.data-grid { display: grid !important; grid-template-columns: repeat(2, 1fr) !important; gap: clamp(5px, min(0.7vw, 0.55vh), 8px) clamp(6px, min(0.9vw, 0.7vh), 10px) !important; }
 .data-grid.cols-3 { grid-template-columns: repeat(3, 1fr) !important; }
 .data-grid.cols-4 { grid-template-columns: repeat(4, 1fr) !important; }
+/* min() of a vw-based and a vh-based term, not just vw - a card's real
+   estate gets squeezed by either a narrower OR a shorter window, and
+   whichever is more constraining should win. This is what actually
+   makes the cards shrink bodily (not just get clipped) as the window
+   gets shorter, instead of relying solely on the outer row's own
+   min-height floor - that floor alone can't shrink a card's real
+   content below what its own padding/font-size demand. */
 .data-cell {
   border: 1px solid rgba(0,0,0,.55) !important;
   background: var(--screen) !important;
   border-radius: var(--radius-sm) !important;
-  padding: 7px 9px !important;
+  padding: clamp(4px, min(0.6vw, 0.42vh), 7px) clamp(6px, min(0.9vw, 0.55vh), 9px) !important;
   box-shadow: inset 0 2px 5px rgba(0,0,0,.6) !important;
 }
 .data-cell.span-2 { grid-column: span 2 !important; }
 .data-value {
   font-family: var(--font-mono) !important;
-  font-size: clamp(14px, 1.4vw, 19px) !important;
+  font-size: clamp(12px, min(1.4vw, 1.5vh), 19px) !important;
   font-weight: 600 !important;
   color: var(--signal) !important;
   text-shadow: 0 0 8px rgba(62,224,138,.3) !important;
@@ -912,9 +923,9 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
 .data-value.ink-faint { color: var(--ink-faint) !important; text-shadow: none !important; }
 /* Mission Info's cells hold short text, not big numerics - the mockup's
    own DataCell/InfoField distinction. */
-.mission-card .data-grid.cols-3 .data-value { font-size: clamp(10px, 1vw, 13px) !important; text-transform: none !important; }
+.mission-card .data-grid.cols-3 .data-value { font-size: clamp(9px, min(1vw, 1.1vh), 13px) !important; text-transform: none !important; }
 .mission-card .data-grid.cols-3 .detection-value-row { min-height: 0 !important; }
-.mission-info-substatus { margin-top: 2px !important; font-size: 11px !important; color: var(--ink-dim) !important; }
+.mission-info-substatus { margin-top: 2px !important; font-size: clamp(8px, min(0.7vw, 1.3vh), 11px) !important; color: var(--ink-dim) !important; }
 
 /* Flight Data's fuel bar - a real percentage-width fill, not decoration -
    see updateOpsSituationalAwareness()'s own opsFuelBarFill.style.width. */
@@ -936,7 +947,7 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
 .mission-aircraft-card { display: flex !important; flex-direction: column !important; }
 .mission-aircraft-name {
   font-family: var(--font-display) !important;
-  font-size: clamp(16px, 1.6vw, 22px) !important;
+  font-size: clamp(14px, min(1.6vw, 1.7vh), 22px) !important;
   font-weight: 700 !important;
   color: var(--ink) !important;
   letter-spacing: .04em !important;
@@ -946,7 +957,7 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
 .mission-aircraft-card #ops-loadout-content { max-height: 130px !important; overflow-y: auto !important; }
 
 .mission-weather-card #mission-weather-theatre { color: var(--ink-dim) !important; font-size: 11px !important; text-transform: none !important; letter-spacing: 0 !important; margin-left: 6px !important; }
-.mission-wx-grid { display: grid !important; grid-template-columns: repeat(2, 1fr) !important; gap: 10px 14px !important; margin: 4px 0 10px !important; }
+.mission-wx-grid { display: grid !important; grid-template-columns: repeat(2, 1fr) !important; gap: clamp(6px, min(0.8vw, 0.8vh), 10px) clamp(8px, min(1.1vw, 1.1vh), 14px) !important; margin: 4px 0 clamp(5px, min(0.8vw, 0.8vh), 10px) !important; }
 .mission-wx-row { display: flex !important; align-items: center !important; gap: 8px !important; color: var(--signal) !important; }
 .mission-wx-row svg { width: clamp(15px, 1.5vw, 20px) !important; height: clamp(15px, 1.5vw, 20px) !important; flex: none !important; }
 .mission-wx-row > div { display: flex !important; flex-direction: column !important; line-height: 1.2 !important; }
@@ -992,7 +1003,7 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
 .mission-flights-table { width: 100% !important; border-collapse: collapse !important; font-family: var(--font-mono) !important; font-size: clamp(9px, 0.85vw, 11.5px) !important; }
 .mission-flights-table th {
   text-align: left !important;
-  padding-bottom: 6px !important;
+  padding-bottom: clamp(2px, 0.4vh, 6px) !important;
   font-family: var(--font-display) !important;
   font-size: 10px !important;
   text-transform: uppercase !important;
@@ -1002,24 +1013,41 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
   border-bottom: 1px solid var(--line) !important;
 }
 .mission-flights-table th.mission-flights-result, .mission-flights-table td.mission-flights-result { text-align: right !important; }
-.mission-flights-table td { padding: 7px 0 !important; color: var(--ink); border-bottom: 1px solid rgba(255,255,255,.05) !important; }
+.mission-flights-table td { padding: clamp(3px, min(0.6vw, 0.55vh), 7px) 0 !important; color: var(--ink); border-bottom: 1px solid rgba(255,255,255,.05) !important; }
 .mission-flights-table tr:last-child td { border-bottom: 0 !important; }
 .mission-flights-row { cursor: pointer !important; }
 .mission-flights-row:hover td:not(.mission-flights-result) { color: var(--signal) !important; }
 
-.ops-events-panel { order: 4 !important; min-height: 95px !important; padding: 11px 12px !important; }
+/* Shrunk and given a smaller, fluid floor (was a flat 95px) - real
+   estate this tab needed back for the map/cards above, per explicit
+   feedback: a live event ticker doesn't need as much permanent height
+   as a whole extra card, especially once it's actually empty ("No
+   events yet this sortie."). Sits at order:4, last in #section-ops's
+   own column, so shrinking it also pulls it - and the bottom edge of
+   the whole tab - closer to the window's own bottom edge instead of
+   leaving it floating with room to spare above it. */
+.ops-events-panel { order: 4 !important; min-height: clamp(40px, 5vh, 62px) !important; padding: clamp(5px, 0.8vh, 9px) 12px !important; }
+/* Its own title, not the untouched app-wide .panel-title default -
+   shrinks with a short window same as the card titles above it do, so
+   the panel's real (content-driven) height actually comes down instead
+   of just its min-height floor, which a title alone can already exceed. */
+.ops-events-panel .panel-title { margin-bottom: clamp(2px, 0.5vh, 6px) !important; font-size: clamp(9px, 0.85vh, 12px) !important; }
 /* A distinct recessed display well, not lines drawn straight onto the
    panel's own raised chassis background - same --screen/--bezel
-   treatment as the map/kneeboard/checklist wells elsewhere. */
+   treatment as the map/kneeboard/checklist wells elsewhere. Its own
+   overflow:auto is unrelated to the "no scrollbar" feedback above - a
+   real, potentially-long combat-event history genuinely benefits from
+   scrolling through it, unlike the Mission tab's cards, which now just
+   shrink instead of ever needing to. */
 #ops-events-list {
-  max-height: 120px !important;
+  max-height: clamp(28px, 4.5vh, 56px) !important;
   overflow: auto !important;
   background: var(--screen) !important;
   border: 1px solid rgba(0,0,0,.7) !important;
   border-radius: var(--radius-sm) !important;
   box-shadow: inset 0 2px 6px rgba(0,0,0,.7) !important;
-  padding: 8px 10px !important;
-  margin-top: 6px !important;
+  padding: clamp(4px, 0.6vh, 6px) 10px !important;
+  margin-top: 4px !important;
 }
 
 /* Hook warning/cautions become avionics annunciators. */
