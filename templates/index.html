@@ -219,13 +219,15 @@
            the id-by-id notes below) or shows an honest NA/-- placeholder -
            never an invented number, same standard as the rest of Ops. -->
       <div class="ops-tab-panel" id="ops-tab-mission">
-        <div class="mission-top-row">
-          <!-- Real Leaflet map, internals completely unchanged (tiles,
-               markers, zoom, KEY, RECENTER) - only its home moved from the
-               old Route tab. See switchOpsTab()'s leafletMap.invalidateSize()
-               call, now keyed off "mission" instead of "route". -->
-          <section class="sub-panel ops-sitaware mission-map-col">
-            <div class="ops-map-home" id="ops-map-home">
+        <!-- Real Leaflet map, internals completely unchanged (tiles,
+             markers, zoom, KEY, RECENTER) - only its home moved from the
+             old Route tab. See switchOpsTab()'s leafletMap.invalidateSize()
+             call, now keyed off "mission" instead of "route". Its own
+             full-width row now (not squeezed beside the telemetry cards) -
+             explicit user request to make the map dominant, the cards
+             below adjusted to fit around it instead. -->
+        <section class="sub-panel ops-sitaware mission-map-col">
+          <div class="ops-map-home" id="ops-map-home">
               <div id="map-controls-bar">
                 <!-- Real signal from DCS.getPause() (see
                      dcs_export_hook.lua/updateOpsSituationalAwareness() in
@@ -285,7 +287,7 @@
             </div>
           </section>
 
-          <div class="mission-right-col">
+          <div class="mission-telemetry-row">
             <!-- FLIGHT DATA - live telemetry, the same real values the old
                  standalone strip above the tabs used to show, just moved
                  into this card (identical ids, so app.js's existing
@@ -350,7 +352,6 @@
               <div class="ops-empty-note">No active waypoint.</div>
             </section>
           </div>
-        </div>
 
         <div class="mission-bottom-row">
           <!-- AIRCRAFT (the mockup's "Quick Aircraft", renamed per
