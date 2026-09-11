@@ -1181,6 +1181,7 @@ function updateRangeRingsAndLabel(lat, lon) {
   const visibleRadiusM = center.distanceTo(L.latLng(center.lat, bounds.getEast()));
   const visibleRadiusNm = visibleRadiusM / METERS_PER_NM;
 
+  mapRangeLabel.hidden = false; // only ever shown once there's a real distance to report - see updateMapMarkers()'s own early returns
   mapRangeLabel.textContent = `${visibleRadiusNm < 1 ? visibleRadiusNm.toFixed(1) : Math.round(visibleRadiusNm)} NM`;
 
   ringsLayer.clearLayers();
@@ -1335,6 +1336,35 @@ function buildMapLegend() {
   `;
 }
 
+// Real per-viewer map preferences (KEY on/off, zoom level) - explicit
+// request: "find a way to save the last state the user left the map in
+// from key being on or off to the zoom distance." localStorage, not
+// anything server-side - this is purely how one person's own browser
+// likes to look at the map, not data anyone else needs to see, and it's
+// already the established fallback for exactly this class of per-viewer
+// convenience. Wrapped in try/catch throughout - private browsing, a
+// cleared site data setting, or a browser configured to block storage
+// can all make localStorage throw on read OR write, and a saved UI
+// preference is never worth a crash over.
+const MAP_PREFS_STORAGE_KEY = "machlink-map-prefs";
+function loadMapPrefs() {
+  try {
+    const raw = localStorage.getItem(MAP_PREFS_STORAGE_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch (e) {
+    return {};
+  }
+}
+function saveMapPrefs(patch) {
+  try {
+    localStorage.setItem(MAP_PREFS_STORAGE_KEY, JSON.stringify({ ...loadMapPrefs(), ...patch }));
+  } catch (e) {
+    // Preference just won't persist this time - not worth surfacing.
+  }
+}
+
 // Esri's "Dark Gray Canvas" - two stacked layers (Base underneath,
 // Reference on top, transparent PNG with just labels/roads/borders) from
 // the same free, key-free server.arcgisonline.com service already
@@ -1359,7 +1389,12 @@ function buildMapLegend() {
 // attempt was.
 function ensureLeafletMap() {
   if (leafletMap) return;
-  leafletMap = L.map(mapLeafletDiv, { center: [0, 0], zoom: 11 });
+  // Real last-used zoom (see MAP_PREFS_STORAGE_KEY above) - 11 stays the
+  // fallback for a first-ever visit with nothing saved yet, or a stored
+  // value too far outside Leaflet's own real zoom range to trust.
+  const savedZoom = loadMapPrefs().zoom;
+  const initialZoom = typeof savedZoom === "number" && savedZoom >= 0 && savedZoom <= 19 ? savedZoom : 11;
+  leafletMap = L.map(mapLeafletDiv, { center: [0, 0], zoom: initialZoom });
   L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}", {
     attribution: "Tiles &copy; Esri",
     maxZoom: 19,
@@ -1385,6 +1420,10 @@ function ensureLeafletMap() {
   leafletMap.on("zoomend moveend", () => {
     if (lastOwnLatLng) updateRangeRingsAndLabel(lastOwnLatLng[0], lastOwnLatLng[1]);
   });
+  // Real last-used zoom, saved on its own listener (not folded into the
+  // "zoomend moveend" one above) since a pan-only moveend has no new zoom
+  // level to record.
+  leafletMap.on("zoomend", () => { saveMapPrefs({ zoom: leafletMap.getZoom() }); });
 }
 
 // Rebuilding the whole layer group every poll tick (below) would destroy
@@ -1503,6 +1542,14 @@ function updateMapMarkers(snapshot) {
     if (dynamicLayer) dynamicLayer.clearLayers();
     if (ringsLayer) ringsLayer.clearLayers();
     hasCenteredOnce = false; // re-center cleanly whenever data resumes, rather than snapping to wherever it last panned
+    // A real, empty-but-bordered box otherwise sat in the map's top-left
+    // corner any time there was nothing to show yet - real bug reported
+    // live ("the little blue rectangle"): mapRangeLabel.textContent was
+    // never actually cleared/hidden on this path, so its own border/
+    // padding kept rendering with nothing inside. Hidden here (and
+    // re-shown only once updateRangeRingsAndLabel() has a real distance
+    // to report) instead.
+    mapRangeLabel.hidden = true;
     return;
   }
   // See the same check in updateOpsSituationalAwareness - a deployed
@@ -1514,6 +1561,7 @@ function updateMapMarkers(snapshot) {
   if (!own || own.lat == null || own.lon == null) {
     mapEmptyState.hidden = false;
     mapEmptyState.textContent = "Waiting for your own aircraft's position...";
+    mapRangeLabel.hidden = true; // same empty-box fix as above - no own position yet means no real range to show
     return;
   }
   mapEmptyState.hidden = true;
@@ -1881,7 +1929,18 @@ mapRecenterBtn.addEventListener("click", () => {
 mapKeyToggle.addEventListener("click", () => {
   mapLegend.hidden = !mapLegend.hidden;
   mapKeyToggle.classList.toggle("active", !mapLegend.hidden);
+  saveMapPrefs({ keyVisible: !mapLegend.hidden });
 });
+// Real last-used KEY visibility (see MAP_PREFS_STORAGE_KEY above) -
+// defaults to OFF for a first-ever visit with nothing saved yet
+// (explicit request: "default the map key to off"), same as the markup
+// itself now ships unchecked/hidden; a genuine prior choice (on OR off)
+// always wins over that default once one exists.
+function applySavedMapKeyVisibility() {
+  const keyVisible = loadMapPrefs().keyVisible === true;
+  mapLegend.hidden = !keyVisible;
+  mapKeyToggle.classList.toggle("active", keyVisible);
+}
 
 // "MFD popout" - explicit request: keep the Mission tab's own map compact
 // and square (like a real aircraft MFD), but let it pop out to a much
@@ -2639,6 +2698,7 @@ loadPilotSummary();
 // for a click, since Ops is the default landing tab.
 ensureLeafletMap();
 buildMapLegend();
+applySavedMapKeyVisibility();
 
 // Always-on, regardless of which primary tab is active.
 // See the comment on pollMapData() itself.
