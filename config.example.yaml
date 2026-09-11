@@ -1,10 +1,5 @@
 # Copy this file to config.yaml and fill in your details.
 
-simbrief:
-  # Either one works - username is easier to find, pilot_id is more stable.
-  username: ""        # SimBrief / Navigraph username, if you have one
-  pilot_id: ""         # SimBrief Pilot ID (Account Settings page)
-
 # Optional. Only used by the "Ask" free-text fallback for questions your
 # loaded aircraft data doesn't cover. Leave blank to disable that feature
 # entirely and run on pure retrieval (recommended if zero-hallucination
@@ -62,8 +57,7 @@ dcs:
   # Leave blank to auto-detect (same Saved Games folder as export_lua_path).
   # Set explicitly only if auto-detect picks the wrong install. Used to
   # extract the real mission briefing (sortie/overview/coalition tasks)
-  # from dcs.log + the loaded .miz - shown in place of SimBrief when DCS
-  # is the detected sim, since SimBrief has no DCS-mission equivalent.
+  # from dcs.log + the loaded .miz.
   log_path: ""
   # Leave blank to auto-detect (checks the standard Eagle Dynamics/Steam
   # install locations). Set explicitly only if DCS is installed somewhere
@@ -80,9 +74,6 @@ dcs:
   # any via DCS's own in-sim "add to kneeboard" feature or dropped in
   # manually. An empty folder here is normal, not a misconfiguration.
   kneeboard_path: ""
-
-msfs:
-  poll_interval_seconds: 5
 
 joystick_diagrams:
   # Folder Joystick Diagrams' own general Export page saves its device SVGs

@@ -1,10 +1,8 @@
 """
 Extracts the real mission briefing (sortie name, overview, coalition task
 text) straight from the .miz DCS is actually flying, so the companion app
-can show it in place of SimBrief when the detected sim is DCS rather than
-MSFS - SimBrief's flight-plan pull has no DCS equivalent, but DCS missions
-already carry their own real, authored briefing text, so this surfaces that
-instead of leaving the panel empty.
+can show it - DCS missions carry their own real, authored briefing text,
+so this surfaces that instead of leaving the panel empty.
 
 How this works, verified against a real mission file rather than assumed:
 DCS logs the exact path of the mission it just loaded to dcs.log (both a
@@ -165,10 +163,10 @@ def _cloud_coverage_word(density):
 
 def _extract_weather(mission_text):
     """Real weather straight off the mission's own ["weather"] table -
-    converted to units a pilot briefing would actually use (kt, ft, inHg),
-    same "send ready-to-render numbers" pattern as /api/simbrief. None if
-    the mission has no weather table at all (shouldn't normally happen,
-    but every field here is best-effort rather than assumed present)."""
+    converted to units a pilot briefing would actually use (kt, ft, inHg).
+    None if the mission has no weather table at all (shouldn't normally
+    happen, but every field here is best-effort rather than assumed
+    present)."""
     weather = _lua_subtable(mission_text, "weather")
     if weather is None:
         return None

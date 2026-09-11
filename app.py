@@ -41,8 +41,6 @@ from integrations.dcs_kneeboard import (
     read_mission_kneeboard_image,
     clean_label,
 )
-from integrations.msfs_watcher import start_msfs_watcher
-from integrations.simbrief import fetch_latest_ofp
 from retrieval import search_aircraft_data, ask_llm_fallback
 from bindings import resolve_aircraft_bindings, load_cockpit_configs, set_active_cockpit_config
 from device_diagrams import diagrams_for_matches
@@ -57,14 +55,12 @@ class AppState:
         self.game = None
         self.aircraft = None
         # Unix time of the last actual "here's an active aircraft" signal
-        # from either integration (dcs_listener.py/msfs_watcher.py) - see
-        # api_status()'s freshness check. Neither integration ever sends an
-        # explicit "no aircraft anymore" signal (DCS's export hook just
-        # stops sending packets once you're not controlling a unit; MSFS's
-        # poll loop just keeps returning whatever it last saw), so without
-        # this, game/aircraft would stay frozen at their last value forever
-        # after you exit - a real bug found live (fuel/heading still
-        # showing on Ops while not even in a mission).
+        # from dcs_listener.py - see api_status()'s freshness check. DCS's
+        # export hook never sends an explicit "no aircraft anymore" signal
+        # (it just stops sending packets once you're not controlling a
+        # unit), so without this, game/aircraft would stay frozen at their
+        # last value forever after you exit - a real bug found live (fuel/
+        # heading still showing on Ops while not even in a mission).
         self.last_game_signal_at = None
         # True/False from DCS.getPause() (see dcs_export_hook.lua), None if
         # unknown (no signal yet, or an older DCS without that API) - used
@@ -73,8 +69,6 @@ class AppState:
         # than treating any staleness as "you left the aircraft" and
         # blanking everything (a real bug found live).
         self.dcs_paused = None
-        self.msfs_available = False
-        self.msfs_error = None
         self.dcs_hook = None
         self.dcs_mission_hook = None
         self.dcs_mission_briefing = None
@@ -115,11 +109,10 @@ live_event_store = LiveEventStore()
 
 
 def load_aircraft_file(name, game=None):
-    """Looks up an aircraft's data file by the exact name the game reports.
+    """Looks up an aircraft's data file by the exact name DCS reports.
     Tries, in order: an unprefixed exact match, a game-prefixed match
-    (dcs_<name>.json / msfs_<name>.json - supports the dcs_/msfs_ filename
-    convention), then falls back to a normalized display_name comparison
-    across all files."""
+    (dcs_<name>.json - supports the dcs_ filename convention), then falls
+    back to a normalized display_name comparison across all files."""
     if not name:
         return None
 
@@ -127,7 +120,7 @@ def load_aircraft_file(name, game=None):
     if game:
         candidates.insert(0, f"{game}_{name}.json")
     else:
-        candidates += [f"dcs_{name}.json", f"msfs_{name}.json"]
+        candidates.append(f"dcs_{name}.json")
 
     for candidate in candidates:
         direct = DATA_DIR / candidate
@@ -151,13 +144,12 @@ def index():
     return render_template("index.html")
 
 
-# Neither integration ever sends an explicit "no aircraft anymore" signal
-# (see the comment on AppState.last_game_signal_at) - DCS's export hook
-# sends telemetry roughly every 2s while actively controlling a unit
-# (dcs_export_hook.lua's telemetryIntervalSeconds), MSFS's watcher polls
-# every 5s (msfs_watcher.py's poll_interval_seconds default) - this is
-# generous buffer past either cadence without leaving stale data visible
-# for long after you've actually exited.
+# DCS's export hook never sends an explicit "no aircraft anymore" signal
+# (see the comment on AppState.last_game_signal_at) - it sends telemetry
+# roughly every 2s while actively controlling a unit
+# (dcs_export_hook.lua's telemetryIntervalSeconds) - this is a generous
+# buffer past that cadence without leaving stale data visible for long
+# after you've actually exited.
 GAME_SIGNAL_STALE_SECONDS = 8.0
 
 
@@ -167,7 +159,6 @@ def api_status():
         game, aircraft = state.game, state.aircraft
         last_signal_at = state.last_game_signal_at
         dcs_paused = state.dcs_paused
-        msfs_available, msfs_error = state.msfs_available, state.msfs_error
         dcs_hook = state.dcs_hook
         dcs_mission_hook = state.dcs_mission_hook
 
@@ -192,7 +183,6 @@ def api_status():
         # apart from "actually disconnected" instead of blanking the whole
         # Ops display either way.
         "dcs_paused": dcs_paused,
-        "msfs_connection": {"available": msfs_available, "error": msfs_error},
         "dcs_hook": dcs_hook,
         "dcs_mission_hook": dcs_mission_hook,
     })
@@ -422,16 +412,6 @@ def api_kneeboard_page(source, index):
     return Response(data, mimetype=mimetype)
 
 
-@app.route("/api/simbrief")
-def api_simbrief():
-    sb_cfg = CONFIG.get("simbrief") or {}
-    result = fetch_latest_ofp(
-        username=sb_cfg.get("username") or None,
-        pilot_id=sb_cfg.get("pilot_id") or None,
-    )
-    return jsonify(result)
-
-
 @app.route("/api/aircraft_list")
 def api_aircraft_list():
     out = []
@@ -457,7 +437,6 @@ if __name__ == "__main__":
         sys.stderr = log_file
 
     dcs_cfg = CONFIG.get("dcs") or {}
-    msfs_cfg = CONFIG.get("msfs") or {}
 
     start_hook_guard(
         explicit_path=dcs_cfg.get("export_lua_path") or None,
@@ -480,7 +459,6 @@ if __name__ == "__main__":
     # won't exist.
     start_pretense_zone_watcher(map_data_store, live_event_store, explicit_path=dcs_cfg.get("pretense_stats_path") or None)
     start_mission_briefing_watcher(state, explicit_log_path=dcs_cfg.get("log_path") or None)
-    start_msfs_watcher(state, poll_interval_seconds=msfs_cfg.get("poll_interval_seconds", 5))
 
     server_cfg = CONFIG.get("server") or {}
     port = server_cfg.get("port", 5000)
