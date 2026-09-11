@@ -786,7 +786,29 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
    before - there was no way to free width for Aircraft without also
    scoping the ticker to whichever container it actually shares a row
    with. */
-.mission-bottom-row { display: grid !important; grid-template-columns: 1.3fr 1fr 1fr !important; grid-template-rows: auto auto !important; gap: clamp(6px, min(1vw, 0.56vh), 10px) !important; flex: 2 0 auto !important; }
+/* flex:2 0 auto -> flex:2 1 auto + min-height:0 - real bug found live
+   with a realistic 5-item loadout (reported with a screenshot): flex-
+   shrink:0 meant this row could never shrink below its own natural
+   content height, and grid-template-rows:auto auto sizes each row to
+   whatever its tallest item's content needs - so once the Aircraft
+   card's real loadout list (which spans both rows) got tall enough,
+   the row just grew past whatever height #ops-tab-mission actually had
+   left, overflowing the tab by a measured 28px at 1366x768 (0 fabricated -
+   this is scrollHeight-clientHeight from injecting a real 5-item A-10C
+   loadout, not a guess). #ops-loadout-content already has its own
+   flex:1 1 auto;min-height:0;overflow-y:auto (the established cap-and-
+   scroll pattern used everywhere else in this file) and was fully
+   capable of scrolling internally - it just never got the chance,
+   because flex-shrink:0 up here meant nothing above it was ever
+   actually constrained enough to make that overflow:auto kick in. flex-
+   shrink:1 lets this row actually shrink to whatever #ops-tab-mission
+   has left (same as every other flexed row in this tab), and min-height:0
+   overrides the grid's own automatic-minimum-size floor (the grid-level
+   equivalent of flexbox's min-height:auto trap) that would otherwise
+   still refuse to shrink below the spanning Aircraft card's full content
+   height. Verified live: a long loadout now genuinely scrolls inside
+   the Aircraft card instead of pushing the tab taller. */
+.mission-bottom-row { display: grid !important; grid-template-columns: 1.3fr 1fr 1fr !important; grid-template-rows: auto auto !important; gap: clamp(6px, min(1vw, 0.56vh), 10px) !important; flex: 2 1 auto !important; min-height: 0 !important; }
 .mission-aircraft-card { grid-column: 1 !important; grid-row: 1 / span 2 !important; }
 .mission-weather-card { grid-column: 2 !important; grid-row: 1 !important; }
 .mission-recentflights-card { grid-column: 3 !important; grid-row: 1 !important; }
@@ -1228,42 +1250,61 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
    for a loadout longer than even the taller card fits. */
 .mission-aircraft-card #ops-loadout-content { flex: 1 1 auto !important; min-height: 0 !important; overflow-y: auto !important; }
 /* Thumbnail sits beside the loadout details, not above/below them -
-   explicit request. Sized off the row's own height now (align-items:
-   stretch, the flex default, is what makes that the definite dimension -
-   same "aspect-ratio derives from the stretched cross-size" technique
-   .mission-map-col above uses for the main map), not a vw-based width
-   guess - Aircraft has real extra height to spend now that it spans
-   both .mission-bottom-row rows, so the image can actually grow with it
-   instead of staying pinned to whatever Weather/Recent Flights' single-
-   row height allowed. max-width keeps it from ever dominating over the
-   loadout list on a very tall/narrow card. object-fit:cover on a real
-   square (cropped tight to the airframe - see the thumbnails' own repo
-   history) source image, so it never distorts. Hidden entirely (see
-   thumbnailForAircraft() in app.js) for an aircraft with no matching
-   real image - the loadout column just takes the full row instead of
-   leaving an empty/broken image box. */
+   explicit request. Real bug found live (reported with a screenshot):
+   the old rule here relied on align-items:stretch (the row's default)
+   to make height the definite dimension and let aspect-ratio derive
+   width from it, capped by max-width. That's fundamentally unreliable
+   whenever the stretched height's aspect-derived width would exceed
+   max-width: the browser clamps width to the cap but does NOT go back
+   and shrink height to match (height was already definite via stretch,
+   not the "auto" side aspect-ratio recomputes) - confirmed live at BOTH
+   .mission-bottom-row's own flex-shrink:0 bug (see that rule's comment -
+   fixed alongside this) making the row artificially tall (a measured
+   131x195 skewed box), AND, separately, after that fix, at a wider
+   1920x1080 layout where the row's real height (267px) still legitimately
+   exceeds the width cap (210px 42x267 box) - two independent ways to hit
+   the same skew, not one bug with one cause. object-fit:cover on either
+   skewed box then had to crop a real chunk off the sides of the source
+   photo (which IS a genuine 1:1 square, cropped tight to the airframe -
+   see the thumbnails' own repo history) to fill it, cutting off the
+   nose/tail. Fixed for real by opting this item OUT of the row's stretch
+   (align-self:center) and using a real `width` (not max-width) as the
+   only sizing input - height is then purely aspect-ratio-derived from
+   that width, so it is unconditionally square regardless of the row's
+   own height in either direction. Trade-off: on a row taller than the
+   resulting square, it now sits centered with some empty space above/
+   below rather than growing to fill - a deliberate choice for "never
+   skewed" over "always fills the row," verified square (both dimensions
+   equal) at both 1366x768 and 1920x1080. Deliberately no max-height
+   here either - a `max-height:100%` clamp (the old design's safety
+   net) reintroduces the exact same non-square skew whenever the row is
+   shorter than the width-derived square (measured live: a 174x168 box
+   at 1366x768 with it in place), for a bug this codebase already spent
+   a screenshot report chasing once. Widened at the same time per
+   explicit request ("give room for the thumbnail"). Hidden entirely
+   (see thumbnailForAircraft() in app.js) for an aircraft with no
+   matching real image - the loadout column just takes the full row
+   instead of leaving an empty/broken image box. */
 .mission-aircraft-body { display: flex !important; gap: clamp(8px, 1.2vw, 14px) !important; align-items: stretch !important; min-height: 0 !important; flex: 1 1 auto !important; }
 .mission-aircraft-thumb {
   flex: 0 0 auto !important;
+  align-self: center !important;
+  width: min(42%, 210px) !important;
   aspect-ratio: 1 / 1 !important;
-  /* 34%, not a rounder-looking number - measured live: with Recent
-     Events now sharing .mission-bottom-row (see that rule's own
-     comment), this card's own natural need (thumbnail + loadout list)
-     had become very slightly taller than Weather/Recent Flights +
-     Recent Events' combined natural need, which was forcing the whole
-     shared row - and #ops-tab-mission's total height - a few px taller
-     than necessary at 1366x768 (a real, measured 7px of overflow with a
-     long real briefing text elsewhere on the page, even though the
-     briefing itself no longer lives in this tab at all). 34% brings
-     Aircraft back in line with its row-mates; re-verify this number if
-     the card's other content changes again. */
-  max-width: min(34%, 180px) !important;
-  max-height: 100% !important;
   object-fit: cover !important;
   border-radius: var(--radius-sm) !important;
-  border: 1px solid rgba(0,0,0,.6) !important;
   background: var(--screen) !important;
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,.03), 0 2px 6px rgba(0,0,0,.5) !important;
+  /* Soft radial fade instead of a hard-edged photo rectangle - explicit
+     request ("soften the edges... blend better with the background").
+     A plain border/inset box-shadow (the old treatment) reads as a
+     sticker pasted on top of the card; masking the image's own edges
+     down to transparent lets the card's dark background show through
+     at the corners/edges instead, so it reads as part of the card
+     rather than a cutout photo. Chromium (this app's WebView2 runtime)
+     needs the -webkit- prefixed property; the unprefixed one is kept
+     for forward compatibility. */
+  mask-image: radial-gradient(ellipse 72% 72% at 50% 50%, #000 55%, transparent 100%) !important;
+  -webkit-mask-image: radial-gradient(ellipse 72% 72% at 50% 50%, #000 55%, transparent 100%) !important;
 }
 .mission-aircraft-loadout-col { flex: 1 1 auto !important; min-width: 0 !important; display: flex !important; flex-direction: column !important; min-height: 0 !important; }
 
