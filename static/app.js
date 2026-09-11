@@ -16,6 +16,7 @@ const kneeboardNavBtn = document.getElementById("kneeboard-nav-btn");
 const opsTabBtns = document.querySelectorAll(".ops-tab-btn");
 const opsTabPanels = {
   mission: document.getElementById("ops-tab-mission"),
+  briefing: document.getElementById("ops-tab-briefing"),
   threats: document.getElementById("ops-tab-threats"),
   weather: document.getElementById("ops-tab-weather"),
   airfields: document.getElementById("ops-tab-airfields"),
