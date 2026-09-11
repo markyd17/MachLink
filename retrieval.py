@@ -136,7 +136,7 @@ def ask_llm_fallback(query, aircraft_context, api_key, model):
     client = anthropic.Anthropic(api_key=api_key)
     system = (
         "You are a flight-sim assistant. The user is asking about an aircraft "
-        "in DCS or MSFS. You were NOT given verified checklist data for this "
+        "in DCS World. You were NOT given verified checklist data for this "
         "question, so answer only with general, well-known simulation "
         "knowledge, be explicit about any uncertainty, and recommend the user "
         "verify against their official checklist/guide before relying on it "

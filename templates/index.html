@@ -45,16 +45,14 @@
       </span>
       <span class="brand-sub">Tactical Flight Companion</span>
     </h1>
-    <!-- Six separate indicators, not one combined string - each is a
+    <!-- Five separate indicators, not one combined string - each is a
          genuinely different real signal, never a guess or a leftover
          value (see updateDetectionIndicators()/pollDebriefStatus() in
          app.js, all driven by data already fetched for other reasons -
          no new backend calls):
-           SIM       - data.game ("dcs"/"msfs"/none)
+           SIM       - data.game ("dcs"/none)
            AIRCRAFT  - data.aircraft (was labeled AIRFRAME)
            MISSION   - derived from sortie_start_time != null (airborne)
-           SIMBRIEF  - derived from whether a pull has actually populated
-                       simbriefContent (MSFS-only, like the panel itself)
            DATA LINK - derived from altitude_ft/speed_kt being non-null
                        (real telemetry presence, already fetched for the
                        Ops flight-status strip)
@@ -73,10 +71,6 @@
       <div class="detection-indicator">
         <span class="detection-label">MISSION</span>
         <span class="detection-value-row"><span class="ml-led idle" id="mission-status-led"></span><span id="mission-status-value" class="status-block idle mono">—</span></span>
-      </div>
-      <div class="detection-indicator">
-        <span class="detection-label">SIMBRIEF</span>
-        <span class="detection-value-row"><span class="ml-led idle" id="simbrief-status-led"></span><span id="simbrief-status-value" class="status-block idle mono">—</span></span>
       </div>
       <div class="detection-indicator">
         <span class="detection-label">DATA LINK</span>
@@ -155,9 +149,9 @@
   </nav>
 
   <div id="primary-content">
-    <!-- OPS - pre-flight planning (SimBrief OFP, DCS mission briefing) and
-         live in-flight tracking (Live Map), together: "what's happening
-         this sortie." Default landing section. -->
+    <!-- OPS - pre-flight planning (DCS mission briefing) and live
+         in-flight tracking (Live Map), together: "what's happening this
+         sortie." Default landing section. -->
     <section class="primary-section" id="section-ops">
       <!-- The mission hook (Saved Games\DCS\Scripts\MachLinkMissionHook.lua)
            is a MANUAL, one-time copy per the README - pulling a MachLink
@@ -186,14 +180,14 @@
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
           <span>Mission</span>
         </button>
-        <!-- BRIEFING - the real SimBrief OFP / DCS mission narrative text
-             (overview/blue task/red task), given its own destination per
-             explicit request: "remove the briefing card and give it its
-             own tab within Ops" - a genuinely unpredictable-length real
-             text block no longer has to compete with the map/cards/
-             ticker for room in the Mission tab, which is what caused a
-             real, confirmed overflow at 1366x768 with a long real
-             briefing (root-caused live, not guessed). Same real
+        <!-- BRIEFING - the real DCS mission narrative text (overview/blue
+             task/red task), given its own destination per explicit
+             request: "remove the briefing card and give it its own tab
+             within Ops" - a genuinely unpredictable-length real text
+             block no longer has to compete with the map/cards/ticker for
+             room in the Mission tab, which is what caused a real,
+             confirmed overflow at 1366x768 with a long real briefing
+             (root-caused live, not guessed). Same real
              pollDcsBriefing()/renderDcsBriefing() logic, unchanged - only
              its home moved. -->
         <button type="button" class="ops-tab-btn" data-ops-tab="briefing">
@@ -217,11 +211,11 @@
              own grid instead (between Status and the LAUNCH indicator) -
              see that grid further down. -->
         <!-- Real signal, same one the old full-width "Begin Mission to
-             Fetch Data" banner used to gate on - shown exactly while
-             neither SimBrief nor a DCS mission briefing has anything yet
-             (see pollStatus() in app.js), hidden the moment either sim is
-             actually detected. Lives in the tab strip's own free space
-             now instead of a banner that used to take a whole row. -->
+             Fetch Data" banner used to gate on - shown exactly while the
+             DCS mission briefing has nothing yet (see pollStatus() in
+             app.js), hidden the moment DCS is actually detected. Lives in
+             the tab strip's own free space now instead of a banner that
+             used to take a whole row. -->
         <span id="ops-tabs-hint">Begin mission to show data</span>
       </div>
 
@@ -230,7 +224,7 @@
            permanently) beside live-telemetry cards (Flight Data/Mission
            Info/Next Waypoint), a bottom row (Aircraft/Weather/Recent
            Flights), and the existing real pre-flight briefing content
-           (SimBrief OFP / DCS's own mission briefing / current loadout).
+           (DCS's own mission briefing / current loadout).
            Every field either binds to a real, already-fetched value (see
            the id-by-id notes below) or shows an honest NA/-- placeholder -
            never an invented number, same standard as the rest of Ops. -->
@@ -410,11 +404,10 @@
             </section>
 
             <!-- NEXT WAYPOINT - no waypoint/route-leg concept exists
-                 anywhere in MachLink (SimBrief's own OFP legs are shown in
-                 full in the briefing panel below, but nothing tracks "the
-                 next one" against your live position) - a real, present
-                 card with an honest empty state, never invented BRG/DIST/
-                 ETE numbers. -->
+                 anywhere in MachLink (nothing tracks "the next one"
+                 against your live position) - a real, present card with
+                 an honest empty state, never invented BRG/DIST/ETE
+                 numbers. -->
             <section class="sub-panel mission-card mission-waypoint-card">
               <h2 class="panel-title">Next Waypoint</h2>
               <div class="ops-empty-note">No active waypoint.</div>
@@ -432,9 +425,8 @@
                thumbnail per detected airframe DOES exist now (explicit
                follow-up, once real images were provided) - see
                thumbnailForAircraft() in app.js; #mission-aircraft-thumb
-               just stays hidden for an aircraft with no matching image
-               (an MSFS aircraft, or a DCS module not in that list)
-               rather than showing a wrong or broken picture. -->
+               just stays hidden for a DCS module not in that list rather
+               than showing a wrong or broken picture. -->
           <section class="sub-panel mission-card mission-aircraft-card">
             <h2 class="panel-title">Aircraft</h2>
             <div class="mission-aircraft-name" id="mission-aircraft-name">NA</div>
@@ -442,8 +434,8 @@
             <div class="mission-aircraft-body">
               <img class="mission-aircraft-thumb" id="mission-aircraft-thumb" alt="" hidden>
               <div class="mission-aircraft-loadout-col">
-                <section class="simbrief-panel" id="ops-loadout-panel" hidden>
-                  <div id="ops-loadout-content" class="simbrief-content"></div>
+                <section class="briefing-panel" id="ops-loadout-panel" hidden>
+                  <div id="ops-loadout-content" class="briefing-content"></div>
                 </section>
                 <div class="ops-empty-note" id="mission-aircraft-empty">No loadout data.</div>
               </div>
@@ -517,33 +509,24 @@
         </div>
       </div>
 
-      <!-- BRIEFING - the real SimBrief OFP pull / DCS mission narrative
-           text (overview/blue task/red task), given its own destination
-           per explicit request: "remove the briefing card and give it
-           its own tab within Ops." A genuinely unpredictable-length real
-           text block no longer has to compete with the map/cards/ticker
-           for room the way it did crammed into the Mission tab - that
-           was the actual root cause of a real, confirmed overflow at
-           1366x768 with a long real briefing (root-caused live, not
-           guessed, in the session that led to this restructure). Same
-           ids, same pollStatus()/renderDcsBriefing() logic, completely
-           unchanged - only which tab hosts it moved. SimBrief has no
-           DCS-mission equivalent - a real DCS mission already carries
-           its own authored briefing, so that's what fills this slot
-           instead when the detected sim is DCS (see pollStatus in
-           app.js). Whenever neither applies, both panels below just stay
-           hidden - the "nothing yet" status lives as a small hint next
-           to the ops tab strip instead (#ops-tabs-hint). -->
+      <!-- BRIEFING - the real DCS mission narrative text (overview/blue
+           task/red task), given its own destination per explicit
+           request: "remove the briefing card and give it its own tab
+           within Ops." A genuinely unpredictable-length real text block
+           no longer has to compete with the map/cards/ticker for room
+           the way it did crammed into the Mission tab - that was the
+           actual root cause of a real, confirmed overflow at 1366x768
+           with a long real briefing (root-caused live, not guessed, in
+           the session that led to this restructure). Same ids, same
+           pollStatus()/renderDcsBriefing() logic, completely unchanged -
+           only which tab hosts it moved. Whenever no DCS mission is
+           detected, the panel below just stays hidden - the "nothing
+           yet" status lives as a small hint next to the ops tab strip
+           instead (#ops-tabs-hint). -->
       <div class="ops-tab-panel" id="ops-tab-briefing" hidden>
-        <section class="sub-panel simbrief-panel" id="simbrief-panel" hidden>
-          <h2 class="panel-title">SimBrief</h2>
-          <button id="simbrief-refresh" class="simbrief-btn">Pull Latest OFP</button>
-          <div id="simbrief-content" class="simbrief-content"></div>
-        </section>
-
-        <section class="sub-panel simbrief-panel" id="dcs-briefing-panel" hidden>
+        <section class="sub-panel briefing-panel" id="dcs-briefing-panel" hidden>
           <h2 class="panel-title">DCS Mission Briefing</h2>
-          <div id="dcs-briefing-content" class="simbrief-content"></div>
+          <div id="dcs-briefing-content" class="briefing-content"></div>
         </section>
       </div>
 
@@ -634,8 +617,8 @@
          reference for the detected airframe: checklists, weapons,
          jettison, systems notes, the aircraft-search bar, bindings and
          cockpit config. Unchanged from the old left panel, just promoted
-         to its own full-width tab instead of sharing the screen with
-         SimBrief/briefing. -->
+         to its own full-width tab instead of sharing the screen with the
+         mission briefing. -->
     <section class="primary-section panel left-panel" id="section-flightschool" hidden>
       <div class="mfd-tabs" id="mfd-tabs"></div>
       <!-- A search bar, not a separate Q&A panel: submitting jumps to

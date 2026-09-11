@@ -1,7 +1,7 @@
 {
-  "_notes": "Copy this file to <exact in-sim aircraft name>.json. For DCS, use the module short name DCS reports on export (e.g. 'FA-18C_hornet'). For MSFS, use the exact ATC Model/Title string (check the aircraft's aircraft.cfg or the in-sim aircraft selector). Delete this _notes field in real files.",
+  "_notes": "Copy this file to <exact in-sim aircraft name>.json, using the module short name DCS reports on export (e.g. 'FA-18C_hornet'). Delete this _notes field in real files.",
 
-  "game": "dcs | msfs",
+  "game": "dcs",
   "display_name": "F/A-18C Hornet",
   "source": {
     "name": "Chuck's Guide to the F/A-18C Hornet",

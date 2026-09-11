@@ -1032,14 +1032,14 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
    reported live: with flex-grow:0, this panel always sized to its own
    full natural content height regardless of how much room
    #ops-tab-mission actually had left after the map row/card row/events
-   ticker above and below it. #dcs-briefing-content/#simbrief-content's
-   own flex:1;overflow-y:auto;min-height:0 (.simbrief-content, base
+   ticker above and below it. #dcs-briefing-content's own
+   flex:1;overflow-y:auto;min-height:0 (.briefing-content, base
    style.css) already existed for exactly this - a genuinely
-   unpredictable-length real mission briefing or SimBrief OFP - it just
-   never had a bounded parent to actually cap against, since flex-grow:0
-   let THIS panel grow to match its content instead of the other way
-   around. A mission with a real, substantial authored briefing pushed
-   the whole tab taller than its fixed height, #ops-tab-mission's own
+   unpredictable-length real mission briefing - it just never had a
+   bounded parent to actually cap against, since flex-grow:0 let THIS
+   panel grow to match its content instead of the other way around. A
+   mission with a real, substantial authored briefing pushed the whole
+   tab taller than its fixed height, #ops-tab-mission's own
    overflow:hidden silently clipping the excess with no visible symptom
    in a screenshot - only found by measuring scrollHeight vs
    clientHeight directly. flex-grow:1 gives this panel whatever's
@@ -1051,10 +1051,10 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
    panel shrink below its content's natural height in the first place
    (a flex item's default min-height:auto refuses to shrink below its
    own content otherwise, regardless of flex-shrink) - .sub-panel's own
-   base min-height:0 (style.css) covers the child #dcs-briefing-content/
-   #simbrief-content already, but this panel itself needed it too. */
-.simbrief-panel { padding: 12px !important; flex: 1 1 auto !important; min-height: 0 !important; }
-.simbrief-btn, .logbook-btn, .ask-btn {
+   base min-height:0 (style.css) covers the child #dcs-briefing-content
+   already, but this panel itself needed it too. */
+.briefing-panel { padding: 12px !important; flex: 1 1 auto !important; min-height: 0 !important; }
+.logbook-btn, .ask-btn {
   background-color: #23282a !important;
   background-image: var(--btn-face) !important;
   border: 1px solid rgba(0,0,0,.6) !important;
@@ -1064,9 +1064,9 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
   text-transform: uppercase !important;
   letter-spacing: .08em !important;
 }
-.simbrief-btn:hover, .logbook-btn:hover, .ask-btn:hover { color: var(--signal) !important; background-image: var(--btn-face-hover) !important; }
-.simbrief-btn:active, .logbook-btn:active, .ask-btn:active { background-image: var(--btn-face-pressed) !important; box-shadow: var(--btn-face-shadow-pressed) !important; }
-.simbrief-btn:focus-visible, .logbook-btn:focus-visible, .ask-btn:focus-visible { outline: none !important; box-shadow: var(--btn-focus-ring), var(--btn-face-shadow) !important; }
+.logbook-btn:hover, .ask-btn:hover { color: var(--signal) !important; background-image: var(--btn-face-hover) !important; }
+.logbook-btn:active, .ask-btn:active { background-image: var(--btn-face-pressed) !important; box-shadow: var(--btn-face-shadow-pressed) !important; }
+.logbook-btn:focus-visible, .ask-btn:focus-visible { outline: none !important; box-shadow: var(--btn-focus-ring), var(--btn-face-shadow) !important; }
 
 /* .data-grid/.data-cell/.data-value/.data-label are shared, generic
    readout classes (style.css) already reused by the DCS-briefing weather
@@ -1218,7 +1218,7 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
   letter-spacing: .04em !important;
   margin-bottom: 4px !important;
 }
-.mission-aircraft-card .simbrief-panel { padding: 0 !important; background: none !important; border: 0 !important; box-shadow: none !important; display: flex !important; flex-direction: column !important; flex: 1 1 auto !important; min-height: 0 !important; }
+.mission-aircraft-card .briefing-panel { padding: 0 !important; background: none !important; border: 0 !important; box-shadow: none !important; display: flex !important; flex-direction: column !important; flex: 1 1 auto !important; min-height: 0 !important; }
 /* max-height -> flex:1 1 auto/min-height:0 - now that Aircraft spans
    both .mission-bottom-row rows (explicit request: "enlarge the
    Aircraft card down to where the Mission Brief is through the recent

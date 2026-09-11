@@ -1,7 +1,6 @@
 const simDetectedValue = document.getElementById("sim-detected-value");
 const airframeDetectedValue = document.getElementById("airframe-detected-value");
 const missionStatusValue = document.getElementById("mission-status-value");
-const simbriefStatusValue = document.getElementById("simbrief-status-value");
 const datalinkStatusValue = document.getElementById("datalink-status-value");
 const primaryNavBtns = document.querySelectorAll(".primary-nav-btn");
 const primarySections = {
@@ -32,9 +31,6 @@ const askForm = document.getElementById("ask-form");
 const askInput = document.getElementById("ask-input");
 const askBarResult = document.getElementById("ask-bar-result");
 const opsTabsHint = document.getElementById("ops-tabs-hint");
-const simbriefPanel = document.getElementById("simbrief-panel");
-const simbriefBtn = document.getElementById("simbrief-refresh");
-const simbriefContent = document.getElementById("simbrief-content");
 const dcsBriefingPanel = document.getElementById("dcs-briefing-panel");
 const dcsBriefingContent = document.getElementById("dcs-briefing-content");
 const opsWeatherBody = document.getElementById("ops-weather-body");
@@ -318,12 +314,11 @@ cockpitConfigSelect.addEventListener("change", async () => {
 
 loadCockpitConfigs();
 
-// Two independent signals, not one combined string: which sim is running
-// (or neither) and which airframe it's reporting (or none) - genuinely
-// different questions (MSFS can be detected sitting at a menu with no
-// airframe loaded yet; DCS's export hook can't currently tell "DCS is
-// open but idle" from "DCS isn't running" apart, since it only ever sends
-// anything at all once you're actually controlling a unit - an honest gap
+// Two independent signals, not one combined string: whether DCS is running
+// (or not) and which airframe it's reporting (or none) - genuinely
+// different questions, since DCS's export hook can't currently tell "DCS is
+// open but idle" from "DCS isn't running" apart - it only ever sends
+// anything at all once you're actually controlling a unit (an honest gap
 // in what that hook can report, not something to paper over here).
 // data.game/data.aircraft are already staleness-checked server-side
 // (api_status() in app.py) - by the time this runs, null genuinely means
@@ -333,9 +328,6 @@ function updateDetectionIndicators(data) {
   if (data.game === "dcs") {
     simText = "DCS DETECTED";
     simCls = "status-block dcs mono"; // lime green - see .status-block.dcs
-  } else if (data.game === "msfs" || (data.msfs_connection && data.msfs_connection.available)) {
-    simText = "MSFS DETECTED";
-    simCls = "status-block mono"; // stays the default cyan/blue treatment
   } else {
     simText = "NO SIM DETECTED";
     simCls = "status-block idle mono";
@@ -370,10 +362,10 @@ function updateDetectionIndicators(data) {
 // data/flight_log.json all show "A-10C_2"/"AH-64D_BLK_II"/"F-16c_50"/
 // "FA-18C_hornet" from real flights) - the rest are standard, widely-
 // documented DCS module type names but UNVERIFIED here; flag if a real
-// detection doesn't actually match one. No entry at all for an MSFS
-// aircraft or an unrecognized DCS module - thumbnailForAircraft() returns
-// null and the image just stays hidden rather than guessing or showing
-// a broken/wrong picture.
+// detection doesn't actually match one. No entry at all for an
+// unrecognized DCS module - thumbnailForAircraft() returns null and the
+// image just stays hidden rather than guessing or showing a broken/wrong
+// picture.
 const AIRFRAME_THUMBNAILS = [
   { keywords: ["a-10", "a10"], file: "a10-thumb.png" },
   { keywords: ["ah-64", "ah64"], file: "ah64-thumb.png" },
@@ -412,7 +404,7 @@ async function pollStatus() {
 
     // Mission Info's Aircraft field and the Aircraft card's name both
     // mirror the exact same data.aircraft the header's AIRCRAFT pill
-    // already shows above - real any time a sim is detected, DCS or MSFS.
+    // already shows above - real any time DCS has a unit detected.
     const aircraftText = data.aircraft ? data.aircraft.toUpperCase() : "NA";
     missionAircraftValue.textContent = aircraftText;
     missionAircraftName.textContent = aircraftText;
@@ -426,19 +418,13 @@ async function pollStatus() {
       missionAircraftThumb.removeAttribute("src");
     }
 
-    // SimBrief has no DCS-mission equivalent - a real DCS mission already
-    // carries its own authored briefing, so that's what fills this slot
-    // instead when the detected sim is DCS. The small tab-strip hint
-    // takes over whenever NEITHER applies (no sim detected yet, or a
-    // sim's detected but you're not in a mission/aircraft) - same real
-    // signal the old full-width placeholder banner used, just relocated.
-    simbriefPanel.hidden = data.game !== "msfs";
+    // A real DCS mission carries its own authored briefing, so the panel
+    // shows once DCS is detected. The small tab-strip hint takes over
+    // whenever it isn't (no sim detected yet, or you're not in a mission/
+    // aircraft) - same real signal the old full-width placeholder banner
+    // used, just relocated.
     dcsBriefingPanel.hidden = data.game !== "dcs";
-    opsTabsHint.hidden = data.game === "msfs" || data.game === "dcs";
-    if (data.game !== "msfs") {
-      simbriefStatusValue.textContent = "—";
-      simbriefStatusValue.className = "status-block idle mono";
-    }
+    opsTabsHint.hidden = data.game === "dcs";
     if (data.game === "dcs") {
       pollDcsBriefing();
       loadKneeboard();
@@ -2263,13 +2249,10 @@ document.addEventListener("keydown", (e) => {
 });
 
 // Extra context on hover only - keeps the bar itself glanceable while still
-// surfacing real signals (MSFS connection errors, a DCS Export.lua repair)
-// that don't need their own permanent screen real estate.
+// surfacing a real signal (a DCS Export.lua repair) that doesn't need its
+// own permanent screen real estate.
 function statusTooltip(data) {
   const lines = [];
-  if (data.game === "msfs" && data.msfs_connection && !data.msfs_connection.available) {
-    lines.push(`MSFS SimConnect: ${data.msfs_connection.error || "not connected"}`);
-  }
   if (data.dcs_hook && data.dcs_hook.status && data.dcs_hook.status !== "ok") {
     lines.push(`DCS export hook: ${data.dcs_hook.status}${data.dcs_hook.detail ? " - " + data.dcs_hook.detail : ""}`);
   }
@@ -2311,8 +2294,8 @@ function renderMissingDataState(message) {
 }
 
 // One OSB tab per top-level content group the loaded aircraft actually has
-// data for - an MSFS civilian plane with zero weapons simply never gets a
-// [WEAPONS] button, rather than showing an empty tab.
+// data for - a DCS module with zero weapons simply never gets a [WEAPONS]
+// button, rather than showing an empty tab.
 function buildSections(data) {
   sections = [];
   if (Object.keys(data.checklists || {}).length) sections.push({ id: "checklists", label: "Checklists" });
@@ -2631,52 +2614,6 @@ function renderInlineMatch(match) {
       <div class="response-body">${escapeHtml(match.answer)}</div>
     </div>`);
 }
-
-simbriefBtn.addEventListener("click", async () => {
-  simbriefContent.innerHTML = "Fetching...";
-  try {
-    const res = await fetch("/api/simbrief");
-    const data = await res.json();
-    if (data.error) {
-      simbriefContent.innerHTML = `<div class="placeholder-warning">${escapeHtml(data.error)}</div>`;
-      return;
-    }
-    // SIMBRIEF header pill - real signal, set only once a pull has
-    // actually populated real OFP data (not just "the panel exists").
-    simbriefStatusValue.textContent = "LOADED";
-    simbriefStatusValue.className = "status-block dcs mono";
-    const route = `${data.origin || "?"} → ${data.destination || "?"}${data.alternate ? " (alt " + data.alternate + ")" : ""}`;
-    simbriefContent.innerHTML = `
-      <div class="data-grid mono">
-        <div class="data-cell">
-          <div class="data-label">Callsign</div>
-          <div class="data-value">${escapeHtml(data.callsign || "?")}</div>
-        </div>
-        <div class="data-cell">
-          <div class="data-label">Aircraft</div>
-          <div class="data-value">${escapeHtml(data.aircraft || "?")}</div>
-        </div>
-        <div class="data-cell span-2">
-          <div class="data-label">Route</div>
-          <div class="data-value">${escapeHtml(route)}</div>
-        </div>
-        <div class="data-cell span-2">
-          <div class="data-label">Route string</div>
-          <div class="data-value">${escapeHtml(data.route || "?")}</div>
-        </div>
-        <div class="data-cell">
-          <div class="data-label">Cruise Alt</div>
-          <div class="data-value">${escapeHtml(String(data.cruise_altitude_ft || "?"))} ft</div>
-        </div>
-        <div class="data-cell">
-          <div class="data-label">Block Fuel</div>
-          <div class="data-value">${escapeHtml(String(data.block_fuel_lbs || "?"))} lbs</div>
-        </div>
-      </div>`;
-  } catch (e) {
-    simbriefContent.innerHTML = `<div class="placeholder-warning">Error reaching server.</div>`;
-  }
-});
 
 function escapeHtml(str) {
   const div = document.createElement("div");

@@ -60,7 +60,7 @@
 html, body { height: 100%; }
 
 /* Dark, thin scrollbars everywhere - previously unstyled, so panels with
-   internal scroll (tab-content-wrapper, simbrief-content, debrief/logbook
+   internal scroll (tab-content-wrapper, briefing-content, debrief/logbook
    bodies) showed the browser's default light-grey scrollbar, a jarring
    flat-web element inside an otherwise all-metal/glass cockpit surface. */
 * {
@@ -181,8 +181,8 @@ header {
   color: var(--text-dim);
   background: transparent;
 }
-/* DCS gets its own lime-green identity on the SIM indicator - MSFS keeps
-   the plain .status-block default (cyan/"blue"). */
+/* DCS gets its own lime-green identity on the SIM indicator; .idle above
+   covers the "nothing detected" state. */
 .status-block.dcs {
   border-color: var(--mfd-green);
   color: var(--mfd-green);
@@ -270,7 +270,7 @@ header {
    so pressing one reads as a real machined toggle rather than a flat CSS
    rectangle. Purely additive (none of these set their own box-shadow),
    listed once here instead of repeating it in each button's own rule. */
-.debrief-btn, .logbook-btn, .ask-btn, .mfd-btn, .simbrief-btn, .ask-picker-btn,
+.debrief-btn, .logbook-btn, .ask-btn, .mfd-btn, .ask-picker-btn,
 #map-recenter, #map-key-toggle, #kneeboard-nav button, #kneeboard-header-controls button,
 #device-modal-controls button {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 -2px 3px rgba(0, 0, 0, 0.3);
@@ -451,8 +451,8 @@ header {
 }
 /* Same gotcha as #device-modal-backdrop: a class selector setting `display`
    beats the browser's own [hidden] default, so without this, toggling
-   .hidden on the SimBrief/DCS-briefing panels would have no visual effect -
-   both would stay showing regardless of which sim is detected. */
+   .hidden on the DCS-briefing panel would have no visual effect - it
+   would stay showing regardless of whether DCS is detected. */
 .sub-panel[hidden] { display: none; }
 
 /* HUD/targeting-reticle corner brackets - the same worn-brass hardware
@@ -493,13 +493,13 @@ header {
   border-width: 0 2px 2px 0;
 }
 
-/* Ask is a search bar under the OSB tabs now, not a side panel - SimBrief/
-   DCS Briefing is the only thing left in Ops's left column, so it just
-   fills it. */
-.simbrief-panel { flex: 1; }
+/* Ask is a search bar under the OSB tabs now, not a side panel - DCS
+   Briefing is the only thing left in Ops's left column, so it just fills
+   it. */
+.briefing-panel { flex: 1; }
 
 /* "Begin Mission to Fetch Data" fills this whole card while it's the only
-   thing showing (see .simbrief-panel's flex:1 above) rather than sitting
+   thing showing (see .briefing-panel's flex:1 above) rather than sitting
    as a small top-aligned line. */
 .ops-briefing-placeholder {
   align-items: center;
@@ -1137,26 +1137,9 @@ header {
 .ask-picker-btn:hover { background: rgba(0, 229, 255, 0.1); }
 
 /* ----------------------------------------------------------
-   RIGHT PANEL: SIMBRIEF
+   RIGHT PANEL: DCS MISSION BRIEFING
    ---------------------------------------------------------- */
-.simbrief-btn {
-  width: 100%;
-  background: transparent;
-  border: 1px solid var(--tactical-cyan);
-  color: var(--tactical-cyan);
-  padding: 12px;
-  font-family: var(--font-display);
-  font-weight: bold;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  cursor: pointer;
-  margin-bottom: 12px;
-  flex-shrink: 0;
-  border-radius: 0;
-}
-.simbrief-btn:hover { background: rgba(0, 229, 255, 0.1); }
-
-.simbrief-content { flex: 1; overflow-y: auto; min-height: 0; }
+.briefing-content { flex: 1; overflow-y: auto; min-height: 0; }
 
 .data-grid {
   display: grid;
