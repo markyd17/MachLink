@@ -775,7 +775,27 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
    the cards rather than growing them - grid items default to
    align-self:stretch, so a `1fr` row genuinely makes all 3 cards taller,
    not just the row's own empty box). */
-.mission-bottom-row { display: grid !important; grid-template-columns: 1.3fr 1fr 1fr !important; grid-template-rows: 1fr !important; gap: clamp(6px, min(1vw, 0.56vh), 10px) !important; flex: 2 0 auto !important; }
+/* Two rows now, not one - Aircraft spans both (see .mission-aircraft-card's
+   own grid-row below) and Recent Events moved in here (explicit request:
+   "enlarge the Aircraft card down to where the Mission Brief is through
+   the recent events... shrink recent events horizontally to give the
+   Aircraft card more vertical space") to sit under Weather/Recent
+   Flights instead of spanning the full tab width the way it used to.
+   Real tradeoff documented on #ops-events-panel's own HTML comment: the
+   ticker is now Mission-tab-only, not visible on every Ops tab like
+   before - there was no way to free width for Aircraft without also
+   scoping the ticker to whichever container it actually shares a row
+   with. */
+.mission-bottom-row { display: grid !important; grid-template-columns: 1.3fr 1fr 1fr !important; grid-template-rows: auto auto !important; gap: clamp(6px, min(1vw, 0.56vh), 10px) !important; flex: 2 0 auto !important; }
+.mission-aircraft-card { grid-column: 1 !important; grid-row: 1 / span 2 !important; }
+.mission-weather-card { grid-column: 2 !important; grid-row: 1 !important; }
+.mission-recentflights-card { grid-column: 3 !important; grid-row: 1 !important; }
+/* Explicit grid placement, not the order:4 this rule used to lean on
+   from its old #ops-tab-mission flex-column position (still harmless
+   left below, just no longer what actually places it) - row 2, under
+   Weather+Recent Flights' combined width, never under the now-tall
+   Aircraft column. */
+.mission-bottom-row .ops-events-panel { grid-column: 2 / span 2 !important; grid-row: 2 !important; }
 
 /* Make the map visually dominant, v0's recessed "screen" bezel - the
    Leaflet map itself (tiles/markers/zoom) is completely untouched, only
@@ -1008,13 +1028,32 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
 }
 
 /* Make briefing content read like a mission card. */
-/* flex:0 0 auto - these (SimBrief/DCS briefing/the placeholder) are also
-   direct children of #ops-tab-mission's flex column now that the Mission
-   tab holds the map+cards above them too; same "don't let it shrink
-   below natural content size" reasoning as .mission-top-row/
-   .mission-bottom-row, even though as the last child there's nothing
-   below it to visually overlap if it did. */
-.simbrief-panel { padding: 12px !important; flex: 0 0 auto !important; }
+/* flex:1 1 auto + min-height:0 (was 0 0 auto, no min-height) - real bug
+   reported live: with flex-grow:0, this panel always sized to its own
+   full natural content height regardless of how much room
+   #ops-tab-mission actually had left after the map row/card row/events
+   ticker above and below it. #dcs-briefing-content/#simbrief-content's
+   own flex:1;overflow-y:auto;min-height:0 (.simbrief-content, base
+   style.css) already existed for exactly this - a genuinely
+   unpredictable-length real mission briefing or SimBrief OFP - it just
+   never had a bounded parent to actually cap against, since flex-grow:0
+   let THIS panel grow to match its content instead of the other way
+   around. A mission with a real, substantial authored briefing pushed
+   the whole tab taller than its fixed height, #ops-tab-mission's own
+   overflow:hidden silently clipping the excess with no visible symptom
+   in a screenshot - only found by measuring scrollHeight vs
+   clientHeight directly. flex-grow:1 gives this panel whatever's
+   genuinely left after the map row/card row/events ticker's own fixed
+   sizes take theirs first - the same idiom .ops-tab-panel itself
+   already uses one level up in #section-ops - no fragile calc() against
+   those other rows' own heights needed; flexbox distributes the
+   leftover space automatically. min-height:0 is what actually lets this
+   panel shrink below its content's natural height in the first place
+   (a flex item's default min-height:auto refuses to shrink below its
+   own content otherwise, regardless of flex-shrink) - .sub-panel's own
+   base min-height:0 (style.css) covers the child #dcs-briefing-content/
+   #simbrief-content already, but this panel itself needed it too. */
+.simbrief-panel { padding: 12px !important; flex: 1 1 auto !important; min-height: 0 !important; }
 .simbrief-btn, .logbook-btn, .ask-btn {
   background-color: #23282a !important;
   background-image: var(--btn-face) !important;
@@ -1179,37 +1218,54 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
   letter-spacing: .04em !important;
   margin-bottom: 4px !important;
 }
-.mission-aircraft-card .simbrief-panel { padding: 0 !important; background: none !important; border: 0 !important; box-shadow: none !important; }
-.mission-aircraft-card #ops-loadout-content { max-height: 130px !important; overflow-y: auto !important; }
+.mission-aircraft-card .simbrief-panel { padding: 0 !important; background: none !important; border: 0 !important; box-shadow: none !important; display: flex !important; flex-direction: column !important; flex: 1 1 auto !important; min-height: 0 !important; }
+/* max-height -> flex:1 1 auto/min-height:0 - now that Aircraft spans
+   both .mission-bottom-row rows (explicit request: "enlarge the
+   Aircraft card down to where the Mission Brief is through the recent
+   events"), this card has real extra height to give the loadout list
+   instead of always capping at a flat 130px regardless of how much room
+   is actually available. Still genuinely scrollable (overflow-y:auto)
+   for a loadout longer than even the taller card fits. */
+.mission-aircraft-card #ops-loadout-content { flex: 1 1 auto !important; min-height: 0 !important; overflow-y: auto !important; }
 /* Thumbnail sits beside the loadout details, not above/below them -
-   explicit request. Sized to roughly match #ops-loadout-content's own
-   130px cap just above so the two sit at a comparable visual weight.
-   object-fit:cover on a real square (1024x1024) source image, so it
-   never distorts regardless of the clamp()'d box size. Hidden entirely
-   (see thumbnailForAircraft() in app.js) for an aircraft with no
-   matching real image - the loadout column just takes the full row
-   instead of leaving an empty/broken image box. */
-.mission-aircraft-body { display: flex !important; gap: clamp(8px, 1.2vw, 14px) !important; align-items: flex-start !important; min-height: 0 !important; }
+   explicit request. Sized off the row's own height now (align-items:
+   stretch, the flex default, is what makes that the definite dimension -
+   same "aspect-ratio derives from the stretched cross-size" technique
+   .mission-map-col above uses for the main map), not a vw-based width
+   guess - Aircraft has real extra height to spend now that it spans
+   both .mission-bottom-row rows, so the image can actually grow with it
+   instead of staying pinned to whatever Weather/Recent Flights' single-
+   row height allowed. max-width keeps it from ever dominating over the
+   loadout list on a very tall/narrow card. object-fit:cover on a real
+   square (cropped tight to the airframe - see the thumbnails' own repo
+   history) source image, so it never distorts. Hidden entirely (see
+   thumbnailForAircraft() in app.js) for an aircraft with no matching
+   real image - the loadout column just takes the full row instead of
+   leaving an empty/broken image box. */
+.mission-aircraft-body { display: flex !important; gap: clamp(8px, 1.2vw, 14px) !important; align-items: stretch !important; min-height: 0 !important; flex: 1 1 auto !important; }
 .mission-aircraft-thumb {
   flex: 0 0 auto !important;
-  /* Ceiling matched to the loadout column's own real natural height
-     (measured live at ~117px next to it, not guessed) rather than the
-     130px #ops-loadout-content cap just above - that cap is a max-
-     height/scroll limit for a LONG loadout, not this column's typical
-     actual height, so matching it made the thumbnail taller than its
-     neighbor actually needs and pushed .mission-bottom-row's shared
-     grid row height up with it (a real, measured few px of otherwise-
-     unnecessary overflow at 1920x1080/1366x768 - re-verify this number
-     if the card's other content changes). */
-  width: clamp(64px, 9vw, 108px) !important;
   aspect-ratio: 1 / 1 !important;
+  /* 34%, not a rounder-looking number - measured live: with Recent
+     Events now sharing .mission-bottom-row (see that rule's own
+     comment), this card's own natural need (thumbnail + loadout list)
+     had become very slightly taller than Weather/Recent Flights +
+     Recent Events' combined natural need, which was forcing the whole
+     shared row - and #ops-tab-mission's total height - a few px taller
+     than necessary at 1366x768 (a real, measured 7px of overflow with a
+     long real briefing text elsewhere on the page, even though the
+     briefing itself no longer lives in this tab at all). 34% brings
+     Aircraft back in line with its row-mates; re-verify this number if
+     the card's other content changes again. */
+  max-width: min(34%, 180px) !important;
+  max-height: 100% !important;
   object-fit: cover !important;
   border-radius: var(--radius-sm) !important;
   border: 1px solid rgba(0,0,0,.6) !important;
   background: var(--screen) !important;
   box-shadow: inset 0 0 0 1px rgba(255,255,255,.03), 0 2px 6px rgba(0,0,0,.5) !important;
 }
-.mission-aircraft-loadout-col { flex: 1 1 auto !important; min-width: 0 !important; }
+.mission-aircraft-loadout-col { flex: 1 1 auto !important; min-width: 0 !important; display: flex !important; flex-direction: column !important; min-height: 0 !important; }
 
 .mission-weather-card #mission-weather-theatre { color: var(--ink-dim) !important; font-size: 11px !important; text-transform: none !important; letter-spacing: 0 !important; margin-left: 6px !important; }
 .mission-wx-grid { display: grid !important; grid-template-columns: repeat(2, 1fr) !important; gap: clamp(4px, min(0.8vw, 0.56vh), 10px) clamp(6px, min(1.1vw, 0.77vh), 14px) !important; margin: 3px 0 clamp(3px, min(0.8vw, 0.56vh), 10px) !important; }
@@ -1636,8 +1692,21 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
   .mission-right-col { flex: 0 0 auto !important; width: 100% !important; justify-content: flex-start !important; }
   /* 4/3-column telemetry grids stop fitting phone width - drop to 2. */
   .data-grid.cols-4, .data-grid.cols-3 { grid-template-columns: repeat(2, 1fr) !important; }
+  /* Every child's explicit grid-column/grid-row (Aircraft spanning 2
+     rows, Weather/Recent Flights/Recent Events at specific column
+     positions - see the desktop rule further up) has to be reset back to
+     plain auto-placement here too, not just the container's own
+     grid-template - a real bug caught live: left alone, Weather/Recent
+     Flights/Recent Events' explicit column-2/column-3/span-2 requests
+     against a template that's now only 1fr forced the browser to invent
+     extra implicit columns instead of actually stacking single-column,
+     squeezing Aircraft into a barely-there sliver instead of the
+     intended full-width phone stack. */
   .mission-bottom-row { grid-template-columns: 1fr !important; grid-template-rows: none !important; }
-  .mission-recentflights-card { grid-column: span 1 !important; }
+  .mission-aircraft-card, .mission-weather-card, .mission-recentflights-card, .mission-bottom-row .ops-events-panel {
+    grid-column: 1 !important;
+    grid-row: auto !important;
+  }
   .ops-events-panel { margin-top: 8px !important; }
   .pilot-breakdown-grid { grid-template-columns: repeat(2, minmax(0,1fr)) !important; }
   .mfd-tabs { overflow-x: auto !important; }

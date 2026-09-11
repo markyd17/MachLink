@@ -186,6 +186,20 @@
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
           <span>Mission</span>
         </button>
+        <!-- BRIEFING - the real SimBrief OFP / DCS mission narrative text
+             (overview/blue task/red task), given its own destination per
+             explicit request: "remove the briefing card and give it its
+             own tab within Ops" - a genuinely unpredictable-length real
+             text block no longer has to compete with the map/cards/
+             ticker for room in the Mission tab, which is what caused a
+             real, confirmed overflow at 1366x768 with a long real
+             briefing (root-caused live, not guessed). Same real
+             pollDcsBriefing()/renderDcsBriefing() logic, unchanged - only
+             its home moved. -->
+        <button type="button" class="ops-tab-btn" data-ops-tab="briefing">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          <span>Briefing</span>
+        </button>
         <button type="button" class="ops-tab-btn" data-ops-tab="threats">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
           <span>Threats</span>
@@ -464,22 +478,47 @@
               </table>
             </div>
           </section>
-        </div>
 
-        <!-- Existing real pre-flight briefing content (SimBrief OFP pull /
-             DCS's own mission briefing text / current-loadout narrative) -
-             unchanged, just relocated under the new card layout instead of
-             being the only thing on this tab. Same ids, same
-             pollStatus()/renderDcsBriefing() logic.
-             SimBrief has no DCS-mission equivalent - a real DCS mission
-             already carries its own authored briefing, so that's what
-             fills this slot instead when the detected sim is DCS (see
-             pollStatus in app.js). Whenever neither applies (no sim
-             detected yet, or a sim's detected but you're not in a
-             mission/aircraft) both panels below just stay hidden - the
-             "nothing yet" status lives as a small hint next to the ops
-             tab strip instead (#ops-tabs-hint), not a full-width banner
-             here, so the card grid above gets the reclaimed room. -->
+          <!-- Live combat-event ticker for THIS sortie - moved in here from
+               its old spot at the #section-ops level (where it sat below
+               EVERY Ops tab, not just Mission) per explicit request:
+               "shrink recent events horizontally to give the aircraft
+               card more vertical space." Real tradeoff worth knowing:
+               this ticker now only shows while the Mission tab itself is
+               active, not on Threats/Weather/Airfields/Briefing the way
+               it used to - there was no way to free this row's width for
+               Aircraft without also scoping the ticker to this tab, since
+               the old always-visible instance lived in a different
+               container entirely. Same real hit/shot/kill events
+               (dcs_combat_events.py), same pollLiveEvents()/
+               renderLiveEvents() logic - only where it lives changed. -->
+          <section class="sub-panel ops-events-panel">
+            <h2 class="panel-title">Recent Events</h2>
+            <div id="ops-events-list">
+              <div class="ops-events-empty">No events yet this sortie.</div>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <!-- BRIEFING - the real SimBrief OFP pull / DCS mission narrative
+           text (overview/blue task/red task), given its own destination
+           per explicit request: "remove the briefing card and give it
+           its own tab within Ops." A genuinely unpredictable-length real
+           text block no longer has to compete with the map/cards/ticker
+           for room the way it did crammed into the Mission tab - that
+           was the actual root cause of a real, confirmed overflow at
+           1366x768 with a long real briefing (root-caused live, not
+           guessed, in the session that led to this restructure). Same
+           ids, same pollStatus()/renderDcsBriefing() logic, completely
+           unchanged - only which tab hosts it moved. SimBrief has no
+           DCS-mission equivalent - a real DCS mission already carries
+           its own authored briefing, so that's what fills this slot
+           instead when the detected sim is DCS (see pollStatus in
+           app.js). Whenever neither applies, both panels below just stay
+           hidden - the "nothing yet" status lives as a small hint next
+           to the ops tab strip instead (#ops-tabs-hint). -->
+      <div class="ops-tab-panel" id="ops-tab-briefing" hidden>
         <section class="sub-panel simbrief-panel" id="simbrief-panel" hidden>
           <h2 class="panel-title">SimBrief</h2>
           <button id="simbrief-refresh" class="simbrief-btn">Pull Latest OFP</button>
@@ -558,16 +597,6 @@
         </section>
       </div>
 
-      <!-- Live combat-event ticker for THIS sortie - the same hit/shot/
-           kill events dcs_combat_events.py already tails for the Debrief
-           report, just surfaced as they happen instead of only after
-           landing. See pollLiveEvents() in app.js. -->
-      <section class="sub-panel ops-events-panel">
-        <h2 class="panel-title">Recent Events</h2>
-        <div id="ops-events-list">
-          <div class="ops-events-empty">No events yet this sortie.</div>
-        </div>
-      </section>
     </section>
 
     <!-- HANGAR - pilot performance record. Was a header button opening a
