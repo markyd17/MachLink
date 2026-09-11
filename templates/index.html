@@ -264,14 +264,27 @@
                 <span id="map-paused-badge" class="mono" hidden>⏸ PAUSED</span>
                 <!-- Live radius-to-edge of the current view, from actual
                      geodesic distance - updates on zoom/pan and every data
-                     poll. Doubles as the mockup's "distance marker". -->
-                <span id="map-range-label" class="mono"></span>
+                     poll. Doubles as the mockup's "distance marker". Starts
+                     hidden - real bug reported live ("the little blue
+                     rectangle in the top left corner"): with no hidden
+                     attribute here, this rendered as an empty bordered box
+                     any time there was no real distance yet to show
+                     (before a mission/own position exists) - its own
+                     border/padding gave it visible size even with no text
+                     inside. updateMapMarkers()/updateRangeRingsAndLabel()
+                     in app.js now toggle hidden to match whether there's
+                     real data. -->
+                <span id="map-range-label" class="mono" hidden></span>
                 <!-- Leaflet's own zoom control (scroll wheel + on-map +/-)
                      handles zoom - RECENTER just snaps back to your own
                      position after you've panned away, since the map
                      doesn't auto-follow every tick (that would fight manual
-                     panning). -->
-                <button type="button" id="map-key-toggle" class="active">KEY</button>
+                     panning). Starts unchecked/hidden (see #map-legend
+                     below) - explicit request: "default the map key to
+                     off." applySavedMapKeyVisibility() in app.js applies a
+                     real prior on/off choice over this default once one
+                     exists (localStorage, per-browser). -->
+                <button type="button" id="map-key-toggle">KEY</button>
                 <button type="button" id="map-recenter">RECENTER</button>
                 <!-- Square is deliberately compact/readable (MFD-style,
                      explicit request) - this is the other half of "best of
@@ -313,8 +326,11 @@
                 <!-- Populated once by buildMapLegend() in app.js, reusing the
                      exact same makeMapIcon() HTML the live markers are drawn
                      with, so the key can never drift out of sync with what's
-                     on the map. -->
-                <div id="map-legend"></div>
+                     on the map. Starts hidden - explicit request: "default
+                     the map key to off" - applySavedMapKeyVisibility() in
+                     app.js overrides this default the moment a real prior
+                     on/off choice exists in localStorage. -->
+                <div id="map-legend" hidden></div>
               </div>
             </div>
           </section>
