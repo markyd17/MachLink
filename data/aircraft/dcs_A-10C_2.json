@@ -6,7 +6,7 @@
     "version_or_date": "Last Updated: 31/08/2023 (as printed in the PDF header, page 1) - re-check chucksguides.com periodically for a newer edition",
     "url": "https://chucksguides.com/aircraft/dcs/a-10c/"
   },
-  "_extraction_note": "Checklist steps are Part 4 (Start-Up Procedure) copied directly from the guide's own numbered steps, not generated. The guide covers both the A-10C Legacy and A-10C II Tank Killer in one document, calling out the few steps where they differ (only step 10, radio setup) - the Tank Killer Expansion variant text was used throughout since that's the module this file is for; the Legacy-only radio steps were left out as not applicable. Two ground-crew interphone calls that precede numbered step 1 in the guide (retract ladder, remove chocks) are included as unnumbered steps '0a'/'0b'. IMPORTANT: this guide has no standalone engine-shutdown/post-flight checklist anywhere (verified against the full 18-part table of contents and a full-text search of the extracted PDF) - Part 6 'Landing' ends at touchdown and Part 7 moves straight into engine systems/fuel management, same gap already noted in the AH-64D file. The 'shutdown' list below is intentionally empty rather than guessed. Weapons are Part 10 (Offence: Weapons & Armament), copied/closely paraphrased from the guide's own lettered/numbered attack sequences (A/B/C.../1/2/3...), not generated. Where a weapon has two release-mode variants that share an identical DSMS profile-setup procedure (e.g. MK-82's manual-CCIP vs. CCIP-CR release), the shared setup is written once and the two attack procedures are both included rather than duplicating the setup steps twice - no steps were invented or altered, just de-duplicated. AGM-65L Laser Maverick, GBU-54 Laser JDAM, and APKWS are marked 'Tank Killer Only' in the guide itself and match this file's module. Ordnance jettison (Part 10 section 4) is included as its own list. 'taxi' (Part 5, Taxi section) and 'takeoff' (Part 5, Takeoff section) checklists, and the 'landing' checklist (Part 6, Normal 360-Degree Landing Approach), are copied directly from the guide's own short numbered steps, same as Part 4 - each restarts its own 1-N numbering rather than continuing Part 4's global count, matching how the guide itself numbers them. The AoA Indexer systems_notes entry is NOT from the guide - it's written independently (standard real-world AoA-indexer symbology, described in different terms/words than the guide's own ASCII arrow representation) since it's directly relevant to flying the landing approach above. Deliberately NOT converting the rest of the guide's ~18 parts wholesale (Parts 1-3, 7-8, 11-18 - cockpit/controls reference, engine/fuel, RWR/countermeasures, datalink, radio, autopilot/LASTE, navigation, air-to-air refueling) - that would mean reproducing the bulk of a commercial, copyrighted guide rather than a few short procedural excerpts. 'night_vision_goggles' (Part 3's short NVG keybind reference) and 'night_flying_ground_prep' (explicit request: the 5-item 'things to do on the ground' list from Part 5's own PRE-FLIGHT section, page 123) are both condensed/paraphrased from their respective short reference sections - not verbatim guide prose - and each of the 5 ground-prep items pulls its actual how-to steps from that item's own short dedicated subsection elsewhere in the guide (TAD Own ID setup p.124, DSMS reload p.126, CMS countermeasure programs p.400, ARC-210/UHF radio tuning p.431/435-436) rather than being invented. Part 9 (Sensors) is explicit request ('pull in the sensors section') and is fully covered by the 11 new checklists 'hud_target_designation' through 'hmcs_markpoint_creation' (each guide subsection - 1.3 HUD/TDC, 2.4-2.8 TGP start-up/lasing/steerpoint-slave/boresight/laser-spot-search/laser-pointer, 4.2/4.5 HMCS power-up/profiles/hook/SPI/TGP-slave/markpoint - condensed/paraphrased from its own short numbered procedure, not verbatim) plus 5 new systems_notes entries (SOI/SPI concept, TGP HOTAS reference, Maverick sensor overview, HMCS symbology categories, HMCS HOTAS reference) that are ALL written independently in different words/structure than the guide's own diagram-legend and prose explanations, not paraphrased from them. 1.4 TISL/Pave Penny (Legacy-only, and explicitly 'not functionally implemented in this simulation' per the guide itself) was excluded as not applicable, same as other Legacy-only content elsewhere in this file. New binding_key identifiers introduced for this addition: china_hat_aft, coolie_hat_down. Part 11 (Defence: RWR and Countermeasures) is explicit request ('countermeasures') - the chaff/flare CMS programs (A/B/C/D, MANUAL/AUTO) were already covered in night_flying_ground_prep, so this pass adds the 3 remaining pieces as systems_notes, all written independently rather than paraphrased: ECM jammer modes (AIR/SAM1/SAM2/AAA), how to read the RWR display (circle proximity/state meanings), and MWS states. The guide's own 'RWR Symbol List' (page 403, credited to a third party '.408-X~RAY') is a table/image the PDF extraction did not capture any readable text for - skipped rather than guessed at from general knowledge, since inventing specific symbol-to-threat-type mappings would risk being wrong. The guide's 'Art of Defeating a Missile' section is just a list of external links (YouTube videos, other websites) with no A-10-specific content of its own - skipped as not applicable to this file's data. Part 12 (Datalink/SADL) is explicit request ('data link') and is fully covered by 8 new checklists - 'sadl_network_setup' (Group/Own ID/callsign) plus the guide's own 7 lettered SADL Functions A-G ('sadl_hook_symbol' through 'sadl_receive_jtac_tasking'), each condensed/paraphrased from its own short numbered procedure, not verbatim - plus 2 new systems_notes (SADL overview, SADL symbology) written independently. 'sadl_broadcast_spi' step 5 (broadcast to the whole network) uses only the Tank Killer control (TMS LEFT LONG) - the guide's Legacy-variant control (DMS LEFT LONG) was left out, same exclusion pattern as elsewhere in this file. New binding_key identifier introduced: tms_left. Remaining flight_planning_notes and qa_snippets are still empty/not curated.",
+  "_extraction_note": "Checklist steps are Part 4 (Start-Up Procedure) copied directly from the guide's own numbered steps, not generated. The guide covers both the A-10C Legacy and A-10C II Tank Killer in one document, calling out the few steps where they differ (only step 10, radio setup) - the Tank Killer Expansion variant text was used throughout since that's the module this file is for; the Legacy-only radio steps were left out as not applicable. Two ground-crew interphone calls that precede numbered step 1 in the guide (retract ladder, remove chocks) are included as unnumbered steps '0a'/'0b'. IMPORTANT: this guide has no standalone engine-shutdown/post-flight checklist anywhere (verified against the full 18-part table of contents and a full-text search of the extracted PDF) - Part 6 'Landing' ends at touchdown and Part 7 moves straight into engine systems/fuel management, same gap already noted in the AH-64D file. The 'shutdown' list below is intentionally empty rather than guessed. Weapons are Part 10 (Offence: Weapons & Armament), copied/closely paraphrased from the guide's own lettered/numbered attack sequences (A/B/C.../1/2/3...), not generated. Where a weapon has two release-mode variants that share an identical DSMS profile-setup procedure (e.g. MK-82's manual-CCIP vs. CCIP-CR release), the shared setup is written once and the two attack procedures are both included rather than duplicating the setup steps twice - no steps were invented or altered, just de-duplicated. AGM-65L Laser Maverick, GBU-54 Laser JDAM, and APKWS are marked 'Tank Killer Only' in the guide itself and match this file's module. Ordnance jettison (Part 10 section 4) is included as its own list. 'taxi' (Part 5, Taxi section) and 'takeoff' (Part 5, Takeoff section) checklists, and the 'landing' checklist (Part 6, Normal 360-Degree Landing Approach), are copied directly from the guide's own short numbered steps, same as Part 4 - each restarts its own 1-N numbering rather than continuing Part 4's global count, matching how the guide itself numbers them. The AoA Indexer systems_notes entry is NOT from the guide - it's written independently (standard real-world AoA-indexer symbology, described in different terms/words than the guide's own ASCII arrow representation) since it's directly relevant to flying the landing approach above. Deliberately NOT converting the rest of the guide's ~18 parts wholesale (Parts 1-3, 7-8, 11-18 - cockpit/controls reference, engine/fuel, RWR/countermeasures, datalink, radio, autopilot/LASTE, navigation, air-to-air refueling) - that would mean reproducing the bulk of a commercial, copyrighted guide rather than a few short procedural excerpts. 'night_vision_goggles' (Part 3's short NVG keybind reference) and 'night_flying_ground_prep' (explicit request: the 5-item 'things to do on the ground' list from Part 5's own PRE-FLIGHT section, page 123) are both condensed/paraphrased from their respective short reference sections - not verbatim guide prose - and each of the 5 ground-prep items pulls its actual how-to steps from that item's own short dedicated subsection elsewhere in the guide (TAD Own ID setup p.124, DSMS reload p.126, CMS countermeasure programs p.400, ARC-210/UHF radio tuning p.431/435-436) rather than being invented. Part 9 (Sensors) is explicit request ('pull in the sensors section') and is fully covered by the 11 new checklists 'hud_target_designation' through 'hmcs_markpoint_creation' (each guide subsection - 1.3 HUD/TDC, 2.4-2.8 TGP start-up/lasing/steerpoint-slave/boresight/laser-spot-search/laser-pointer, 4.2/4.5 HMCS power-up/profiles/hook/SPI/TGP-slave/markpoint - condensed/paraphrased from its own short numbered procedure, not verbatim) plus 5 new systems_notes entries (SOI/SPI concept, TGP HOTAS reference, Maverick sensor overview, HMCS symbology categories, HMCS HOTAS reference) that are ALL written independently in different words/structure than the guide's own diagram-legend and prose explanations, not paraphrased from them. 1.4 TISL/Pave Penny (Legacy-only, and explicitly 'not functionally implemented in this simulation' per the guide itself) was excluded as not applicable, same as other Legacy-only content elsewhere in this file. New binding_key identifiers introduced for this addition: china_hat_aft, coolie_hat_down. Part 11 (Defence: RWR and Countermeasures) is explicit request ('countermeasures') - the chaff/flare CMS programs (A/B/C/D, MANUAL/AUTO) were already covered in night_flying_ground_prep, so this pass adds the 3 remaining pieces as systems_notes, all written independently rather than paraphrased: ECM jammer modes (AIR/SAM1/SAM2/AAA), how to read the RWR display (circle proximity/state meanings), and MWS states. The guide's own 'RWR Symbol List' (page 403, credited to a third party '.408-X~RAY') is a table/image the PDF extraction did not capture any readable text for - skipped rather than guessed at from general knowledge, since inventing specific symbol-to-threat-type mappings would risk being wrong. The guide's 'Art of Defeating a Missile' section is just a list of external links (YouTube videos, other websites) with no A-10-specific content of its own - skipped as not applicable to this file's data. Part 12 (Datalink/SADL) is explicit request ('data link') and is fully covered by 8 new checklists - 'sadl_network_setup' (Group/Own ID/callsign) plus the guide's own 7 lettered SADL Functions A-G ('sadl_hook_symbol' through 'sadl_receive_jtac_tasking'), each condensed/paraphrased from its own short numbered procedure, not verbatim - plus 2 new systems_notes (SADL overview, SADL symbology) written independently. 'sadl_broadcast_spi' step 5 (broadcast to the whole network) uses only the Tank Killer control (TMS LEFT LONG) - the guide's Legacy-variant control (DMS LEFT LONG) was left out, same exclusion pattern as elsewhere in this file. New binding_key identifier introduced: tms_left. Part 13 (Radio) is explicit request ('radio') and is covered by 5 new checklists, each condensed/paraphrased from its own short numbered tutorial in the guide: radio_arc210_manual_frequency and radio_arc210_preset_channel (ARC-210 Tutorials 1-2), radio_arc210_edit_preset (Tutorial 3, programming a preset channel with a briefed frequency), radio_arc186_vhf_fm (the JTAC radio), and radio_arc164_uhf (the flight/wingman radio, plus its own load-a-preset sub-procedure). The Legacy-only AN/ARC-186(V) VHF AM #1 tutorial was excluded - per the guide's own Tank Killer radio overview, that radio 'is not installed on the A-10C II Tank Killer variant' (ARC-210 replaces it), same exclusion pattern as elsewhere in this file. Also skipped: the 'Advanced radio tutorial' line, just a link to an external PDF with no content of its own, and the Caucasus-map airfield tower frequency table (explicit call: real, useful data, but specific to one theater/map - would be actively misleading presented as universal advice in a per-aircraft file with no theater awareness, so left out entirely rather than included with a caveat). 3 new systems_notes entries (radio system overview, Intercom Panel, which ARC-210 controls do nothing in DCS) are written independently, not paraphrased. New binding_key identifiers introduced: mic_switch_forward, mic_switch_aft, mic_switch_down. Remaining flight_planning_notes and qa_snippets are still empty/not curated.",
   "checklists": {
     "pre_start": [
       {
@@ -1109,6 +1109,156 @@
         "step": 13,
         "action": "Employ weapons as normal - see this file's own Weapons list."
       }
+    ],
+    "radio_arc210_manual_frequency": [
+      {
+        "step": 1,
+        "action": "Set the Radio Operation Mode Selector to TR (Transmit-Receive)."
+      },
+      {
+        "step": 2,
+        "action": "Set the Radio Frequency Mode Dial to MAN (Manual Frequency)."
+      },
+      {
+        "step": 3,
+        "action": "Set the SQL (Squelch) knob to ON."
+      },
+      {
+        "step": 4,
+        "action": "Select the frequency: a) turn the manual frequency tuning knobs, or b) enter it on the UFC (e.g. \"1330\" for 133.000 MHz) and press the COM1 button."
+      },
+      {
+        "step": 5,
+        "action": "Select AM or FM band with the AM/FM button."
+      },
+      {
+        "step": 6,
+        "action": "The selected frequency shows on both the radio panel and the HUD's V1 field."
+      },
+      {
+        "step": 7,
+        "action": "Transmit with the Microphone Switch FWD.",
+        "binding_key": "mic_switch_forward"
+      }
+    ],
+    "radio_arc210_preset_channel": [
+      {
+        "step": 1,
+        "action": "Set the Radio Operation Mode Selector to TR."
+      },
+      {
+        "step": 2,
+        "action": "Set the Radio Frequency Mode Dial to PRST (Preset Channel)."
+      },
+      {
+        "step": 3,
+        "action": "Set the SQL knob to ON."
+      },
+      {
+        "step": 4,
+        "action": "Select the channel: a) turn the CHANNEL knob, or b) enter the channel number on the UFC and press COM1."
+      },
+      {
+        "step": 5,
+        "action": "The selected channel shows on both the radio panel and the HUD's V1 field."
+      },
+      {
+        "step": 6,
+        "action": "Transmit with the Microphone Switch FWD.",
+        "binding_key": "mic_switch_forward"
+      }
+    ],
+    "radio_arc210_edit_preset": [
+      {
+        "step": 1,
+        "action": "Set the Radio Operation Mode Selector to CHG PRST (Change Preset)."
+      },
+      {
+        "step": 2,
+        "action": "Set the Radio Frequency Mode Dial to PRST (Preset Channel)."
+      },
+      {
+        "step": 3,
+        "action": "Select the channel to edit (e.g. Channel 4): turn the CHANNEL knob, or enter the number on the UFC and press COM1."
+      },
+      {
+        "step": 4,
+        "action": "Decide the frequency to set for that channel (e.g. 256.000 MHz) - there are two ways to enter it, below."
+      },
+      {
+        "step": 5,
+        "action": "Method 1, from the radio panel: turn the manual frequency tuning knobs to the target frequency."
+      },
+      {
+        "step": 6,
+        "action": "Method 2, from the COMM page: a) press the OSB next to COMM, then ARC210 PRESETS, b) use the ROW arrows to select the channel, c) type the frequency on the UFC keypad (e.g. \"2560\" for 256.000 MHz), d) press the OSB next to FREQ to apply it, e) optionally type a name on the CDU keypad and press the OSB next to NAME."
+      },
+      {
+        "step": 7,
+        "action": "Select AM or FM band with the AM/FM button."
+      },
+      {
+        "step": 8,
+        "action": "Set the Radio Operation Mode Selector back to TR when done."
+      }
+    ],
+    "radio_arc186_vhf_fm": [
+      {
+        "step": 1,
+        "action": "This is the VHF FM #2 radio (30.000-76.000 MHz), used to talk to JTAC units."
+      },
+      {
+        "step": 2,
+        "action": "Set the Radio Frequency Mode to TR."
+      },
+      {
+        "step": 3,
+        "action": "Adjust the radio volume as needed."
+      },
+      {
+        "step": 4,
+        "action": "Set the Radio Function Selector to MAN (Manual Frequency) or PRE (Preset Channel)."
+      },
+      {
+        "step": 5,
+        "action": "Set the frequency with the Frequency Dials, or select the preset channel."
+      },
+      {
+        "step": 6,
+        "action": "Transmit with the Microphone Switch AFT.",
+        "binding_key": "mic_switch_aft"
+      }
+    ],
+    "radio_arc164_uhf": [
+      {
+        "step": 1,
+        "action": "This is the UHF radio (225.000-399.975 MHz) - normally what you'll use to talk to your flight."
+      },
+      {
+        "step": 2,
+        "action": "Set the Radio Function Selector to MAIN or BOTH."
+      },
+      {
+        "step": 3,
+        "action": "Adjust the radio volume as needed."
+      },
+      {
+        "step": 4,
+        "action": "Set the Radio Frequency Mode Selector to MNL (Manual) or PRESET."
+      },
+      {
+        "step": 5,
+        "action": "Set the frequency with the Frequency Dials, or select the preset channel."
+      },
+      {
+        "step": 6,
+        "action": "Transmit with the Microphone Switch DOWN.",
+        "binding_key": "mic_switch_down"
+      },
+      {
+        "step": 7,
+        "action": "To save a frequency onto a preset channel: a) dial in the frequency, b) select the destination preset channel, c) press the LOAD button (under its cover)."
+      }
     ]
   },
   "weapons": [
@@ -1752,6 +1902,18 @@
     {
       "topic": "SADL symbology",
       "notes": "Flight Members (aircraft on your own Group ID) show as an icon with their Own ID and altitude, in thousands of feet. Friendly Networked Members (a different Group ID) show altitude only, no ID. Friendly Ground Forces need an EPLRS radio fitted to broadcast their position at all. A Mini-SPI is a smaller, single-tier version of the normal SPI symbol - someone else's SPI being broadcast to you, connected to their aircraft icon by a blue line."
+    },
+    {
+      "topic": "Radio system overview, Tank Killer",
+      "notes": "Three radios on the left console: the ARC-210 (V/UHF, for air and ground units - replaces the Legacy VHF AM #1, which isn't installed on the Tank Killer variant), the ARC-186 VHF FM #2 (30.000-76.000 MHz, for JTAC units), and the ARC-164 UHF (225.000-399.975 MHz, for wingmen/support flights/ATC). The Mic Switch picks which one you transmit on: FWD = ARC-210, AFT = VHF FM, DOWN = UHF."
+    },
+    {
+      "topic": "Intercom Panel",
+      "notes": "Routes audio, not transmission - each radio has its own volume, but the Intercom panel's Audio Control Switches (INT/FM/UHF/VHF/AIM/IFF/ILS/TCN) turn each one's receive audio on or off, plus LASTE warning tones. The Intercom Selector Switch picks which radio your microphone actually speaks to; INT alone lets you talk to ground crew (for arming/refueling calls)."
+    },
+    {
+      "topic": "ARC-210 controls not simulated",
+      "notes": "Several physical controls on the ARC-210 panel do nothing in DCS: the TOD SND/RCV buttons, the GPS button, the LSKs, the RT Select button, TEST, ZERO, and both ECCM/ECCM MASTER positions. Don't spend time troubleshooting them - it's a limitation of the sim, not something you're doing wrong."
     }
   ],
   "qa_snippets": []
