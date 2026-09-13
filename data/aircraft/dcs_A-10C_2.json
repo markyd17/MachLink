@@ -6,7 +6,7 @@
     "version_or_date": "Last Updated: 31/08/2023 (as printed in the PDF header, page 1) - re-check chucksguides.com periodically for a newer edition",
     "url": "https://chucksguides.com/aircraft/dcs/a-10c/"
   },
-  "_extraction_note": "Checklist steps are Part 4 (Start-Up Procedure) copied directly from the guide's own numbered steps, not generated. The guide covers both the A-10C Legacy and A-10C II Tank Killer in one document, calling out the few steps where they differ (only step 10, radio setup) - the Tank Killer Expansion variant text was used throughout since that's the module this file is for; the Legacy-only radio steps were left out as not applicable. Two ground-crew interphone calls that precede numbered step 1 in the guide (retract ladder, remove chocks) are included as unnumbered steps '0a'/'0b'. IMPORTANT: this guide has no standalone engine-shutdown/post-flight checklist anywhere (verified against the full 18-part table of contents and a full-text search of the extracted PDF) - Part 6 'Landing' ends at touchdown and Part 7 moves straight into engine systems/fuel management, same gap already noted in the AH-64D file. The 'shutdown' list below is intentionally empty rather than guessed. Weapons are Part 10 (Offence: Weapons & Armament), copied/closely paraphrased from the guide's own lettered/numbered attack sequences (A/B/C.../1/2/3...), not generated. Where a weapon has two release-mode variants that share an identical DSMS profile-setup procedure (e.g. MK-82's manual-CCIP vs. CCIP-CR release), the shared setup is written once and the two attack procedures are both included rather than duplicating the setup steps twice - no steps were invented or altered, just de-duplicated. AGM-65L Laser Maverick, GBU-54 Laser JDAM, and APKWS are marked 'Tank Killer Only' in the guide itself and match this file's module. Ordnance jettison (Part 10 section 4) is included as its own list. 'taxi' (Part 5, Taxi section) and 'takeoff' (Part 5, Takeoff section) checklists, and the 'landing' checklist (Part 6, Normal 360-Degree Landing Approach), are copied directly from the guide's own short numbered steps, same as Part 4 - each restarts its own 1-N numbering rather than continuing Part 4's global count, matching how the guide itself numbers them. The AoA Indexer systems_notes entry is NOT from the guide - it's written independently (standard real-world AoA-indexer symbology, described in different terms/words than the guide's own ASCII arrow representation) since it's directly relevant to flying the landing approach above. Deliberately NOT converting the rest of the guide's ~18 parts wholesale (Parts 1-3, 7-9, 11-18 - cockpit/controls reference, engine/fuel, sensors, RWR/countermeasures, datalink, radio, autopilot/LASTE, navigation, air-to-air refueling) - that would mean reproducing the bulk of a commercial, copyrighted guide rather than a few short procedural excerpts. 'night_vision_goggles' (Part 3's short NVG keybind reference) and 'night_flying_ground_prep' (explicit request: the 5-item 'things to do on the ground' list from Part 5's own PRE-FLIGHT section, page 123) are both condensed/paraphrased from their respective short reference sections - not verbatim guide prose - and each of the 5 ground-prep items pulls its actual how-to steps from that item's own short dedicated subsection elsewhere in the guide (TAD Own ID setup p.124, DSMS reload p.126, CMS countermeasure programs p.400, ARC-210/UHF radio tuning p.431/435-436) rather than being invented. Remaining flight_planning_notes and qa_snippets are still empty/not curated.",
+  "_extraction_note": "Checklist steps are Part 4 (Start-Up Procedure) copied directly from the guide's own numbered steps, not generated. The guide covers both the A-10C Legacy and A-10C II Tank Killer in one document, calling out the few steps where they differ (only step 10, radio setup) - the Tank Killer Expansion variant text was used throughout since that's the module this file is for; the Legacy-only radio steps were left out as not applicable. Two ground-crew interphone calls that precede numbered step 1 in the guide (retract ladder, remove chocks) are included as unnumbered steps '0a'/'0b'. IMPORTANT: this guide has no standalone engine-shutdown/post-flight checklist anywhere (verified against the full 18-part table of contents and a full-text search of the extracted PDF) - Part 6 'Landing' ends at touchdown and Part 7 moves straight into engine systems/fuel management, same gap already noted in the AH-64D file. The 'shutdown' list below is intentionally empty rather than guessed. Weapons are Part 10 (Offence: Weapons & Armament), copied/closely paraphrased from the guide's own lettered/numbered attack sequences (A/B/C.../1/2/3...), not generated. Where a weapon has two release-mode variants that share an identical DSMS profile-setup procedure (e.g. MK-82's manual-CCIP vs. CCIP-CR release), the shared setup is written once and the two attack procedures are both included rather than duplicating the setup steps twice - no steps were invented or altered, just de-duplicated. AGM-65L Laser Maverick, GBU-54 Laser JDAM, and APKWS are marked 'Tank Killer Only' in the guide itself and match this file's module. Ordnance jettison (Part 10 section 4) is included as its own list. 'taxi' (Part 5, Taxi section) and 'takeoff' (Part 5, Takeoff section) checklists, and the 'landing' checklist (Part 6, Normal 360-Degree Landing Approach), are copied directly from the guide's own short numbered steps, same as Part 4 - each restarts its own 1-N numbering rather than continuing Part 4's global count, matching how the guide itself numbers them. The AoA Indexer systems_notes entry is NOT from the guide - it's written independently (standard real-world AoA-indexer symbology, described in different terms/words than the guide's own ASCII arrow representation) since it's directly relevant to flying the landing approach above. Deliberately NOT converting the rest of the guide's ~18 parts wholesale (Parts 1-3, 7-8, 11-18 - cockpit/controls reference, engine/fuel, RWR/countermeasures, datalink, radio, autopilot/LASTE, navigation, air-to-air refueling) - that would mean reproducing the bulk of a commercial, copyrighted guide rather than a few short procedural excerpts. 'night_vision_goggles' (Part 3's short NVG keybind reference) and 'night_flying_ground_prep' (explicit request: the 5-item 'things to do on the ground' list from Part 5's own PRE-FLIGHT section, page 123) are both condensed/paraphrased from their respective short reference sections - not verbatim guide prose - and each of the 5 ground-prep items pulls its actual how-to steps from that item's own short dedicated subsection elsewhere in the guide (TAD Own ID setup p.124, DSMS reload p.126, CMS countermeasure programs p.400, ARC-210/UHF radio tuning p.431/435-436) rather than being invented. Part 9 (Sensors) is explicit request ('pull in the sensors section') and is fully covered by the 11 new checklists 'hud_target_designation' through 'hmcs_markpoint_creation' (each guide subsection - 1.3 HUD/TDC, 2.4-2.8 TGP start-up/lasing/steerpoint-slave/boresight/laser-spot-search/laser-pointer, 4.2/4.5 HMCS power-up/profiles/hook/SPI/TGP-slave/markpoint - condensed/paraphrased from its own short numbered procedure, not verbatim) plus 5 new systems_notes entries (SOI/SPI concept, TGP HOTAS reference, Maverick sensor overview, HMCS symbology categories, HMCS HOTAS reference) that are ALL written independently in different words/structure than the guide's own diagram-legend and prose explanations, not paraphrased from them. 1.4 TISL/Pave Penny (Legacy-only, and explicitly 'not functionally implemented in this simulation' per the guide itself) was excluded as not applicable, same as other Legacy-only content elsewhere in this file. New binding_key identifiers introduced for this addition: china_hat_aft, coolie_hat_down. Remaining flight_planning_notes and qa_snippets are still empty/not curated.",
   "checklists": {
     "pre_start": [
       {
@@ -375,6 +375,440 @@
       {
         "step": 5,
         "action": "Review your flight plan before takeoff: check your waypoints/steerpoints on the TAD (and the CDU's flight-plan page) so you already know the route instead of working it out for the first time in the dark."
+      }
+    ],
+    "hud_target_designation": [
+      {
+        "step": 1,
+        "action": "Set the Master Mode Switch to NAV mode.",
+        "binding_key": "master_mode_button"
+      },
+      {
+        "step": 2,
+        "action": "Press Coolie Hat UP to set the HUD as the Sensor of Interest (SOI).",
+        "binding_key": "coolie_hat_up"
+      },
+      {
+        "step": 3,
+        "action": "By default the TDC (Target Designation Cue) is caged on the Total Velocity Vector (TVV)."
+      },
+      {
+        "step": 4,
+        "action": "Use the Slew Control Switch to move the TDC onto the target.",
+        "binding_key": "hotas_slew"
+      },
+      {
+        "step": 5,
+        "action": "Press TMS FWD LONG to set the TDC's current location as the SPI (Sensor Point of Interest).",
+        "binding_key": "tms_forward"
+      },
+      {
+        "step": 6,
+        "action": "To reset the SPI, press TMS AFT LONG - the TDC stays ground-stabilized where it was.",
+        "binding_key": "tms_aft"
+      },
+      {
+        "step": 7,
+        "action": "To recage the TDC back to the TVV, press China Hat AFT SHORT.",
+        "binding_key": "china_hat_aft"
+      }
+    ],
+    "tgp_startup_and_lasing": [
+      {
+        "step": 1,
+        "action": "Press the OSB next to TGP to bring up the TGP feed page."
+      },
+      {
+        "step": 2,
+        "action": "On the AHCP, set the TGP switch ON (UP) to power up the targeting pod."
+      },
+      {
+        "step": 3,
+        "action": "Wait through the roughly 2-minute warm-up - the display shows TGP OFF, then NOT TIMED OUT during warm-up."
+      },
+      {
+        "step": 4,
+        "action": "Warm-up is complete once the NOT TIMED OUT indication disappears."
+      },
+      {
+        "step": 5,
+        "action": "Set MASTER ARM and LASER ARM switches to ARM.",
+        "binding_key": "master_arm_arm"
+      },
+      {
+        "step": 6,
+        "action": "Select A-G (Air-to-Ground) TGP mode by pressing the OSB next to AG."
+      },
+      {
+        "step": 7,
+        "action": "Confirm the TGP switches from STBY to AG mode - the camera un-stows."
+      },
+      {
+        "step": 8,
+        "action": "Press Coolie Hat LONG toward the MFCD showing the TGP feed to set the TGP as SOI.",
+        "binding_key": "coolie_hat_toward_mfcd"
+      },
+      {
+        "step": 9,
+        "action": "Select the video mode with the Boat Switch: FWD = FLIR Black Hot, MIDDLE = CCD (TV), AFT = FLIR White Hot.",
+        "binding_key": "boat_switch"
+      },
+      {
+        "step": 10,
+        "action": "Select Field-of-View with China Hat FWD SHORT (toggles WIDE/NARROW).",
+        "binding_key": "china_hat_forward"
+      },
+      {
+        "step": 11,
+        "action": "Select the desired Laser Designator Mode (LSR) with its OSB."
+      },
+      {
+        "step": 12,
+        "action": "Press the OSB next to CNTL to enter the TGP A-G Control Page."
+      },
+      {
+        "step": 13,
+        "action": "Enter the desired laser code on the UFC scratchpad (e.g. 1688)."
+      },
+      {
+        "step": 14,
+        "action": "Press the OSB next to \"L\" (Laser Designation Code) to apply the code."
+      },
+      {
+        "step": 15,
+        "action": "Select the desired LATCH mode with its OSB (ON = laser stays firing once triggered by the Nosewheel Steering Button; OFF = you must hold the button)."
+      },
+      {
+        "step": 16,
+        "action": "Press the OSB next to RTN to return to the main TGP page."
+      },
+      {
+        "step": 17,
+        "action": "Use the Slew Control Switch to move the TGP reticle onto the target.",
+        "binding_key": "hotas_slew"
+      },
+      {
+        "step": 18,
+        "action": "Press DMS FWD/AFT SHORT to adjust zoom level.",
+        "binding_key": "dms_fwd_aft"
+      },
+      {
+        "step": 19,
+        "action": "Press TMS FWD SHORT to track the target - toggles between AREA TRACK (static) and POINT TRACK (moving).",
+        "binding_key": "tms_forward"
+      },
+      {
+        "step": 20,
+        "action": "Press TMS FWD LONG to designate the TGP's target as the SPI.",
+        "binding_key": "tms_forward"
+      },
+      {
+        "step": 21,
+        "action": "Press China Hat FWD LONG to slave all sensors to the SPI.",
+        "binding_key": "china_hat_forward"
+      },
+      {
+        "step": 22,
+        "action": "Press and hold the Nosewheel Steering Button to fire the laser.",
+        "binding_key": "nosewheel_steering_button"
+      }
+    ],
+    "tgp_slave_to_steerpoint": [
+      {
+        "step": 1,
+        "action": "Verify the TGP is powered and set to A-G mode."
+      },
+      {
+        "step": 2,
+        "action": "Set the AAP (Auxiliary Avionics Panel) Steerpoint Selector to MISSION."
+      },
+      {
+        "step": 3,
+        "action": "Set the AAP CDU Selector Knob to STEER."
+      },
+      {
+        "step": 4,
+        "action": "On the UFC, use the STEER rocker to select the desired steerpoint."
+      },
+      {
+        "step": 5,
+        "action": "Press TMS AFT LONG to set the selected steerpoint as the SPI.",
+        "binding_key": "tms_aft"
+      },
+      {
+        "step": 6,
+        "action": "Press China Hat AFT LONG to slave the TGP to the steerpoint.",
+        "binding_key": "china_hat_aft"
+      },
+      {
+        "step": 7,
+        "action": "Press Coolie Hat LONG toward the MFCD showing the TGP feed to set the TGP as SOI.",
+        "binding_key": "coolie_hat_toward_mfcd"
+      },
+      {
+        "step": 8,
+        "action": "Use the Slew Control Switch to put the TGP reticle on the target - same designation procedure as the TGP Start-Up & Lasing checklist above.",
+        "binding_key": "hotas_slew"
+      },
+      {
+        "step": 9,
+        "action": "To make the TGP's own reticle the SPI instead, press TMS FWD LONG.",
+        "binding_key": "tms_forward"
+      }
+    ],
+    "tgp_boresight": [
+      {
+        "step": 1,
+        "action": "In the TGP page, press the OSB next to B-S (Boresight Function) - the pod points 150 mils (default) below the aircraft's zero sight line, directly forward."
+      },
+      {
+        "step": 2,
+        "action": "To use a custom depression angle instead: a) enter the desired depression (in mils) on the UFC scratchpad, b) press the OSB next to B-S again."
+      }
+    ],
+    "tgp_laser_spot_search": [
+      {
+        "step": 1,
+        "action": "Confirm the laser code the friendly asset (JTAC or another aircraft) is using, and that they're actively lasing before you try to track it."
+      },
+      {
+        "step": 2,
+        "action": "Power up the TGP and set A-G mode (see the TGP Start-Up & Lasing checklist above)."
+      },
+      {
+        "step": 3,
+        "action": "Press Coolie Hat LONG toward the MFCD showing the TGP feed to set the TGP as SOI.",
+        "binding_key": "coolie_hat_toward_mfcd"
+      },
+      {
+        "step": 4,
+        "action": "Press the OSB next to CNTL to enter the TGP A-G Control Page."
+      },
+      {
+        "step": 5,
+        "action": "Enter the laser code to search for on the UFC scratchpad."
+      },
+      {
+        "step": 6,
+        "action": "Press the OSB next to \"LSS\" (Laser Spot Search Code) to apply it."
+      },
+      {
+        "step": 7,
+        "action": "Press the OSB next to RTN to return to the main TGP page."
+      },
+      {
+        "step": 8,
+        "action": "Use the Slew Control Switch to point the TGP toward the JTAC's general location - it needs to be looking reasonably close to find the laser.",
+        "binding_key": "hotas_slew"
+      },
+      {
+        "step": 9,
+        "action": "Press the OSB next to \"LSS\" to start the search (shortcut: China Hat AFT SHORT).",
+        "binding_key": "china_hat_aft"
+      },
+      {
+        "step": 10,
+        "action": "\"LSRCH\" appears while the TGP searches; the Situational Awareness Cue shows where it's scanning."
+      },
+      {
+        "step": 11,
+        "action": "Once a laser reflection is detected, \"DETECT\" replaces \"LSRCH\" and the OSB changes from LSS to LST (Laser Spot Track) - the TGP automatically slews onto it."
+      },
+      {
+        "step": 12,
+        "action": "After about 1 second, \"DETECT\" becomes \"LTRACK\" and a tracking-gate box appears over the laser spot."
+      },
+      {
+        "step": 13,
+        "action": "The TGP diamond marks the Laser Spot Track (LST) on both the HUD and the TAD."
+      },
+      {
+        "step": 14,
+        "action": "To exit LSS/LST mode, press the OSB next to LSS again."
+      },
+      {
+        "step": 15,
+        "action": "If the JTAC sends you a 9-line or other tasking, a NEW TASKING message appears: a) open the MSG page to read it, b) press the OSB next to ACK (or TMS LEFT SHORT) to acknowledge/clear it, c) return to the TGP page."
+      }
+    ],
+    "tgp_laser_pointer_marker": [
+      {
+        "step": 1,
+        "action": "Power up the TGP and set A-G mode."
+      },
+      {
+        "step": 2,
+        "action": "Set MASTER ARM and LASER ARM switches to ARM.",
+        "binding_key": "master_arm_arm"
+      },
+      {
+        "step": 3,
+        "action": "Press Coolie Hat LONG toward the MFCD showing the TGP feed to set the TGP as SOI.",
+        "binding_key": "coolie_hat_toward_mfcd"
+      },
+      {
+        "step": 4,
+        "action": "Select IR (Infrared) as the Laser Designator Mode via its OSB."
+      },
+      {
+        "step": 5,
+        "action": "Slew the TGP reticle onto the target.",
+        "binding_key": "hotas_slew"
+      },
+      {
+        "step": 6,
+        "action": "Press and hold the Nosewheel Steering Button to fire the pointer - a flashing \"P\" (Infrared Pointer) shows it's active. Unlike the laser designator, this can't guide a weapon - it's an IR marker only visible on Night Vision Goggles, for pointing a target out to another aircraft.",
+        "binding_key": "nosewheel_steering_button"
+      }
+    ],
+    "hmcs_power_up_and_profiles": [
+      {
+        "step": 1,
+        "action": "Power up the HMCS: set the HMCS Power Switch to ON. By default the HMD overlay only shows when you're looking away from the HUD - press DMS LEFT LONG to toggle the overlay on/off regardless.",
+        "binding_key": "hmcs_power_switch"
+      },
+      {
+        "step": 2,
+        "action": "The HMCS has 3 preset profiles you can edit from the STAT page's HMCS sub-menu (per symbol: ON/OFF/OCLD-occludable, plus an optional cutoff range in nm). To modify one: a) select STAT, b) select HMCS, c) select the profile (PRO1/2/3), d) use the SYMBOL arrows to pick the symbol to change, e) press OCLD/ON/OFF to set its visibility, f) optionally enter a cutoff range on the UFC scratchpad and press RANGE."
+      },
+      {
+        "step": 3,
+        "action": "Recommended profile for an attack run: CROSSHAIR - ON, OWN SPI - ON, HDC - ON (occlude the rest to avoid cluttering the HUD)."
+      },
+      {
+        "step": 4,
+        "action": "To cycle between the 3 profiles: a) press Coolie Hat DOWN to set the HMCS as SOI (confirm the SOI asterisk on the HMD), b) press DMS RIGHT SHORT to cycle profiles - or select one directly from the HMCS Symbology page.",
+        "binding_key": "coolie_hat_down"
+      }
+    ],
+    "hmcs_hook_symbol": [
+      {
+        "step": 1,
+        "action": "Press Coolie Hat DOWN to set the HMCS as SOI (confirm the SOI asterisk).",
+        "binding_key": "coolie_hat_down"
+      },
+      {
+        "step": 2,
+        "action": "Move your helmet to place the HMD crosshair over the symbol you want to hook."
+      },
+      {
+        "step": 3,
+        "action": "Press TMS FWD SHORT to hook the symbol.",
+        "binding_key": "tms_forward"
+      },
+      {
+        "step": 4,
+        "action": "Hooked symbol data (bearing, distance, elevation, unit type) shows in the lower-left of the HMD."
+      },
+      {
+        "step": 5,
+        "action": "A dashed box appears over the symbol with a yellow line to the crosshair."
+      },
+      {
+        "step": 6,
+        "action": "Press TMS AFT SHORT to un-hook it.",
+        "binding_key": "tms_aft"
+      }
+    ],
+    "hmcs_create_spi": [
+      {
+        "step": 1,
+        "action": "Method 1 - on a hooked symbol: hook a symbol (see HMCS Hook Symbol above), then press TMS FWD LONG to create a SPI on it. Press TMS AFT SHORT to un-hook, or TMS AFT LONG to reset the SPI to the selected steerpoint without un-hooking.",
+        "binding_key": [
+          "tms_forward",
+          "tms_aft"
+        ]
+      },
+      {
+        "step": 2,
+        "action": "Method 2 - with the HDC (Helmet Designation Cursor): a) press Coolie Hat DOWN to set the HMCS as SOI, b) press China Hat AFT SHORT to recage the HDC to the crosshair, c) move your helmet near the target, d) use the Slew Control Switch to walk the ground-stabilized HDC onto the target, e) press TMS FWD LONG to create a SPI on the HDC.",
+        "binding_key": [
+          "coolie_hat_down",
+          "china_hat_aft",
+          "hotas_slew",
+          "tms_forward"
+        ]
+      }
+    ],
+    "hmcs_slave_tgp_to_los": [
+      {
+        "step": 1,
+        "action": "Power up the TGP and set it to A-G mode."
+      },
+      {
+        "step": 2,
+        "action": "Press Coolie Hat DOWN to set the HMCS as SOI.",
+        "binding_key": "coolie_hat_down"
+      },
+      {
+        "step": 3,
+        "action": "Press China Hat AFT SHORT to recage the HDC to the crosshair.",
+        "binding_key": "china_hat_aft"
+      },
+      {
+        "step": 4,
+        "action": "Move your helmet near the target."
+      },
+      {
+        "step": 5,
+        "action": "Use the Slew Control Switch to walk the ground-stabilized HDC onto the target.",
+        "binding_key": "hotas_slew"
+      },
+      {
+        "step": 6,
+        "action": "Press TMS FWD LONG to create a SPI on the HDC.",
+        "binding_key": "tms_forward"
+      },
+      {
+        "step": 7,
+        "action": "Press DMS LEFT SHORT to show a TGP feed repeater on the HMD.",
+        "binding_key": "dms_left_right"
+      },
+      {
+        "step": 8,
+        "action": "Press DMS RIGHT LONG to slave the TGP to the HMCS line-of-sight (the SPI you just created) - the TGP's field-of-view box appears once slaved.",
+        "binding_key": "dms_left_right"
+      },
+      {
+        "step": 9,
+        "action": "Cycle video mode with the Boat Switch (FWD = FLIR Black Hot, MIDDLE = CCD, AFT = FLIR White Hot).",
+        "binding_key": "boat_switch"
+      },
+      {
+        "step": 10,
+        "action": "To slew the TGP directly instead, press Coolie Hat LONG toward the TGP's MFCD to make it SOI, then use the Slew Control Switch and the TGP's own HOTAS controls.",
+        "binding_key": "coolie_hat_toward_mfcd"
+      }
+    ],
+    "hmcs_markpoint_creation": [
+      {
+        "step": 1,
+        "action": "Press Coolie Hat DOWN to set the HMCS as SOI.",
+        "binding_key": "coolie_hat_down"
+      },
+      {
+        "step": 2,
+        "action": "Press China Hat AFT SHORT to recage the HDC to the crosshair.",
+        "binding_key": "china_hat_aft"
+      },
+      {
+        "step": 3,
+        "action": "Move your helmet near the target."
+      },
+      {
+        "step": 4,
+        "action": "Use the Slew Control Switch to walk the ground-stabilized HDC onto the target.",
+        "binding_key": "hotas_slew"
+      },
+      {
+        "step": 5,
+        "action": "Press TMS RIGHT SHORT to create a markpoint on the HDC.",
+        "binding_key": "tms_right"
+      },
+      {
+        "step": 6,
+        "action": "Optional: press TMS RIGHT LONG to make that markpoint the SPI.",
+        "binding_key": "tms_right"
       }
     ]
   },
@@ -979,6 +1413,26 @@
     {
       "topic": "AoA Indexer (landing approach)",
       "notes": "Written independently, not from the guide - standard AoA-indexer symbology: a chevron pointing down means fast (low AoA), a chevron pointing up means slow (high AoA), and a circle means on-speed. Only active with the nose gear down, so it's a landing-approach aid, not a general flight instrument."
+    },
+    {
+      "topic": "SOI vs. SPI (sensor concept)",
+      "notes": "SOI (Sensor of Interest) is whichever sensor you're currently controlling - the HUD, the TGP, a Maverick's seeker, or the HMCS. SPI (Sensor Point of Interest) is where that sensor is currently pointed/locked - SOI is picking which sensor you're holding, SPI is where its cursor is. Every weapon-employment procedure in this file's Weapons list follows the same pattern: make a sensor the SOI, move its SPI onto the target, optionally slave the other sensors to that SPI (China Hat FWD LONG), then employ the weapon."
+    },
+    {
+      "topic": "TGP (LITENING targeting pod) - HOTAS reference, Tank Killer",
+      "notes": "With the TGP page as SOI: TMS FWD SHORT toggles Point/Area Track, TMS FWD LONG creates a SPI, TMS AFT SHORT autofocuses, TMS AFT LONG resets the SPI to the steerpoint, TMS RIGHT SHORT sets a markpoint, TMS RIGHT LONG makes the last markpoint the SPI. DMS FWD/AFT SHORT zooms in/out. Boat Switch cycles video mode (FWD = FLIR Black Hot, MIDDLE = CCD, AFT = FLIR White Hot). China Hat FWD SHORT toggles Wide/Narrow FOV, FWD LONG slaves all sensors to the SPI, AFT SHORT toggles Laser Spot Search."
+    },
+    {
+      "topic": "AGM-65 Maverick sensor overview",
+      "notes": "The Maverick's own seeker head doubles as a sensor once it's selected on the DSMS and made SOI - its DLZ (Dynamic Launch Zone) staple on the HUD shows minimum/maximum range and time-of-flight. See this file's own Weapons list for the full IR/laser Maverick employment procedures; this note is just the sensor side."
+    },
+    {
+      "topic": "HMCS symbology categories",
+      "notes": "HMD symbology is grouped into four categories: Basic (aircraft heading/altitude/airspeed/pitch, horizon line, crosshair, SPI line), Navigation (steerpoints and markpoints), Unit (nearby datalink contacts - the same ones the TAD shows), and Designation (whatever you've hooked or designated with the helmet/TGP). Each symbol's visibility (ON/OFF/OCLD) and cutoff range is configurable per profile - see the HMCS Power-Up & Profiles checklist."
+    },
+    {
+      "topic": "HMCS - HOTAS reference, Tank Killer",
+      "notes": "With the HMCS as SOI (Coolie Hat DOWN): TMS FWD SHORT hooks the symbol under the crosshair, FWD LONG makes the hooked object/HDC the SPI, AFT SHORT un-hooks, AFT LONG resets the SPI to the steerpoint, RIGHT SHORT creates a markpoint at the HDC, RIGHT LONG makes the last markpoint the SPI. DMS FWD/AFT adjusts HMD brightness, LEFT SHORT shows the TGP feed on the HMD, RIGHT SHORT cycles profiles, RIGHT LONG slaves the TGP to the HMCS line-of-sight. China Hat FWD SHORT toggles TGP Wide/Narrow FOV, AFT SHORT recages the HDC to the crosshair."
     }
   ],
   "qa_snippets": []
