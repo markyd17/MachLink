@@ -6,7 +6,7 @@
     "version_or_date": "Last Updated: 31/08/2023 (as printed in the PDF header, page 1) - re-check chucksguides.com periodically for a newer edition",
     "url": "https://chucksguides.com/aircraft/dcs/a-10c/"
   },
-  "_extraction_note": "Checklist steps are Part 4 (Start-Up Procedure) copied directly from the guide's own numbered steps, not generated. The guide covers both the A-10C Legacy and A-10C II Tank Killer in one document, calling out the few steps where they differ (only step 10, radio setup) - the Tank Killer Expansion variant text was used throughout since that's the module this file is for; the Legacy-only radio steps were left out as not applicable. Two ground-crew interphone calls that precede numbered step 1 in the guide (retract ladder, remove chocks) are included as unnumbered steps '0a'/'0b'. IMPORTANT: this guide has no standalone engine-shutdown/post-flight checklist anywhere (verified against the full 18-part table of contents and a full-text search of the extracted PDF) - Part 6 'Landing' ends at touchdown and Part 7 moves straight into engine systems/fuel management, same gap already noted in the AH-64D file. The 'shutdown' list below is intentionally empty rather than guessed. Weapons are Part 10 (Offence: Weapons & Armament), copied/closely paraphrased from the guide's own lettered/numbered attack sequences (A/B/C.../1/2/3...), not generated. Where a weapon has two release-mode variants that share an identical DSMS profile-setup procedure (e.g. MK-82's manual-CCIP vs. CCIP-CR release), the shared setup is written once and the two attack procedures are both included rather than duplicating the setup steps twice - no steps were invented or altered, just de-duplicated. AGM-65L Laser Maverick, GBU-54 Laser JDAM, and APKWS are marked 'Tank Killer Only' in the guide itself and match this file's module. Ordnance jettison (Part 10 section 4) is included as its own list. 'taxi' (Part 5, Taxi section) and 'takeoff' (Part 5, Takeoff section) checklists, and the 'landing' checklist (Part 6, Normal 360-Degree Landing Approach), are copied directly from the guide's own short numbered steps, same as Part 4 - each restarts its own 1-N numbering rather than continuing Part 4's global count, matching how the guide itself numbers them. The AoA Indexer systems_notes entry is NOT from the guide - it's written independently (standard real-world AoA-indexer symbology, described in different terms/words than the guide's own ASCII arrow representation) since it's directly relevant to flying the landing approach above. Deliberately NOT converting the rest of the guide's ~18 parts wholesale (Parts 1-3, 7-9, 11-18 - cockpit/controls reference, engine/fuel, sensors, RWR/countermeasures, datalink, radio, autopilot/LASTE, navigation, air-to-air refueling) - that would mean reproducing the bulk of a commercial, copyrighted guide rather than a few short procedural excerpts. Remaining flight_planning_notes and qa_snippets are still empty/not curated.",
+  "_extraction_note": "Checklist steps are Part 4 (Start-Up Procedure) copied directly from the guide's own numbered steps, not generated. The guide covers both the A-10C Legacy and A-10C II Tank Killer in one document, calling out the few steps where they differ (only step 10, radio setup) - the Tank Killer Expansion variant text was used throughout since that's the module this file is for; the Legacy-only radio steps were left out as not applicable. Two ground-crew interphone calls that precede numbered step 1 in the guide (retract ladder, remove chocks) are included as unnumbered steps '0a'/'0b'. IMPORTANT: this guide has no standalone engine-shutdown/post-flight checklist anywhere (verified against the full 18-part table of contents and a full-text search of the extracted PDF) - Part 6 'Landing' ends at touchdown and Part 7 moves straight into engine systems/fuel management, same gap already noted in the AH-64D file. The 'shutdown' list below is intentionally empty rather than guessed. Weapons are Part 10 (Offence: Weapons & Armament), copied/closely paraphrased from the guide's own lettered/numbered attack sequences (A/B/C.../1/2/3...), not generated. Where a weapon has two release-mode variants that share an identical DSMS profile-setup procedure (e.g. MK-82's manual-CCIP vs. CCIP-CR release), the shared setup is written once and the two attack procedures are both included rather than duplicating the setup steps twice - no steps were invented or altered, just de-duplicated. AGM-65L Laser Maverick, GBU-54 Laser JDAM, and APKWS are marked 'Tank Killer Only' in the guide itself and match this file's module. Ordnance jettison (Part 10 section 4) is included as its own list. 'taxi' (Part 5, Taxi section) and 'takeoff' (Part 5, Takeoff section) checklists, and the 'landing' checklist (Part 6, Normal 360-Degree Landing Approach), are copied directly from the guide's own short numbered steps, same as Part 4 - each restarts its own 1-N numbering rather than continuing Part 4's global count, matching how the guide itself numbers them. The AoA Indexer systems_notes entry is NOT from the guide - it's written independently (standard real-world AoA-indexer symbology, described in different terms/words than the guide's own ASCII arrow representation) since it's directly relevant to flying the landing approach above. Deliberately NOT converting the rest of the guide's ~18 parts wholesale (Parts 1-3, 7-9, 11-18 - cockpit/controls reference, engine/fuel, sensors, RWR/countermeasures, datalink, radio, autopilot/LASTE, navigation, air-to-air refueling) - that would mean reproducing the bulk of a commercial, copyrighted guide rather than a few short procedural excerpts. 'night_vision_goggles' (Part 3's short NVG keybind reference) and 'night_flying_ground_prep' (explicit request: the 5-item 'things to do on the ground' list from Part 5's own PRE-FLIGHT section, page 123) are both condensed/paraphrased from their respective short reference sections - not verbatim guide prose - and each of the 5 ground-prep items pulls its actual how-to steps from that item's own short dedicated subsection elsewhere in the guide (TAD Own ID setup p.124, DSMS reload p.126, CMS countermeasure programs p.400, ARC-210/UHF radio tuning p.431/435-436) rather than being invented. Remaining flight_planning_notes and qa_snippets are still empty/not curated.",
   "checklists": {
     "pre_start": [
       {
@@ -340,7 +340,43 @@
         "action": "Touchdown: let the aircraft settle onto the runway - no flare needed."
       }
     ],
-    "shutdown": []
+    "shutdown": [],
+    "night_vision_goggles": [
+      {
+        "step": 1,
+        "action": "Toggle Night Vision Goggles ON/OFF: RSHIFT + H."
+      },
+      {
+        "step": 2,
+        "action": "Increase NVG brightness: RCTRL + RSHIFT + H."
+      },
+      {
+        "step": 3,
+        "action": "Decrease NVG brightness: RALT + RSHIFT + H."
+      }
+    ],
+    "night_flying_ground_prep": [
+      {
+        "step": 1,
+        "action": "Identify yourself on the TAD and give your wingmen a way to see you: a) Select the NET OSB on the TAD. b) Enter your desired ID number on the UFC scratchpad. c) Press the OWN ID OSB to apply it. d) Return to the TAD view via the TAD OSB. Anyone sharing your Group ID then sees your Own ID appear on their own TAD - useful for coordinating position in the dark without needing visual contact."
+      },
+      {
+        "step": 2,
+        "action": "Program your weapons on the DSMS. If you changed your loadout after spawning, reload it first: select the CDU OSB on the right MFCD, press and hold the MSG OSB until the DISPLAY PROGRAM menu appears, select LOAD, then LOAD ALL - reload is complete once an asterisk appears next to every menu. Then set up each weapon's release profile (mode, fuzing, ripple, offsets, laser code, etc.) - see this file's own Weapons list for the specific DSMS steps per munition."
+      },
+      {
+        "step": 3,
+        "action": "Set up your countermeasure programs on the CMSP, or just pick a preset: Program A (older-generation radar SAM), Program B (newer-generation radar SAM), Program C (IR heat-seeking SAM), Program D (general-purpose/unknown threat). Cycle programs with the CMS switch RIGHT/LEFT, and choose MANUAL (you decide when to run it) or AUTO (the system picks and runs the best program for whatever's detected) on the CMS Mode Selector."
+      },
+      {
+        "step": 4,
+        "action": "Set your radio frequencies from the mission briefing before you need them. On the ARC-210: set Radio Operation Mode - TR, Frequency Mode - MAN (manual) or PRST (preset), SQL - ON, then dial in the frequency (or select the preset channel) - it's confirmed once it shows on the V1 HUD readout. To save a briefed frequency onto a preset channel on the older UHF radio: dial in the frequency, select the destination preset channel, and press LOAD."
+      },
+      {
+        "step": 5,
+        "action": "Review your flight plan before takeoff: check your waypoints/steerpoints on the TAD (and the CDU's flight-plan page) so you already know the route instead of working it out for the first time in the dark."
+      }
+    ]
   },
   "weapons": [
     {
