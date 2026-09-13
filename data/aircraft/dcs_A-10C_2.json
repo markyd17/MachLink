@@ -6,7 +6,7 @@
     "version_or_date": "Last Updated: 31/08/2023 (as printed in the PDF header, page 1) - re-check chucksguides.com periodically for a newer edition",
     "url": "https://chucksguides.com/aircraft/dcs/a-10c/"
   },
-  "_extraction_note": "Checklist steps are Part 4 (Start-Up Procedure) copied directly from the guide's own numbered steps, not generated. The guide covers both the A-10C Legacy and A-10C II Tank Killer in one document, calling out the few steps where they differ (only step 10, radio setup) - the Tank Killer Expansion variant text was used throughout since that's the module this file is for; the Legacy-only radio steps were left out as not applicable. Two ground-crew interphone calls that precede numbered step 1 in the guide (retract ladder, remove chocks) are included as unnumbered steps '0a'/'0b'. IMPORTANT: this guide has no standalone engine-shutdown/post-flight checklist anywhere (verified against the full 18-part table of contents and a full-text search of the extracted PDF) - Part 6 'Landing' ends at touchdown and Part 7 moves straight into engine systems/fuel management, same gap already noted in the AH-64D file. The 'shutdown' list below is intentionally empty rather than guessed. Weapons are Part 10 (Offence: Weapons & Armament), copied/closely paraphrased from the guide's own lettered/numbered attack sequences (A/B/C.../1/2/3...), not generated. Where a weapon has two release-mode variants that share an identical DSMS profile-setup procedure (e.g. MK-82's manual-CCIP vs. CCIP-CR release), the shared setup is written once and the two attack procedures are both included rather than duplicating the setup steps twice - no steps were invented or altered, just de-duplicated. AGM-65L Laser Maverick, GBU-54 Laser JDAM, and APKWS are marked 'Tank Killer Only' in the guide itself and match this file's module. Ordnance jettison (Part 10 section 4) is included as its own list. 'taxi' (Part 5, Taxi section) and 'takeoff' (Part 5, Takeoff section) checklists, and the 'landing' checklist (Part 6, Normal 360-Degree Landing Approach), are copied directly from the guide's own short numbered steps, same as Part 4 - each restarts its own 1-N numbering rather than continuing Part 4's global count, matching how the guide itself numbers them. The AoA Indexer systems_notes entry is NOT from the guide - it's written independently (standard real-world AoA-indexer symbology, described in different terms/words than the guide's own ASCII arrow representation) since it's directly relevant to flying the landing approach above. Deliberately NOT converting the rest of the guide's ~18 parts wholesale (Parts 1-3, 7-8, 11-18 - cockpit/controls reference, engine/fuel, RWR/countermeasures, datalink, radio, autopilot/LASTE, navigation, air-to-air refueling) - that would mean reproducing the bulk of a commercial, copyrighted guide rather than a few short procedural excerpts. 'night_vision_goggles' (Part 3's short NVG keybind reference) and 'night_flying_ground_prep' (explicit request: the 5-item 'things to do on the ground' list from Part 5's own PRE-FLIGHT section, page 123) are both condensed/paraphrased from their respective short reference sections - not verbatim guide prose - and each of the 5 ground-prep items pulls its actual how-to steps from that item's own short dedicated subsection elsewhere in the guide (TAD Own ID setup p.124, DSMS reload p.126, CMS countermeasure programs p.400, ARC-210/UHF radio tuning p.431/435-436) rather than being invented. Part 9 (Sensors) is explicit request ('pull in the sensors section') and is fully covered by the 11 new checklists 'hud_target_designation' through 'hmcs_markpoint_creation' (each guide subsection - 1.3 HUD/TDC, 2.4-2.8 TGP start-up/lasing/steerpoint-slave/boresight/laser-spot-search/laser-pointer, 4.2/4.5 HMCS power-up/profiles/hook/SPI/TGP-slave/markpoint - condensed/paraphrased from its own short numbered procedure, not verbatim) plus 5 new systems_notes entries (SOI/SPI concept, TGP HOTAS reference, Maverick sensor overview, HMCS symbology categories, HMCS HOTAS reference) that are ALL written independently in different words/structure than the guide's own diagram-legend and prose explanations, not paraphrased from them. 1.4 TISL/Pave Penny (Legacy-only, and explicitly 'not functionally implemented in this simulation' per the guide itself) was excluded as not applicable, same as other Legacy-only content elsewhere in this file. New binding_key identifiers introduced for this addition: china_hat_aft, coolie_hat_down. Part 11 (Defence: RWR and Countermeasures) is explicit request ('countermeasures') - the chaff/flare CMS programs (A/B/C/D, MANUAL/AUTO) were already covered in night_flying_ground_prep, so this pass adds the 3 remaining pieces as systems_notes, all written independently rather than paraphrased: ECM jammer modes (AIR/SAM1/SAM2/AAA), how to read the RWR display (circle proximity/state meanings), and MWS states. The guide's own 'RWR Symbol List' (page 403, credited to a third party '.408-X~RAY') is a table/image the PDF extraction did not capture any readable text for - skipped rather than guessed at from general knowledge, since inventing specific symbol-to-threat-type mappings would risk being wrong. The guide's 'Art of Defeating a Missile' section is just a list of external links (YouTube videos, other websites) with no A-10-specific content of its own - skipped as not applicable to this file's data. Part 12 (Datalink/SADL) is explicit request ('data link') and is fully covered by 8 new checklists - 'sadl_network_setup' (Group/Own ID/callsign) plus the guide's own 7 lettered SADL Functions A-G ('sadl_hook_symbol' through 'sadl_receive_jtac_tasking'), each condensed/paraphrased from its own short numbered procedure, not verbatim - plus 2 new systems_notes (SADL overview, SADL symbology) written independently. 'sadl_broadcast_spi' step 5 (broadcast to the whole network) uses only the Tank Killer control (TMS LEFT LONG) - the guide's Legacy-variant control (DMS LEFT LONG) was left out, same exclusion pattern as elsewhere in this file. New binding_key identifier introduced: tms_left. Part 13 (Radio) is explicit request ('radio') and is covered by 5 new checklists, each condensed/paraphrased from its own short numbered tutorial in the guide: radio_arc210_manual_frequency and radio_arc210_preset_channel (ARC-210 Tutorials 1-2), radio_arc210_edit_preset (Tutorial 3, programming a preset channel with a briefed frequency), radio_arc186_vhf_fm (the JTAC radio), and radio_arc164_uhf (the flight/wingman radio, plus its own load-a-preset sub-procedure). The Legacy-only AN/ARC-186(V) VHF AM #1 tutorial was excluded - per the guide's own Tank Killer radio overview, that radio 'is not installed on the A-10C II Tank Killer variant' (ARC-210 replaces it), same exclusion pattern as elsewhere in this file. Also skipped: the 'Advanced radio tutorial' line, just a link to an external PDF with no content of its own, and the Caucasus-map airfield tower frequency table (explicit call: real, useful data, but specific to one theater/map - would be actively misleading presented as universal advice in a per-aircraft file with no theater awareness, so left out entirely rather than included with a caveat). 3 new systems_notes entries (radio system overview, Intercom Panel, which ARC-210 controls do nothing in DCS) are written independently, not paraphrased. New binding_key identifiers introduced: mic_switch_forward, mic_switch_aft, mic_switch_down. Part 17 (Air-to-Air Refueling) is explicit request ('A2A') and is covered by one 17-step checklist ('air_to_air_refueling'), condensed/paraphrased from the guide's own numbered 'How To' procedure, plus one new systems_notes entry (tanker compatibility - the A-10C's boom-only refueling door means only the KC-135 works in DCS, not the probe-and-drogue tankers). Real, confirmed gap in the source material, handled per explicit instruction rather than guessed at: step 4 of the guide's procedure (contact the tanker) specifies the Legacy A-10C's VHF AM #1 radio, which this file's own Radio system overview note already establishes is NOT installed on the Tank Killer variant - the guide never states what replaces it for tanker comms on Tank Killer, and this has not been verified in-game, so that step is written as an honest, explicit open gap rather than a guessed answer. Skipped the guide's own 'Why We All Hate It' intro (personal opinion/narrative, not reference data) and its two external links (a YouTube example, a Steam Community written tutorial) - neither is A-10-specific content to source from. Remaining flight_planning_notes and qa_snippets are still empty/not curated.",
+  "_extraction_note": "Checklist steps are Part 4 (Start-Up Procedure) copied directly from the guide's own numbered steps, not generated. The guide covers both the A-10C Legacy and A-10C II Tank Killer in one document, calling out the few steps where they differ (only step 10, radio setup) - the Tank Killer Expansion variant text was used throughout since that's the module this file is for; the Legacy-only radio steps were left out as not applicable. Two ground-crew interphone calls that precede numbered step 1 in the guide (retract ladder, remove chocks) are included as unnumbered steps '0a'/'0b'. IMPORTANT: this guide has no standalone engine-shutdown/post-flight checklist anywhere (verified against the full 18-part table of contents and a full-text search of the extracted PDF) - Part 6 'Landing' ends at touchdown and Part 7 moves straight into engine systems/fuel management, same gap already noted in the AH-64D file. The 'shutdown' list below is intentionally empty rather than guessed. Weapons are Part 10 (Offence: Weapons & Armament), copied/closely paraphrased from the guide's own lettered/numbered attack sequences (A/B/C.../1/2/3...), not generated. Where a weapon has two release-mode variants that share an identical DSMS profile-setup procedure (e.g. MK-82's manual-CCIP vs. CCIP-CR release), the shared setup is written once and the two attack procedures are both included rather than duplicating the setup steps twice - no steps were invented or altered, just de-duplicated. AGM-65L Laser Maverick, GBU-54 Laser JDAM, and APKWS are marked 'Tank Killer Only' in the guide itself and match this file's module. Ordnance jettison (Part 10 section 4) is included as its own list. 'taxi' (Part 5, Taxi section) and 'takeoff' (Part 5, Takeoff section) checklists, and the 'landing' checklist (Part 6, Normal 360-Degree Landing Approach), are copied directly from the guide's own short numbered steps, same as Part 4 - each restarts its own 1-N numbering rather than continuing Part 4's global count, matching how the guide itself numbers them. The AoA Indexer systems_notes entry is NOT from the guide - it's written independently (standard real-world AoA-indexer symbology, described in different terms/words than the guide's own ASCII arrow representation) since it's directly relevant to flying the landing approach above. Deliberately NOT converting the rest of the guide's ~18 parts wholesale (Parts 1-3, 7-8, 11-18 - cockpit/controls reference, engine/fuel, RWR/countermeasures, datalink, radio, autopilot/LASTE, navigation, air-to-air refueling) - that would mean reproducing the bulk of a commercial, copyrighted guide rather than a few short procedural excerpts. 'night_vision_goggles' (Part 3's short NVG keybind reference) and 'night_flying_ground_prep' (explicit request: the 5-item 'things to do on the ground' list from Part 5's own PRE-FLIGHT section, page 123) are both condensed/paraphrased from their respective short reference sections - not verbatim guide prose - and each of the 5 ground-prep items pulls its actual how-to steps from that item's own short dedicated subsection elsewhere in the guide (TAD Own ID setup p.124, DSMS reload p.126, CMS countermeasure programs p.400, ARC-210/UHF radio tuning p.431/435-436) rather than being invented. Part 9 (Sensors) is explicit request ('pull in the sensors section') and is fully covered by the 11 new checklists 'hud_target_designation' through 'hmcs_markpoint_creation' (each guide subsection - 1.3 HUD/TDC, 2.4-2.8 TGP start-up/lasing/steerpoint-slave/boresight/laser-spot-search/laser-pointer, 4.2/4.5 HMCS power-up/profiles/hook/SPI/TGP-slave/markpoint - condensed/paraphrased from its own short numbered procedure, not verbatim) plus 5 new systems_notes entries (SOI/SPI concept, TGP HOTAS reference, Maverick sensor overview, HMCS symbology categories, HMCS HOTAS reference) that are ALL written independently in different words/structure than the guide's own diagram-legend and prose explanations, not paraphrased from them. 1.4 TISL/Pave Penny (Legacy-only, and explicitly 'not functionally implemented in this simulation' per the guide itself) was excluded as not applicable, same as other Legacy-only content elsewhere in this file. New binding_key identifiers introduced for this addition: china_hat_aft, coolie_hat_down. Part 11 (Defence: RWR and Countermeasures) is explicit request ('countermeasures') - the chaff/flare CMS programs (A/B/C/D, MANUAL/AUTO) were already covered in night_flying_ground_prep, so this pass adds the 3 remaining pieces as systems_notes, all written independently rather than paraphrased: ECM jammer modes (AIR/SAM1/SAM2/AAA), how to read the RWR display (circle proximity/state meanings), and MWS states. The guide's own 'RWR Symbol List' (page 403, credited to a third party '.408-X~RAY') is a table/image the PDF extraction did not capture any readable text for - skipped rather than guessed at from general knowledge, since inventing specific symbol-to-threat-type mappings would risk being wrong. The guide's 'Art of Defeating a Missile' section is just a list of external links (YouTube videos, other websites) with no A-10-specific content of its own - skipped as not applicable to this file's data. Part 12 (Datalink/SADL) is explicit request ('data link') and is fully covered by 8 new checklists - 'sadl_network_setup' (Group/Own ID/callsign) plus the guide's own 7 lettered SADL Functions A-G ('sadl_hook_symbol' through 'sadl_receive_jtac_tasking'), each condensed/paraphrased from its own short numbered procedure, not verbatim - plus 2 new systems_notes (SADL overview, SADL symbology) written independently. 'sadl_broadcast_spi' step 5 (broadcast to the whole network) uses only the Tank Killer control (TMS LEFT LONG) - the guide's Legacy-variant control (DMS LEFT LONG) was left out, same exclusion pattern as elsewhere in this file. New binding_key identifier introduced: tms_left. Part 13 (Radio) is explicit request ('radio') and is covered by 5 new checklists, each condensed/paraphrased from its own short numbered tutorial in the guide: radio_arc210_manual_frequency and radio_arc210_preset_channel (ARC-210 Tutorials 1-2), radio_arc210_edit_preset (Tutorial 3, programming a preset channel with a briefed frequency), radio_arc186_vhf_fm (the JTAC radio), and radio_arc164_uhf (the flight/wingman radio, plus its own load-a-preset sub-procedure). The Legacy-only AN/ARC-186(V) VHF AM #1 tutorial was excluded - per the guide's own Tank Killer radio overview, that radio 'is not installed on the A-10C II Tank Killer variant' (ARC-210 replaces it), same exclusion pattern as elsewhere in this file. Also skipped: the 'Advanced radio tutorial' line, just a link to an external PDF with no content of its own, and the Caucasus-map airfield tower frequency table (explicit call: real, useful data, but specific to one theater/map - would be actively misleading presented as universal advice in a per-aircraft file with no theater awareness, so left out entirely rather than included with a caveat). 3 new systems_notes entries (radio system overview, Intercom Panel, which ARC-210 controls do nothing in DCS) are written independently, not paraphrased. New binding_key identifiers introduced: mic_switch_forward, mic_switch_aft, mic_switch_down. Part 17 (Air-to-Air Refueling) is explicit request ('A2A') and is covered by one 17-step checklist ('air_to_air_refueling'), condensed/paraphrased from the guide's own numbered 'How To' procedure, plus one new systems_notes entry (tanker compatibility - the A-10C's boom-only refueling door means only the KC-135 works in DCS, not the probe-and-drogue tankers). Real, confirmed gap in the source material, handled per explicit instruction rather than guessed at: step 4 of the guide's procedure (contact the tanker) specifies the Legacy A-10C's VHF AM #1 radio, which this file's own Radio system overview note already establishes is NOT installed on the Tank Killer variant - the guide never states what replaces it for tanker comms on Tank Killer, and this has not been verified in-game, so that step is written as an honest, explicit open gap rather than a guessed answer. Skipped the guide's own 'Why We All Hate It' intro (personal opinion/narrative, not reference data) and its two external links (a YouTube example, a Steam Community written tutorial) - neither is A-10-specific content to source from. Part 16 (Navigation & ILS Landing) is explicit request ('nav') and is the largest single addition so far - 16 new checklists condensed/paraphrased from the guide's own numbered procedures (waypoint designate/navigate/consult/add/edit/offset, markpoint navigate/consult/add, flight plan create/use, divert, ADF, TACAN, anchor point setup, ILS approach) plus 7 new systems_notes written independently (nav systems overview, NMSP, TAD moving map, TAD HOTAS reference, HSI reference, navigation point types, bullseye call format). The guide's own worked examples throughout this part use specific mission/map data (Groom Lake AFB coordinates, Kutaisi's TACAN channel, Khasab/Batumi airfields, specific frequencies like 255.000 MHz) purely to illustrate a real walkthrough - none of that was carried in as fact; every checklist here is written generically (e.g. 'the beacon's frequency, from your mission briefing' instead of a hardcoded number), same principle as the Caucasus airfield frequency table excluded from the Radio addition. ils_landing_approach deliberately stops at 'deploy gear/flaps/airbrakes' and points back at the existing 'landing' checklist for the touchdown sequence rather than re-describing it - the guide's own ILS section duplicates that content almost verbatim (itself an artifact of the guide's page numbering restarting mid-section). Excluded the Legacy-only TAD control mapping (6.1's 'CONTROLS (A-10C LEGACY)') in favor of the Tank Killer one, same pattern as elsewhere. New binding_key identifier introduced: dms_up_down (DMS UP/DOWN - cycling waypoints/markpoints/airfields - a third DMS axis distinct from the existing dms_fwd_aft and dms_left_right). Remaining flight_planning_notes and qa_snippets are still empty/not curated.",
   "checklists": {
     "pre_start": [
       {
@@ -1332,6 +1332,468 @@
         "step": 17,
         "action": "Close the fuel trap door and resume flight."
       }
+    ],
+    "waypoint_designate_steerpoint": [
+      {
+        "step": 1,
+        "action": "Set the AAP Steerpoint Selector Knob to MISSION (gives access to every waypoint in the current mission)."
+      },
+      {
+        "step": 2,
+        "action": "Set the AAP CDU Selector Knob to STEER."
+      },
+      {
+        "step": 3,
+        "action": "Press Coolie Hat UP to set the HUD as the Sensor of Interest (SOI).",
+        "binding_key": "coolie_hat_up"
+      },
+      {
+        "step": 4,
+        "action": "Select the waypoint to use as your steerpoint - three ways: a) DMS UP/DOWN while the HUD is SOI cycles through waypoints, b) the CDU's own STEER switch or +/- rocker, c) the UFC's STEER rocker.",
+        "binding_key": "dms_up_down"
+      },
+      {
+        "step": 5,
+        "action": "The selected waypoint shows as your steerpoint on both the HUD and CDU."
+      }
+    ],
+    "waypoint_navigate_to_steerpoint": [
+      {
+        "step": 1,
+        "action": "Once a steerpoint is designated, cycle Master Mode to NAV.",
+        "binding_key": "master_mode_button"
+      },
+      {
+        "step": 2,
+        "action": "Select STR PT navigation mode on the NMSP."
+      },
+      {
+        "step": 3,
+        "action": "If the SPI isn't already set to STPT (steerpoint), press TMS AFT LONG with the HUD as SOI to set it.",
+        "binding_key": "tms_aft"
+      },
+      {
+        "step": 4,
+        "action": "Follow the steering cues on the HSI and HUD - the TVV points toward the steerpoint once STPT is the SPI."
+      }
+    ],
+    "waypoint_consult_data": [
+      {
+        "step": 1,
+        "action": "Set the AAP Steerpoint Selector Knob to MISSION."
+      },
+      {
+        "step": 2,
+        "action": "To check a specific waypoint: set the AAP CDU Selector Knob to WAYPT, enter its number on the keypad, then press the LSK next to the Waypoint Number field - this opens the WP INFO page (name, heading/distance/time-to-go)."
+      },
+      {
+        "step": 3,
+        "action": "For more detail on that waypoint, press the LSK next to WAYPOINT, then use the Page Increment/Decrement rocker to flip between its two data pages (coordinates, elevation, wind)."
+      },
+      {
+        "step": 4,
+        "action": "To check the current steerpoint instead of one specific waypoint: set the AAP CDU Selector Knob to STEER - this opens the STEERPOINT INFO page (desired heading, distance, elevation, required airspeed, bearing/radial to it)."
+      },
+      {
+        "step": 5,
+        "action": "Other useful AAP CDU Selector positions: OTHER (unlocks the CDU's Function Select Keys, needed to add/edit anything) and POSITION (shows your own current position)."
+      }
+    ],
+    "waypoint_add": [
+      {
+        "step": 1,
+        "action": "Method 1 - copy an existing point: a) set the AAP Steerpoint Selector Knob to MISSION, b) set the AAP CDU Selector Knob to OTHER, c) press the WP FSK, d) select the WAYPOINT branch, e) select \"Copy to available mission point\" - this copies the point (e.g. a hooked TAD symbol) into the next free mission-point slot."
+      },
+      {
+        "step": 2,
+        "action": "Method 2 - enter coordinates manually: a) follow steps a-d above, b) select the desired coordinate format (L/L for Latitude/Longitude, or UTM/MGRS), c) enter the latitude on the keypad and press the LSK next to the latitude field, d) enter the longitude and press its LSK, e) enter the elevation (ft) and press its LSK, f) enter a unique name and press its LSK - the waypoint is created once every field is set. Coordinates are entered as one digit string per field (e.g. a latitude of 37°13.133'N is typed as 3713133)."
+      }
+    ],
+    "waypoint_edit": [
+      {
+        "step": 1,
+        "action": "Set the AAP Steerpoint Selector Knob to MISSION."
+      },
+      {
+        "step": 2,
+        "action": "Set the AAP CDU Selector Knob to OTHER."
+      },
+      {
+        "step": 3,
+        "action": "Press the WP FSK."
+      },
+      {
+        "step": 4,
+        "action": "Select the WAYPOINT branch."
+      },
+      {
+        "step": 5,
+        "action": "Select the waypoint to edit: enter its number on the keypad, then press the LSK next to the Waypoint Number field."
+      },
+      {
+        "step": 6,
+        "action": "Edit its latitude, longitude, and elevation the same way as adding a new waypoint (enter the value on the keypad, then press each field's own LSK) - see the Add Waypoints checklist for the coordinate entry format."
+      }
+    ],
+    "waypoint_offset": [
+      {
+        "step": 1,
+        "action": "Use this when a target is given relative to an existing waypoint (e.g. \"0.84 nm at a magnetic heading of 346 degrees from Waypoint 1\") rather than as its own coordinates."
+      },
+      {
+        "step": 2,
+        "action": "Set the AAP Steerpoint Selector Knob to MISSION."
+      },
+      {
+        "step": 3,
+        "action": "Set the AAP CDU Selector Knob to OTHER."
+      },
+      {
+        "step": 4,
+        "action": "Press the OSET (Offset) FSK."
+      },
+      {
+        "step": 5,
+        "action": "Enter the reference waypoint's number on the keypad and press the LSK next to the Waypoint Number field."
+      },
+      {
+        "step": 6,
+        "action": "Enter the magnetic heading and distance offset on the keypad, then press the LSK next to MH/DIS. Format: HHHDD.T under 100 nm, HHHDDD.T from 100-999 nm, HHHDDDD.T at 1000+ nm (e.g. a heading of 346 and 0.8 nm is entered as 34600.8)."
+      },
+      {
+        "step": 7,
+        "action": "Type a name for the new offset waypoint on the keypad."
+      },
+      {
+        "step": 8,
+        "action": "Select \"Copy to available mission point\" to save it into a free mission-point slot - it can then be selected like any other waypoint."
+      }
+    ],
+    "markpoint_navigate": [
+      {
+        "step": 1,
+        "action": "Set the AAP Steerpoint Selector Knob to MARK."
+      },
+      {
+        "step": 2,
+        "action": "Set the AAP CDU Selector Knob to OTHER."
+      },
+      {
+        "step": 3,
+        "action": "Press Coolie Hat UP to set the HUD as SOI.",
+        "binding_key": "coolie_hat_up"
+      },
+      {
+        "step": 4,
+        "action": "Select the markpoint to use as your steerpoint - same three methods as designating a waypoint steerpoint (DMS UP/DOWN, the CDU STEER switch, or the UFC STEER rocker) - see the Waypoint Designate Steerpoint checklist.",
+        "binding_key": "dms_up_down"
+      },
+      {
+        "step": 5,
+        "action": "The selected markpoint shows as your steerpoint on the HUD and CDU."
+      },
+      {
+        "step": 6,
+        "action": "Cycle Master Mode to NAV.",
+        "binding_key": "master_mode_button"
+      },
+      {
+        "step": 7,
+        "action": "Select STR PT navigation mode on the NMSP."
+      },
+      {
+        "step": 8,
+        "action": "If the SPI isn't already set to STPT, press TMS AFT LONG with the HUD as SOI.",
+        "binding_key": "tms_aft"
+      },
+      {
+        "step": 9,
+        "action": "Follow the steering cues on the HSI and HUD."
+      }
+    ],
+    "markpoint_consult_data": [
+      {
+        "step": 1,
+        "action": "Set the AAP Steerpoint Selector Knob to MARK."
+      },
+      {
+        "step": 2,
+        "action": "Set the AAP CDU Selector Knob to OTHER."
+      },
+      {
+        "step": 3,
+        "action": "Press the WP FSK."
+      },
+      {
+        "step": 4,
+        "action": "Select the WAYPOINT branch."
+      },
+      {
+        "step": 5,
+        "action": "Select the markpoint to view: enter its letter on the keypad and press the LSK next to the Waypoint Number field, or cycle through them with the +/- rocker - this shows its name, coordinates, elevation, and wind."
+      }
+    ],
+    "markpoint_add": [
+      {
+        "step": 1,
+        "action": "Overhead method: pressing the MK button on the CDU creates a new markpoint at your current position - each press creates the next one in order (A-Y; Z is reserved for automatic weapon-release markpoints)."
+      },
+      {
+        "step": 2,
+        "action": "Designation method: point any sensor (HUD TDC, TGP, Maverick seeker, or TAD cursor) at the target, then press TMS RIGHT SHORT - each press creates the next markpoint in order (A-Y).",
+        "binding_key": "tms_right"
+      },
+      {
+        "step": 3,
+        "action": "Weapon-release method: a Z markpoint is created automatically every time you release a weapon - each new release replaces the previous one."
+      },
+      {
+        "step": 4,
+        "action": "HMCS method (Tank Killer): a) turn on HMCS power, b) press Coolie Hat DOWN to set the HMCS as SOI, c) press China Hat AFT SHORT to recage the HDC to the crosshair, d) move your helmet to place the crosshair near the target, e) use the Slew Control Switch to walk the ground-stabilized HDC onto it, f) press TMS RIGHT SHORT to create the markpoint, g) optionally press TMS RIGHT LONG to make it the SPI.",
+        "binding_key": [
+          "hmcs_power_switch",
+          "coolie_hat_down",
+          "china_hat_aft",
+          "hotas_slew",
+          "tms_right"
+        ]
+      },
+      {
+        "step": 5,
+        "action": "To browse your markpoints afterward, set the AAP Steerpoint Selector Knob to MARK."
+      }
+    ],
+    "flight_plan_create": [
+      {
+        "step": 1,
+        "action": "Set the AAP Steerpoint Selector Knob to FLT PLAN (needed for the route to actually draw on the TAD)."
+      },
+      {
+        "step": 2,
+        "action": "Set the AAP CDU Selector Knob to OTHER."
+      },
+      {
+        "step": 3,
+        "action": "Press the FPM (Flight Plan Menu) FSK."
+      },
+      {
+        "step": 4,
+        "action": "Type a name for the new flight plan on the CDU keyboard, then press the LSK next to NEW FP."
+      },
+      {
+        "step": 5,
+        "action": "Press the LSK next to FPBUILD [name] to open the Flight Plan Build page - it lists every waypoint in the plan (index 01 is always your Init Posit)."
+      },
+      {
+        "step": 6,
+        "action": "Add waypoints one at a time: enter a waypoint's number on the CDU keyboard, then press the LSK next to the sequence slot you want it in (01, 02, 03...)."
+      },
+      {
+        "step": 7,
+        "action": "Use the Page Increment/Decrement rocker to move to the next page once you've filled a page's worth of slots, and keep adding waypoints the same way - a flight plan can hold up to 40."
+      }
+    ],
+    "flight_plan_use": [
+      {
+        "step": 1,
+        "action": "Set the AAP Steerpoint Selector Knob to FLT PLAN."
+      },
+      {
+        "step": 2,
+        "action": "Set the AAP CDU Selector Knob to OTHER."
+      },
+      {
+        "step": 3,
+        "action": "Press the FPM (Flight Plan Menu) FSK."
+      },
+      {
+        "step": 4,
+        "action": "Press the LSK next to the flight plan you want active - an asterisk marks it as selected."
+      },
+      {
+        "step": 5,
+        "action": "Press the LSK next to your active flight plan again to toggle AUTO (advances to the next waypoint automatically once you're close enough) or MAN (you advance manually) sequencing."
+      },
+      {
+        "step": 6,
+        "action": "The TAD now draws the flight plan's waypoints connected by green lines, and cycling the steerpoint switch moves through them in sequence."
+      }
+    ],
+    "divert_to_nearest_airfield": [
+      {
+        "step": 1,
+        "action": "Set the AAP CDU Selector Knob to OTHER."
+      },
+      {
+        "step": 2,
+        "action": "Press Coolie Hat UP to set the HUD as SOI.",
+        "binding_key": "coolie_hat_up"
+      },
+      {
+        "step": 3,
+        "action": "Select the CDU page."
+      },
+      {
+        "step": 4,
+        "action": "On the UFC, press FUNC then 2 (NAV functions)."
+      },
+      {
+        "step": 5,
+        "action": "Press the OSB to select the DIVERT menu."
+      },
+      {
+        "step": 6,
+        "action": "The Divert menu lists the closest airfields, with heading, distance, and time-to-go to each."
+      },
+      {
+        "step": 7,
+        "action": "Select an airfield's OSB for its FLDINFO (Field Information) page - runway heading/elevation/length, ILS frequency (if any), TACAN channel (if any), and tower radio frequency."
+      },
+      {
+        "step": 8,
+        "action": "The selected airfield becomes your current steerpoint, and the HUD shows the way there."
+      },
+      {
+        "step": 9,
+        "action": "With the HUD still SOI, use DMS UP/DOWN SHORT to cycle through the other listed airfields.",
+        "binding_key": "dms_up_down"
+      }
+    ],
+    "adf_navigation": [
+      {
+        "step": 1,
+        "action": "On the NMSP, make sure ILS and TCN are not selected."
+      },
+      {
+        "step": 2,
+        "action": "Set the UHF radio's mode to ADF."
+      },
+      {
+        "step": 3,
+        "action": "Set the UHF frequency mode to MNL (Manual)."
+      },
+      {
+        "step": 4,
+        "action": "Dial in the beacon's frequency, from your mission briefing/kneeboard."
+      },
+      {
+        "step": 5,
+        "action": "Confirm signal with the UHF HOMING light illuminated."
+      },
+      {
+        "step": 6,
+        "action": "On the HSI, follow Bearing Pointer 1 toward the beacon - ADF gives bearing only, no range."
+      }
+    ],
+    "tacan_navigation": [
+      {
+        "step": 1,
+        "action": "Power up the TACAN panel: set the Mode Selector to T/R (Transmit-Receive)."
+      },
+      {
+        "step": 2,
+        "action": "Set the station's TACAN channel on the panel (the right knob sets X/Y, the two left/right selector knobs set the channel number)."
+      },
+      {
+        "step": 3,
+        "action": "On the NMSP, press TCN to slave the HSI to the TACAN beacon."
+      },
+      {
+        "step": 4,
+        "action": "Set the desired course to the station with the HSI Course Set Knob."
+      },
+      {
+        "step": 5,
+        "action": "After a few seconds, the HSI shows DME (distance) to the station in nautical miles."
+      },
+      {
+        "step": 6,
+        "action": "Steer to center the TACAN CDI - the deviation from centerline shrinks as you approach the radial."
+      },
+      {
+        "step": 7,
+        "action": "The pointed end of the Course Arrow and Bearing Pointer 1 both indicate the beacon's direction."
+      },
+      {
+        "step": 8,
+        "action": "A centered CDI means you're established on your selected radial."
+      },
+      {
+        "step": 9,
+        "action": "Turn to follow Bearing Pointer 1 (or the course needle) along that radial to the station."
+      }
+    ],
+    "anchor_point_bullseye_setup": [
+      {
+        "step": 1,
+        "action": "Set the AAP Steerpoint Selector Knob to MISSION."
+      },
+      {
+        "step": 2,
+        "action": "Set the AAP CDU Selector Knob to WAYPT - this opens the WP INFO page."
+      },
+      {
+        "step": 3,
+        "action": "Select the ANCHOR PT branch."
+      },
+      {
+        "step": 4,
+        "action": "Enter the number of the waypoint you want to use as the new anchor point on the keypad, then press the LSK next to the Waypoint Number field."
+      },
+      {
+        "step": 5,
+        "action": "Press the LSK next to HUD OFF to also show anchor point/bullseye data on the HUD."
+      },
+      {
+        "step": 6,
+        "action": "Select ANCHR mode on the NMSP."
+      },
+      {
+        "step": 7,
+        "action": "The anchor point is now set - check it on the CDU, HUD, HSI, and TAD."
+      },
+      {
+        "step": 8,
+        "action": "You could also create a brand-new waypoint (rather than reusing an existing one) and set that as the anchor point instead - the process is the same either way."
+      }
+    ],
+    "ils_landing_approach": [
+      {
+        "step": 1,
+        "action": "Set your VHF radio to TR, manual frequency, and the tower's briefed frequency - call in for an inbound request."
+      },
+      {
+        "step": 2,
+        "action": "Turn ILS power ON."
+      },
+      {
+        "step": 3,
+        "action": "Enter the ILS frequency for your destination runway - find it on the airfield's FLDINFO page via the Divert function, or from your kneeboard."
+      },
+      {
+        "step": 4,
+        "action": "Set your HSI course to the runway's magnetic heading."
+      },
+      {
+        "step": 5,
+        "action": "On the NMSP, set homing mode to ILS and turn toward the runway."
+      },
+      {
+        "step": 6,
+        "action": "Align with the runway using the HSI, CDI, and the ADI's localizer steering bar."
+      },
+      {
+        "step": 7,
+        "action": "Inside about 10 nm, the Glide Slope Fail flag disappears and gives vertical guidance for a 3-degree glide slope."
+      },
+      {
+        "step": 8,
+        "action": "Fly the glide slope by keeping the Glide Slope Steering Bar and Deviation Indicator centered, alongside the localizer bar."
+      },
+      {
+        "step": 9,
+        "action": "Once both the localizer and glide slope are captured, deploy the landing gear, flaps, and airbrakes and continue as in the standard landing checklist (radar altitude reference, -500 ft/min descent, touchdown - no flare needed)."
+      }
     ]
   },
   "weapons": [
@@ -1991,6 +2453,34 @@
     {
       "topic": "Air-to-Air Refueling - tanker compatibility",
       "notes": "The A-10C's refueling door only works with a flying-boom tanker - in DCS, that's specifically the KC-135 Stratotanker. The other refueling aircraft in DCS (Il-78M, KC-135 MPRS, S-3B Viking, KC-130) are all probe-and-drogue systems, which the A-10C can't use."
+    },
+    {
+      "topic": "Navigation systems overview",
+      "notes": "Four main interfaces control navigation: the CDU/AAP, the CDU Page Repeater/UFC scratchpad, the NMSP, and HOTAS controls (which vary by whatever's currently SOI). The EGI (Embedded GPS & Inertial Navigation System) is the primary nav system, feeding the CDU with position/attitude/steering data. HARS (Heading & Attitude Reference System) is a gyro-based backup that takes over automatically if the EGI's INS fails - it can't drive the HUD's Total Velocity Vector and drifts under hard maneuvering, so there's no real reason to select it manually while the EGI is working."
+    },
+    {
+      "topic": "NMSP (Navigation Mode Select Panel)",
+      "notes": "The NMSP picks what feeds the HUD, ADI, and HSI. HARS and EGI are mutually exclusive - selecting one deselects the other. TISL, TACAN, and ILS are also mutually exclusive with each other (all three use external beacons/stations). STR PT mode makes the HSI/ADI operate relative to your steerpoint; ANCHR mode instead points them at the anchor point (bullseye). The UHF/FM Homing lights turn amber when their respective radio panel is set to homing mode."
+    },
+    {
+      "topic": "TAD moving map",
+      "notes": "The moving map has three scale modes: MAN (change scale manually with the ADJ +/- rocker), AUTO (scale follows the selected map chart format automatically), and OFF. With the TAD as SOI, China Hat FWD SHORT cycles NORM/EXP1/EXP2 map-expansion modes - each step narrows the displayed chart format by one increment (e.g. 1:2M to 1:1M to 1:500K) regardless of the TAD's own range-scale setting. Key TAD symbols: a green diamond marks where the TGP is pointed, range rings are centered on your own aircraft (the outer ring matches the TAD's range-scale setting), and the bullseye/anchor point has its own dedicated symbol."
+    },
+    {
+      "topic": "TAD - HOTAS reference, Tank Killer",
+      "notes": "With the TAD as SOI (Coolie Hat toward its MFCD): TMS FWD SHORT hooks a symbol (SPI, TGP diamond, waypoint/steerpoint, or bullseye), AFT SHORT un-hooks it, LEFT LONG broadcasts your SPI. DMS FWD/AFT SHORT changes TAD scale, FWD LONG toggles the quick map view, AFT LONG selects the TAD center option, LEFT SHORT toggles CEN/DEP mode, RIGHT SHORT cycles center/depressed mode. China Hat FWD SHORT toggles the expanded map mode, AFT SHORT resets the TAD cursor. The Slew Control Switch moves the TAD cursor."
+    },
+    {
+      "topic": "HSI (Horizontal Situation Indicator) reference",
+      "notes": "The HSI is the fallback for navigation data not shown on the HUD or CDU, and for use after battle damage. Bearing Pointer 1 shows the magnetic bearing to the selected TACAN station (or the ADF station instead, if ADF is selected - ADF takes priority if both are active); Bearing Pointer 2 points to the current steerpoint. The CDI (Course Deviation Indicator) shows how far off your selected course you are, with a TO-FROM flag telling you which side of the station/waypoint you're on. The Course Set Knob dials in a course; the Heading Set Knob sets the heading bug."
+    },
+    {
+      "topic": "Navigation point types",
+      "notes": "Waypoints are pre-planned reference points (up to 2,050 in the CDU database) that you can create, edit, and string into flight plans. A Steerpoint is just whichever waypoint or markpoint is currently selected. Markpoints mark a point of interest on the fly (up to 26, lettered A-Z). An Anchor Point (Bullseye) is a shared reference point for the whole friendly force. The AAP Steerpoint Selector Knob picks which pool of points you're browsing (MISSION = all waypoints, FLT PLAN = the active flight plan's waypoints, MARK = markpoints, ANCHR = the anchor point), and the AAP CDU Selector Knob picks what the CDU page shows (OTHER unlocks the Function Select Keys for adding/editing anything, POSITION shows your own position, STEER shows the current steerpoint, WAYPT shows a specific waypoint/markpoint)."
+    },
+    {
+      "topic": "Bullseye call format",
+      "notes": "A bullseye call communicates your position without telling the enemy where you actually are, since only friendly forces know where the bullseye is: bearing from the bullseye, then range from the bullseye, then altitude - e.g. \"Bullseye 180 for 15, angels 20.\""
     }
   ],
   "qa_snippets": []
