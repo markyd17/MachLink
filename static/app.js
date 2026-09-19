@@ -942,16 +942,41 @@ function formatFlightDate(unixSeconds) {
   return new Date(unixSeconds * 1000).toLocaleDateString([], { month: "short", day: "numeric" });
 }
 
-function joinCounts(obj) {
-  const entries = Object.entries(obj || {}).sort((a, b) => b[1] - a[1]);
-  if (!entries.length) return "None yet";
-  return entries.map(([key, count]) => `${count}x ${key}`).join(", ");
+// A real <table> for the Hangar's breakdown blocks - these used to be one
+// comma-joined string each ("5x Soft Target, 2x SAM, ..."), which read as
+// free text (explicit request: "less free text looking and more like a
+// table format"). First column is the label, every later column is a
+// right-aligned number. Sorted biggest-first, ties alphabetical so the
+// order never flickers between refreshes.
+function breakdownTable(headers, rows) {
+  if (!rows.length) return `<div class="pilot-breakdown-empty mono">None yet</div>`;
+  const head = headers.map((h, i) => `<th${i ? ' class="num"' : ""}>${escapeHtml(h)}</th>`).join("");
+  const body = rows
+    .map((cells) => `<tr>${cells.map((c, i) => `<td${i ? ' class="num"' : ""}>${escapeHtml(String(c))}</td>`).join("")}</tr>`)
+    .join("");
+  return `<table class="pilot-breakdown-table"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
 }
 
-function joinHours(obj) {
-  const entries = Object.entries(obj || {}).sort((a, b) => b[1] - a[1]);
-  if (!entries.length) return "None yet";
-  return entries.map(([key, hours]) => `${hours} hrs ${key}`).join(", ");
+// {label: count} -> [[label, count], ...], biggest first.
+function sortedCountRows(obj) {
+  return Object.entries(obj || {}).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+}
+
+// Every airframe ever flown gets a row here, not just ones with a kill or
+// a loss - flight_hours_by_airframe already has all of them, and a
+// 0 / 0 row is real information ("flown, never scored, never lost"), where
+// the old Losses-by-Airframe line silently omitted anything not lost.
+function aircraftPerformanceRows(s) {
+  const kills = s.kills_by_airframe || {};
+  const losses = s.losses_by_airframe || {};
+  const airframes = new Set([
+    ...Object.keys(s.flight_hours_by_airframe || {}),
+    ...Object.keys(kills),
+    ...Object.keys(losses),
+  ]);
+  return [...airframes]
+    .map((a) => [a, kills[a] || 0, losses[a] || 0])
+    .sort((a, b) => b[1] - a[1] || b[2] - a[2] || a[0].localeCompare(b[0]));
 }
 
 function renderPilotSummaryStats(s) {
@@ -974,19 +999,20 @@ function renderPilotSummaryStats(s) {
     <div class="pilot-breakdown-grid">
       <div class="pilot-breakdown-block">
         <h4 class="checklist-title">FLIGHT HOURS BY AIRFRAME</h4>
-        <div class="debrief-cause mono">${escapeHtml(joinHours(s.flight_hours_by_airframe))}</div>
+        ${breakdownTable(["Airframe", "Hours"], sortedCountRows(s.flight_hours_by_airframe))}
       </div>
       <div class="pilot-breakdown-block">
         <h4 class="checklist-title">KILLS BY TYPE</h4>
-        <div class="debrief-cause mono">${escapeHtml(joinCounts(s.kills_by_type))}${s.total_friendly_fire_kills ? ` — ${s.total_friendly_fire_kills} friendly fire` : ""}</div>
+        ${breakdownTable(["Type", "Kills"], sortedCountRows(s.kills_by_type))}
+        ${s.total_friendly_fire_kills ? `<div class="pilot-breakdown-note mono">Includes ${s.total_friendly_fire_kills} friendly fire</div>` : ""}
       </div>
       <div class="pilot-breakdown-block">
-        <h4 class="checklist-title">LOSSES BY AIRFRAME</h4>
-        <div class="debrief-cause mono">${escapeHtml(joinCounts(s.losses_by_airframe))}</div>
+        <h4 class="checklist-title">AIRCRAFT PERFORMANCE</h4>
+        ${breakdownTable(["Airframe", "Kills", "Losses"], aircraftPerformanceRows(s))}
       </div>
       <div class="pilot-breakdown-block">
         <h4 class="checklist-title">LOSSES BY CAUSE</h4>
-        <div class="debrief-cause mono">${escapeHtml(joinCounts(s.losses_by_cause))}</div>
+        ${breakdownTable(["Cause", "Losses"], sortedCountRows(s.losses_by_cause))}
       </div>
     </div>`;
 }
