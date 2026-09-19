@@ -1550,7 +1550,32 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
   padding: clamp(6px, 1vh, 10px) clamp(8px, 1vw, 12px) !important;
 }
 .pilot-breakdown-block .checklist-title { margin: 0 0 6px 0 !important; font-size: .8rem !important; }
-.pilot-breakdown-block .debrief-cause { margin-top: 0 !important; }
+/* Breakdown tables (Flight Hours / Kills by Type / Aircraft Performance /
+   Losses by Cause) - same visual language as .mission-flights-table
+   (mono body, small uppercase dim header over a hairline, faint row
+   dividers) so the two real tables in the app read as one system. Label
+   column takes the slack; number columns hug their content and right-
+   align. overflow-wrap:anywhere on the label cell lets a long unbroken
+   airframe id like "AH-64D_BLK_II" wrap instead of forcing the whole
+   block wider than its grid column. */
+.pilot-breakdown-table { width: 100% !important; border-collapse: collapse !important; font-family: var(--font-mono) !important; font-size: clamp(10px, 0.85vw, 12px) !important; }
+.pilot-breakdown-table th {
+  text-align: left !important;
+  padding: 0 0 4px 0 !important;
+  font-family: var(--font-display) !important;
+  font-size: 10px !important;
+  font-weight: 500 !important;
+  text-transform: uppercase !important;
+  letter-spacing: .06em !important;
+  color: var(--ink-dim) !important;
+  border-bottom: 1px solid var(--line) !important;
+}
+.pilot-breakdown-table td { padding: 4px 0 !important; color: var(--ink) !important; border-bottom: 1px solid rgba(255,255,255,.05) !important; }
+.pilot-breakdown-table tr:last-child td { border-bottom: 0 !important; }
+.pilot-breakdown-table td:first-child { overflow-wrap: anywhere !important; }
+.pilot-breakdown-table th.num, .pilot-breakdown-table td.num { text-align: right !important; padding-left: 10px !important; font-variant-numeric: tabular-nums !important; white-space: nowrap !important; }
+.pilot-breakdown-empty { color: var(--ink-dim) !important; font-size: clamp(10px, 0.85vw, 12px) !important; }
+.pilot-breakdown-note { margin-top: 6px !important; color: var(--ink-dim) !important; font-size: 10px !important; }
 
 /* ---------- Flight School ---------- */
 /* Needs the exact same explicit-height treatment #section-ops already
@@ -1749,7 +1774,12 @@ header { background-color: var(--chassis); background-image: linear-gradient(180
     grid-row: auto !important;
   }
   .ops-events-panel { margin-top: 8px !important; }
-  .pilot-breakdown-grid { grid-template-columns: repeat(2, minmax(0,1fr)) !important; }
+  /* Single column, not 2 - the breakdowns are real tables now (Aircraft
+     Performance has 3 columns), and a ~160px half-width cell wrapped
+     airframe ids like AH-64D_BLK_II onto a second line (measured live at
+     375px). The old 2-up layout was sized for the one-line free-text
+     strings these used to be. */
+  .pilot-breakdown-grid { grid-template-columns: 1fr !important; }
   .mfd-tabs { overflow-x: auto !important; }
   .mfd-tabs > * { white-space: nowrap !important; }
   #section-kneeboard .sub-panel { min-height: 60vh !important; }

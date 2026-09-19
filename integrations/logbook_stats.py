@@ -73,6 +73,7 @@ def _empty_summary():
         "total_kills": 0,
         "total_friendly_fire_kills": 0,
         "kills_by_type": {},
+        "kills_by_airframe": {},
         "losses_by_airframe": {},
         "losses_by_cause": {},
         "avg_kills_per_sortie": 0.0,
@@ -106,6 +107,18 @@ def compute_stats(flights):
     for k in all_kills:
         bucket = _kill_bucket(k)
         kills_by_type[bucket] = kills_by_type.get(bucket, 0) + 1
+
+    # Kills credited to each of the player's own airframes (not the kill
+    # target's type - that's kills_by_type above). Counts every kill
+    # record, friendly fire included, so this column sums to total_kills
+    # instead of quietly disagreeing with it. Feeds the Hangar's "Aircraft
+    # Performance" table alongside losses_by_airframe below.
+    kills_by_airframe = {}
+    for f in flights:
+        count = len(f.get("kills") or [])
+        if count:
+            aircraft = f.get("aircraft") or "Unknown"
+            kills_by_airframe[aircraft] = kills_by_airframe.get(aircraft, 0) + count
 
     # A count per airframe of sorties lost - shot down, crashed, ejected,
     # or an unconfirmed timeout-inferred crash all count the same here
@@ -142,6 +155,7 @@ def compute_stats(flights):
         "total_kills": total_kills,
         "total_friendly_fire_kills": friendly_fire_kills,
         "kills_by_type": kills_by_type,
+        "kills_by_airframe": kills_by_airframe,
         "losses_by_airframe": losses_by_airframe,
         "losses_by_cause": losses_by_cause,
         "avg_kills_per_sortie": round(total_kills / total_sorties, 2),
