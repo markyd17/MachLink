@@ -397,7 +397,17 @@ async function pollStatus() {
     updateDetectionIndicators(data);
     dcsPaused = data.dcs_paused ?? null;
 
-    if (data.aircraft !== lastAircraft) {
+    // Only a genuinely different aircraft reloads Flight School. A null
+    // aircraft is deliberately NOT a change: /api/status blanks aircraft
+    // to null whenever DCS's telemetry goes stale (~8s), and a pause
+    // causes exactly that - the export hook only sends while
+    // LoGetModelTime() is advancing, and model time freezes while paused.
+    // Treating null as "new aircraft" wiped the active tab, scroll
+    // position and checked-off steps (checkKey() keys off lastAircraft)
+    // on every pause AND again on unpause. Keeping lastAircraft at the
+    // last real airframe means pause/unpause, leaving the cockpit, or a
+    // respawn in the same jet all leave the guide exactly as you left it.
+    if (data.aircraft && data.aircraft !== lastAircraft) {
       lastAircraft = data.aircraft;
       loadChecklist();
     }
@@ -2292,6 +2302,7 @@ async function loadChecklist() {
   citationLine.hidden = true;
   lastChecklistData = null;
   tabContent.innerHTML = "Loading...";
+  tabContent.scrollTop = 0; // a new aircraft starts at the top, not wherever the last one was left
   clearAskBarResult(); // a search result from the previous aircraft is no longer relevant
   try {
     const res = await fetch("/api/checklist");
@@ -2626,7 +2637,11 @@ async function jumpToMatch(match) {
     // synchronous write, nothing left to silently not happen.
     const containerRect = tabContent.getBoundingClientRect();
     const elRect = el.getBoundingClientRect();
-    tabContent.scrollTop += (elRect.top - containerRect.top) - (containerRect.height - elRect.height) / 2;
+    // Center a card that fits; pin the top of one taller than the viewport
+    // (most weapon procedures are) - centering those pushes the title, the
+    // very thing you searched for, off the top of the screen.
+    const offset = elRect.height > containerRect.height ? 8 : (containerRect.height - elRect.height) / 2;
+    tabContent.scrollTop += (elRect.top - containerRect.top) - offset;
   }
   return true;
 }
