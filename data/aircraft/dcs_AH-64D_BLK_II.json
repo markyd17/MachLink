@@ -7,7 +7,7 @@
     "url": "https://chucksguides.com/aircraft/dcs/ah-64d/"
   },
 
-  "_extraction_note": "Steps below were extracted directly from the guide's own numbered [P]/[CPG] checklist format, not generated. Some sub-steps were dropped where the PDF's multi-column kneeboard layout split a sentence across a graphic sidebar and the extraction tool couldn't reliably rejoin it (step numbers may skip, e.g. 6 to 9) - these are minor sub-bullets/notes, not missing major actions, but you or Marky should do one real read-through against the PDF before treating this as complete. No standalone 'aircraft shutdown' checklist exists in this guide (verified by full-text search) - it covers Cold Start in extreme depth but not a formal post-flight shutdown sequence.",
+  "_extraction_note": "Steps below were extracted directly from the guide's own numbered [P]/[CPG] checklist format, not generated. Some sub-steps were dropped where the PDF's multi-column kneeboard layout split a sentence across a graphic sidebar and the extraction tool couldn't reliably rejoin it (step numbers may skip, e.g. 6 to 9) - these are minor sub-bullets/notes, not missing major actions, but you or Marky should do one real read-through against the PDF before treating this as complete. No standalone 'aircraft shutdown' checklist exists in this guide (verified by full-text search) - it covers Cold Start in extreme depth but not a formal post-flight shutdown sequence. Weapons audit (explicit request: check for missing weapons instructions, starting with the A-10C and then this aircraft). Part 14 of the guide (Offence: Weapons & Armament) was compared section by section against this file. The weapon TYPES were already all present (gun, rockets, AGM-114K, AGM-114L); what was missing were whole delivery methods. Added: gun FIXED mode (2.2.2), CPG gun NORM with HMD (2.3.1) and with TADS (2.3.2), gun with George AI (2.4); rocket running/diving fire (3.2.2), multicrew direct fire (3.3.1) and indirect fire (3.3.2) in COOP mode with the TADS, rockets with George AI (3.4); plus the first systems_notes in this file (9 reference notes condensed/written independently from sections 1.1-1.6, 2.1, 3.1 and 4.1: armament overview, Hydra rocket types, crew roles, WAS/trigger guard, delivery techniques, gun ranging/limits, rocket aiming, Hellfire constraints box, Hellfire missile settings/channels/laser codes). Every procedure is condensed/paraphrased from the guide's own numbered [P]/[CPG] steps. Also fixed a stale sentence in the LOBL entry that said the LOAL modes were 'not yet transcribed' (they already were). NOT yet carried over, stated rather than left as a silent gap: section 4.2.1.4 (operating with a JTAC/AFAC - contact and 9-line procedure, coordinates + IR pointer, laser designation) and 4.2.2 (Hellfire with George AI as CPG) - both read but not transcribed; the guide's worked JTAC examples use specific frequencies/callsigns from its own demo mission, which should be generalized rather than baked in. The step-number gaps noted at the top of this note still apply to the older entries.",
 
   "checklists": {
     "before_start_up": [
@@ -138,7 +138,7 @@
   "weapons": [
     {
       "name": "M230 30mm Chain Gun",
-      "employment_notes": "Standard gun employment steps per Chuck's Guide section 2.2, NORM mode with HMD.",
+      "employment_notes": "Standard gun employment steps per Chuck's Guide section 2.2, NORM mode with HMD (pilot). Other gun entries below: FIXED mode (pilot), NORM with HMD (CPG), NORM with TADS (CPG) and George AI as CPG.",
       "switchology": [
         "[P] Set Sight Select Switch to FWD (HMD). HDU should show 'P-HMD'.",
         { "text": "[P] Press A/S (Arm/Safe) Pushbutton to set Master Arm ON (ARM).", "binding_key": "master_arm_as_pushbutton" },
@@ -150,8 +150,86 @@
       ]
     },
     {
+      "name": "M230 30mm Chain Gun - FIXED Mode (Pilot)",
+      "employment_notes": "Chuck's Guide section 2.2.2. Point-the-nose gunnery: in FIXED mode the turret stays pointed straight ahead at a set ballistic solution of 1575 m instead of following your helmet sight, and the Fixed Gun Reticle marks where that solution lands - you aim by maneuvering the helicopter. For the head-tracked NORM mode see the main M230 entry.",
+      "switchology": [
+        "[P] Set the Sight Select Switch to FWD (HMD). The HDU should show 'P-HMD'.",
+        { "text": "[P] Press A/S (Arm/Safe) Pushbutton to set Master Arm ON (ARM).", "binding_key": "master_arm_as_pushbutton" },
+        "[P] Press WAS (Weapon Action Switch) UP to select the Gun. The range source reverts to manual, which doesn't affect the gun's range compensation in FIXED mode.",
+        "[P] Flip the Weapons Trigger Switch Guard UP (Safety OFF/OPEN) (not needed if the Weapons Trigger Guard Enable special option is turned off).",
+        "[P] Press the WPN FAB (Fixed Action Button) to open the Weapon menu.",
+        "[P] Press the VAB (Variable Action Button) next to the desired BURST LIMIT (the guide's example uses 20 rounds).",
+        "[P] Press the VAB next to MODE to select FXD (Fixed).",
+        "[P] Note the Fixed Gun Reticle - it is the virtual point in front of the aircraft that matches the 1575 m ballistic solution.",
+        "[P] Maneuver the helicopter to place the Fixed Gun Reticle on the target.",
+        "[P] Fire by squeezing the Weapons Trigger to the second detent (default Spacebar binding).",
+        "[P] Watch where the rounds land and adjust your aim for follow-up attacks."
+      ]
+    },
+    {
+      "name": "M230 30mm Chain Gun - NORM Mode with HMD (CPG)",
+      "employment_notes": "Chuck's Guide section 2.3.1. The front-seat version of the pilot's head-tracked gun procedure: same steps, but using the TEDAC Left Hand Grip WAS and trigger, and the HDU shows 'C-HMD'. The turret follows your helmet line-of-sight reticle and compensates for range. Reference: section 2.1 for ranging, turret limits and limit messages (see the gun reference note).",
+      "switchology": [
+        "[CPG] Set the Sight Select Switch to FWD (HMD). The HDU should show 'C-HMD'.",
+        { "text": "[CPG] Press A/S (Arm/Safe) Pushbutton to set Master Arm ON (ARM).", "binding_key": "master_arm_as_pushbutton" },
+        "[CPG] Press the TEDAC Left Hand Grip WAS (Weapon Action Switch) UP to select the Gun. The range source reverts to the manual range set on the WPN page.",
+        "[CPG] Flip the TEDAC Left Hand Grip Weapons Trigger Switch Guard UP (Safety OFF/OPEN) (not needed if the Weapons Trigger Guard Enable special option is turned off).",
+        "[CPG] Press the WPN FAB (Fixed Action Button) to open the Weapon menu.",
+        "[CPG] Press the VAB next to MAN RNG, enter the gun ranging distance in meters on the KU and press ENTER - 800 m is a good fixed setting. For automatic ranging enter 'A' instead (the radar altimeter must be on).",
+        "[CPG] Press the VAB next to the desired BURST LIMIT (the guide's example uses 10 rounds).",
+        "[CPG] Press the VAB next to MODE to select NORM.",
+        "[CPG] Verify no COINCIDENCE, AZ LIMIT, EL LIMIT or BAL LIMIT messages appear in the High Action Display.",
+        "[CPG] Move your head to keep the Helmet Line-of-Sight Reticle on the target - the turret follows the reticle and compensates for range. Maximum supported ballistic range is 4200 m; the guide's author prefers 500-1800 m.",
+        "[CPG] Fire by squeezing the TEDAC Left Hand Grip Weapons Trigger to the second detent."
+      ]
+    },
+    {
+      "name": "M230 30mm Chain Gun - NORM Mode with TADS (CPG)",
+      "employment_notes": "Chuck's Guide section 2.3.2. Guns the target using the TADS as the sight, with the laser rangefinder feeding range and (with LMC + TSE) automatic lead on moving targets. Multicrew note: on the pilot's HDU the Cued Line-of-Sight Reticle shows where the TADS is looking when the pilot's ACQ source is TADS. Target of opportunity spotted by eye? Select the GHS (your helmet) or PHS (pilot's helmet) as the acquisition source and press the Sight Slave Button to slave the TADS to the helmet reticle; press it again to de-slave and fine-tune with MAN TRK.",
+      "switchology": [
+        "[CPG] From the WPN page, press the VAB next to UTIL to open the Weapon Utility page.",
+        "[CPG] Press the VABs next to TADS and FLIR to power them on if needed (hollow circle = OFF, solid circle = ON).",
+        "[CPG] Press the VAB next to LASER to power on the laser rangefinder/designator (LRFD) - only the CPG can do this.",
+        "[CPG] Press the VAB next to UTIL to return to the main WPN page.",
+        "[CPG] Set the Sight Select Switch to RIGHT (TADS). 'TADS' appears at the lower left of the TDU and HDU. To clear the TADS overlay from the HDU either flip the HDU away with the IHADSS Show binding (default 'i'), or set the sight to FWD (HMD), turn the TDU Image Brightness rocker fully DOWN, then set the sight back to TADS.",
+        { "text": "[CPG] Press A/S (Arm/Safe) Pushbutton to set Master Arm ON (ARM).", "binding_key": "master_arm_as_pushbutton" },
+        "[CPG] Press the TEDAC Left Hand Grip WAS UP to select the Gun.",
+        "[CPG] Flip the TEDAC Left Hand Grip Weapons Trigger Switch Guard UP (Safety OFF/OPEN) (not needed if the Weapons Trigger Guard Enable special option is turned off).",
+        "[CPG] Press the WPN FAB, then the VAB next to the desired BURST LIMIT (the guide's example uses 10 rounds), then the VAB next to MODE to select NORM.",
+        "[CPG] Confirm TADS is the selected sight on the WPN page, select the TADS video with the TAD button, and adjust the TDU symbology (SYM), image brightness (BRT) and contrast (CON) as needed.",
+        "[CPG] On the TEDAC Left Hand Grip set the TADS Sensor Select Switch to FLIR (FWD) for infrared or DTV (MIDDLE) for day TV. If FLIR: adjust Level and Gain, and toggle polarity with the TEDAC Right Hand Grip FLIR Polarity Button or the collective Boresight/Polarity Selector RIGHT (PLRT).",
+        "[CPG] On the TEDAC Left Hand Grip set the TADS FOV selector as desired (Zoom, Medium, Narrow or Wide).",
+        "[CPG] Slew the TADS line of sight with the TEDAC Right Hand Grip MAN TRK switch (the 'thumb force controller'). The TADS is not ground-stabilized while you use it, so keep the reticle on the target with constant small corrections.",
+        "[CPG] If the target or the helicopter is moving, press the TEDAC Left Hand Grip LMC button to engage the Linear Motion Compensator - it makes the reticle much easier to hold and also enables the Target State Estimator (TSE).",
+        "[CPG] Squeeze and hold the TEDAC Right Hand Grip LRFD Trigger: first detent = range only, second detent = range and laser designation. With LMC active, the second detent also engages TSE, which automatically leads the target so the rounds land where it's going.",
+        "[CPG] Stay inside the gun's ballistic range (4200 m maximum; the guide's author prefers 500-1800 m), then fire by squeezing the TEDAC Left Hand Grip Weapons Trigger to the second detent.",
+        "[CPG] Once the target is destroyed, press the LMC button again to disengage LMC."
+      ]
+    },
+    {
+      "name": "M230 30mm Chain Gun (George AI as CPG)",
+      "employment_notes": "Chuck's Guide section 2.4 - the single-player way to use the gun's TADS-quality targeting: you fly and give orders, George (the AI co-pilot/gunner) finds, lases, stores and fires on the target. The George menu color shows your rules of engagement: yellow = weapons hold, green = weapons free.",
+      "switchology": [
+        "[P] Set the Sight Select Switch to FWD (HMD). The HDU should show 'P-HMD'.",
+        { "text": "[P] Press A/S (Arm/Safe) Pushbutton to set Master Arm ON (ARM).", "binding_key": "master_arm_as_pushbutton" },
+        "[P] Show the George menu with LCTRL+V.",
+        "[P] Press 'A' SHORT (LEFT, under 0.5 sec) to cycle weapons until GUN is selected.",
+        "[P] Press 'D' SHORT (RIGHT, under 0.5 sec) to cycle the gun burst setting (the guide's example uses 20 rounds).",
+        "[P] Confirm the George menu is yellow (weapons hold). If it's green (weapons free), press 'W' LONG (UP, over 0.5 sec) to set it back to weapons hold.",
+        "[P] From the WPN page set the Pilot Acquisition Source to TADS, then fly toward the target and keep the helicopter's attitude stable. Your HDU reticle is the Designation Reticle that shows George where to look for targets.",
+        "[P] Move your head so the reticle is near the area George should search, then press 'W' SHORT (under 0.5 sec).",
+        "[George] George sets the acquisition source to PHS (Pilot Helmet Sight), slaves the TADS ('slaving'), then de-slaves it ('de-slaved') once the TADS is roughly on the area you pointed at - you can look elsewhere from here.",
+        "[George] George scans the area and, when targets are found, a target list appears in the George menu.",
+        "[P] Cycle the list with 'W' SHORT (UP) or 'S' SHORT (DOWN) until the target you want is marked with '>', then press 'D' SHORT (RIGHT) to select it. Pressing 'S' SHORT undesignates George's target.",
+        "[George] George designates, lases and stores the target with the TADS, calling out 'lased and stored'. With your ACQ source on TADS you'll see a cued line-of-sight reticle on your HDU marking it.",
+        "[P] Order George to fire with the George AI Multifunctional Input (Center) command (formerly 'Consent to Fire'), or press 'W' LONG to go weapons free (the menu turns green).",
+        "[George] George fires on the target using the burst setting you selected.",
+        "[P] To stop George engaging, press 'S' SHORT (DOWN) to undesignate his target. Hide the George menu with LCTRL+V."
+      ]
+    },
+    {
       "name": "2.75in Rockets",
-      "employment_notes": "Standard rocket employment steps per Chuck's Guide, lateral (roll) or pedal-turn steering onto the Rocket Steering Cursor depending on cockpit/mode.",
+      "employment_notes": "Standard rocket employment steps per Chuck's Guide, lateral (roll) or pedal-turn steering onto the Rocket Steering Cursor depending on cockpit/mode. More detailed rocket entries follow: running/diving fire (pilot), direct and indirect COOP fire with the TADS (multicrew) and George AI as CPG.",
       "switchology": [
         "[P] Set Sight Select Switch to FWD (HMD).",
         { "text": "[P] Press A/S (Arm/Safe) Pushbutton to set Master Arm ON (ARM).", "binding_key": "master_arm_as_pushbutton" },
@@ -165,8 +243,91 @@
       ]
     },
     {
+      "name": "2.75in Rockets - Running/Diving Fire with HMD (Pilot)",
+      "employment_notes": "Chuck's Guide section 3.2.2. Same setup as the hover-fire rocket procedure, but flown as a running or diving attack: you steer onto the Rocket Steering Cursor with cyclic roll (not pedals), keep the trim ball centered with the pedals, and set pitch with the cyclic if you're diving. The articulated pylons handle rocket elevation (never azimuth) so the salvo lands on the aimpoint.",
+      "switchology": [
+        "[P] Set the Sight Select Switch to FWD (HMD). The HDU should show 'P-HMD'.",
+        { "text": "[P] Press A/S (Arm/Safe) Pushbutton to set Master Arm ON (ARM).", "binding_key": "master_arm_as_pushbutton" },
+        "[P] Press WAS (Weapon Action Switch) LEFT to select the Rockets. A 'TYPE?' indication means no rocket type has been chosen yet.",
+        "[P] Flip the Weapons Trigger Switch Guard UP (Safety OFF/OPEN) (not needed if the Weapons Trigger Guard Enable special option is turned off).",
+        "[P] Press the WPN FAB (Fixed Action Button) to open the Weapon menu.",
+        "[P] Press the VAB next to the rocket type you want (the guide's example is 6PD - high explosive, point-detonation fuzing). The rocket counter sits below the type field.",
+        "[P] Press the VAB next to MAN RNG and enter the ranging distance in meters on the KU, then ENTER - or enter 'A' for automatic ranging (radar altimeter must be on).",
+        "[P] Press the VAB next to the desired Salvo Quantity (the guide's example uses 4 rockets per salvo).",
+        "[P] Spot the target visually and start flying toward it, moving your head to keep the Helmet Line-of-Sight Reticle on it.",
+        "[P] Use cyclic roll to turn toward the Rocket Steering Cursor while keeping the reticle on the target.",
+        "[P] When the Rocket Steering Cursor lines up with the reticle laterally, stop turning and stabilize attitude and heading with the cyclic. Keep the trim ball centered with the pedals. If you're diving, set the pitch with the cyclic and hold your power setting with the collective.",
+        "[P] Verify no weapon inhibit messages (e.g. PYLON LIMITS) appear in the High Action Display.",
+        "[P] Fire by squeezing the Weapons Trigger to the second detent (default Spacebar binding)."
+      ]
+    },
+    {
+      "name": "2.75in Rockets - Direct Fire, COOP Mode with TADS (Multicrew)",
+      "employment_notes": "Chuck's Guide section 3.3.1. COOP mode means both crew have selected rockets and work together: the CPG designates the target with the TADS, the pilot steers onto the Rocket Steering Cursor and fires. 'Direct' means there's a clear line of sight between the TADS and the target. The CPG cues the pilot with the call 'Match and Shoot'. The COOP indication appears on the WPN page once both crew have selected rockets.",
+      "switchology": [
+        "[P] Set the Sight Select Switch to FWD (HMD). The HDU should show 'P-HMD'.",
+        { "text": "[P] Press A/S (Arm/Safe) Pushbutton to set Master Arm ON (ARM).", "binding_key": "master_arm_as_pushbutton" },
+        "[P] Press WAS LEFT to select the Rockets ('TYPE?' means no rocket type chosen yet).",
+        "[P] Flip the Weapons Trigger Switch Guard UP (Safety OFF/OPEN) (not needed if the Weapons Trigger Guard Enable special option is turned off).",
+        "[P] Press the WPN FAB, then the VAB next to the rocket type you want (example: 6PD), the VAB next to MAN RNG (enter meters on the KU, or 'A' for automatic ranging), and the VAB next to the Salvo Quantity (example: 4).",
+        "[P] Press the VAB next to ACQ and select TADS, so the CPG's TADS is your acquisition source.",
+        "[CPG] From the WPN page, press the VAB next to UTIL, power on TADS and FLIR if needed, power on LASER, then press UTIL again to return to the main WPN page.",
+        "[CPG] Set the Sight Select Switch to RIGHT (TADS). ('TADS' appears at the lower left of the TDU and HDU.)",
+        "[CPG] Press the TEDAC Left Hand Grip WAS LEFT to select the Rockets, then press the WPN FAB and set the same rocket type and MAN RNG ranging as above.",
+        "[CPG] When both crew have rockets selected, COOP shows on the WPN pages. Confirm TADS is the selected sight, select the TADS video with the TAD button, and adjust SYM/BRT/CON as needed.",
+        "[CPG] Set the TADS Sensor Select Switch (TEDAC Left Hand Grip) to FLIR or DTV, adjust FLIR Level/Gain and polarity if using FLIR, and set the FOV selector as desired.",
+        "[CPG] Slew the TADS onto the target with the TEDAC Right Hand Grip MAN TRK switch (it is not ground-stabilized while you use it). If the target or aircraft is moving, press the LMC button to engage the Linear Motion Compensator (this also enables TSE).",
+        "[CPG] Squeeze and hold the TEDAC Right Hand Grip LRFD Trigger to the second detent to range and designate the target (with LMC active this also engages TSE, which leads a moving target).",
+        "[CPG] Tell the pilot 'Match and Shoot'.",
+        "[P] Steer toward the Rocket Steering Cursor until it lines up with the aimpoint - pedals in a hover, or cyclic roll in forward flight with the trim ball centered. A cued line-of-sight reticle on your HDU shows where the TADS is looking when your ACQ source is TADS.",
+        "[P] The articulated pylons set rocket elevation (not azimuth). Verify no PYLON LIMITS or other inhibit messages, then fire by squeezing the Weapons Trigger to the second detent.",
+        "[CPG] After the salvo, a TOF (time-of-flight) count runs until impact. 'Sense' the strike: drop the TADS FOV one level with the TEDAC Left Hand Grip FOV selector to watch the impacts, adjust the aimpoint, and repeat with the pilot until the desired effect."
+      ]
+    },
+    {
+      "name": "2.75in Rockets - Indirect Fire, COOP Mode with TADS (Multicrew)",
+      "employment_notes": "Chuck's Guide section 3.3.2. Rocket artillery: no line of sight between the TADS and the target is needed - the CPG stores the target as a target point, slaves the TADS to that point, and the pilot 'matches and shoots' on the Rocket Steering Cursor. Can be flown from a hover or as a diving attack. Flow: CPG finds, lases, designates and stores the target; CPG selects the stored target point; both crew select rockets; pilot matches and shoots.",
+      "switchology": [
+        "[P] Set the Sight Select Switch to FWD (HMD), Master Arm ON (A/S pushbutton), WAS LEFT to select Rockets, then flip the Weapons Trigger Switch Guard UP - same as the direct-fire procedure.",
+        "[P] Press the WPN FAB, then set the rocket type (example: 6PD), MAN RNG (meters on the KU, or 'A' for automatic ranging) and Salvo Quantity (example: 4) via their VABs, and press the VAB next to ACQ to select TADS.",
+        "[CPG] From the WPN page, press the VAB next to UTIL, power on TADS, FLIR and LASER, then press UTIL again to return. Set the Sight Select Switch to RIGHT (TADS).",
+        "[CPG] Press the TEDAC Left Hand Grip WAS LEFT to select the Rockets and set the same rocket type and ranging on the WPN page. When both crew have rockets selected, COOP appears on the WPN pages.",
+        "[CPG] Confirm TADS is the selected sight, select the TADS video with the TAD button, set FLIR or DTV, adjust brightness/contrast and FOV, and slew onto the target with the MAN TRK switch (engage LMC if anything is moving).",
+        "[CPG] Squeeze and hold the TEDAC Right Hand Grip LRFD Trigger to the second detent to range and designate the target.",
+        "[CPG] Press the TEDAC Left Hand Grip Store/Update Switch FWD (STORE) to store the TADS line of sight as a target point. A 'T' and its target point number (e.g. T01) shows on the TDU - call it out to the pilot, e.g. 'BMP stored target 01'.",
+        "[CPG] On the TSD page select the ATK (Attack) phase, press the VAB next to COORD, then the VAB next to the target point (e.g. T01) - it becomes the acquisition source.",
+        "[CPG] Press the TEDAC Right Hand Grip Sight Slave Button - the TADS locks onto the selected acquisition source (the target point).",
+        "[CPG] Tell the pilot 'Match and Shoot'.",
+        "[P] Steer toward the Rocket Steering Cursor until it lines up with the aimpoint - pedals in a hover, or cyclic roll in forward flight with the trim ball centered. The cued line-of-sight reticle on your HDU marks the TADS aimpoint when your ACQ source is TADS.",
+        "[P] Verify no weapon inhibit messages (e.g. PYLON LIMITS), then fire by squeezing the Weapons Trigger to the second detent.",
+        "[CPG] 'Sense' the impacts - drop the TADS FOV one level, adjust the aimpoint, and repeat the salvo with the pilot as needed."
+      ]
+    },
+    {
+      "name": "2.75in Rockets (George AI as CPG)",
+      "employment_notes": "Chuck's Guide section 3.4. Single-player rocket attack with George (the AI co-pilot/gunner) designating: you point him at an area, pick a target from his list, then match the aircraft to the Rocket Steering Cursor and give the fire order. The George menu color shows your rules of engagement: yellow = weapons hold, green = weapons free.",
+      "switchology": [
+        "[P] Set the Sight Select Switch to FWD (HMD). The HDU should show 'P-HMD'.",
+        { "text": "[P] Press A/S (Arm/Safe) Pushbutton to set Master Arm ON (ARM).", "binding_key": "master_arm_as_pushbutton" },
+        "[P] Show the George menu with LCTRL+V.",
+        "[P] Press 'A' SHORT (LEFT, under 0.5 sec) to cycle weapons until Rockets is selected.",
+        "[P] Press 'A' LONG (LEFT, over 0.5 sec) to cycle rocket types (the guide's example selects HE).",
+        "[P] Press 'D' SHORT (RIGHT, under 0.5 sec) to cycle the salvo quantity (the guide's example uses 4 rockets per salvo).",
+        "[P] Confirm the George menu is yellow (weapons hold). If it's green (weapons free), press 'W' LONG (UP, over 0.5 sec) to set it back to weapons hold.",
+        "[P] Your HDU reticle is the Designation Reticle showing George where to look for targets. From the WPN page set the Pilot Acquisition Source to TADS, fly toward the target and keep the helicopter stable.",
+        "[P] Move your head so the reticle is near the area George should search, then press 'W' SHORT (under 0.5 sec).",
+        "[George] George sets the acquisition source to PHS (Pilot Helmet Sight), slaves the TADS ('slaving'), then de-slaves it ('de-slaved') when it's roughly on that area, and starts scanning - a target list appears when targets are found.",
+        "[P] Cycle the list with 'W' SHORT (UP) or 'S' SHORT (DOWN) until the target you want is marked '>', then press 'D' SHORT (RIGHT) to select it ('S' SHORT undesignates).",
+        "[George] George designates, lases and stores the target with the TADS ('lased and stored'). With your ACQ source on TADS, a cued line-of-sight reticle marks it on your HDU.",
+        "[P] Steer toward the Rocket Steering Cursor to 'match' (align) the helicopter with the target - pedals in a hover, cyclic roll in forward flight.",
+        "[P] Order George to fire with the George AI Multifunctional Input (Center) command (formerly 'Consent to Fire'), or press 'W' LONG to go weapons free (menu turns green).",
+        "[George] George fires the rockets at the target himself.",
+        "[P] To stop George engaging, press 'S' SHORT (DOWN) to undesignate his target. Hide the George menu with LCTRL+V."
+      ]
+    },
+    {
       "name": "AGM-114K Hellfire (Laser-Guided, LOBL)",
-      "employment_notes": "Lock-On Before Launch engagement per Chuck's Guide section 4.2.1.1: the CPG lases the target with the TADS LRFD, then fires - missile tracks the laser to impact. This is the primary/most common Hellfire engagement method covered in the guide. Two other modes exist (LOAL-DIR, LOAL-LO/HI) for cases like backscatter or minimizing exposure time, not yet transcribed here - ask if you need those.",
+      "employment_notes": "Lock-On Before Launch engagement per Chuck's Guide section 4.2.1.1: the CPG lases the target with the TADS LRFD, then fires - missile tracks the laser to impact. This is the primary/most common Hellfire engagement method covered in the guide. The two other modes (LOAL-DIR and LOAL-LO / LOAL-HI) have their own entries below, for cases like backscatter or minimizing exposure time.",
       "switchology": [
         "[CPG] From the WPN page, press VAB next to UTIL to select the Weapon Utility page.",
         "[CPG] Press VABs next to TADS and FLIR to power those systems on if needed.",
@@ -263,6 +424,45 @@
         "Flip the Emergency Jettison Switch Cover Guard.",
         "Press the Emergency Jettison Switch."
       ]
+    }
+  ],
+
+  "systems_notes": [
+    {
+      "topic": "Armament overview (M139 gun, M261 rockets, Hellfire)",
+      "notes": "The AH-64D has three primary weapons: the M139 Area Weapon System (a hydraulically steered M230 30 mm chain gun), the M261 Aerial Rocket Sub-System (19-tube launchers firing Hydra 70 / 2.75-inch rockets), and the Longbow Hellfire Modular Missile System (M299 four-rail launcher, which fires every Hellfire variant). Gun ammo is M789 HEDP (combat) or M788 TP (training), chosen in the Mission Editor; the magazine holds 1,200 rounds (300 if the Internal Auxiliary Fuel System 'Robbie tank' is installed) and fires up to about 625 rounds per minute. Rocket launchers ride all four pylons for up to 76 rockets, and each launcher is 'zoned' so a pair can carry up to three rocket types, or up to five with two pairs. Missiles: the AGM-114K is a semi-active laser missile guided by the CPG's TADS laser (or another designator); the AGM-114L is a fire-and-forget active-radar missile guided by the AN/APG-78 Fire Control Radar. Both carry a tandem-charge HEAT warhead to defeat reactive armor. The air-to-air (WAS AFT) position has no function in this DCS variant."
+    },
+    {
+      "topic": "Hydra 70 rocket types",
+      "notes": "Types available: M151 HE ('10-pounder' high explosive for lightly armored and soft targets, point-detonating or programmable-delay fuze); M156 white phosphorus (target marking); M229 HE ('17-pounder' aerial artillery, point-detonating or programmable-delay fuze); M257 illumination; M259 white phosphorus (smokescreen concealment); M261 MPSM (multipurpose submunition, airburst just before the target, for lightly to medium armored vehicles and soft targets); M264 red phosphorus (smokescreen); M274 TP-SM 'blue spear' (training rocket with a brief smoke signature); M282 MPP (multipurpose penetrator for lightly armored vehicles and bunkers, fixed-delay fuze). On the WPN page the loaded types show as labels such as 6PD (Mk 66 motor, point-detonation fuzing, high explosive), 6RC (penetration, high explosive), 6MP (time-delay multipurpose submunition), 6IL (time-delay illumination), 6SK (time-delay smoke) and 6FL (time-delay flechette)."
+    },
+    {
+      "topic": "Weapons crew roles (pilot vs. CPG)",
+      "notes": "The pilot's main job is flying toward the target, managing countermeasure programs and flying attack profiles; the CPG powers up and runs the sensors (especially the TADS), designates and stores targets, and runs guided weapons like the Hellfire. Master Arm (the A/S button) is available in both cockpits, so either crew member can launch weapons - but TADS target designation is ultimately the CPG's job. If the pilot is incapacitated, the CPG can fly the helicopter and employ unguided weapons. Both seats configure weapons on the WPN MPD page and enter values on the KU (Keyboard Unit). The GND ORIDE button overrides the on-ground weapon safety so the crew can WAS and arm weapons on the ground. Clear communication between the two crew members is what makes the aircraft work."
+    },
+    {
+      "topic": "Weapon Action Switch (WAS) and trigger guard",
+      "notes": "Selecting a weapon is called 'WASing' it (say 'wahz'). WAS FWD = G (gun), LEFT = R (rockets), RIGHT = M (Hellfire missiles), AFT = A (air-to-air, no function in this DCS variant); the WPN page changes to match. The pilot's and CPG's cyclic WAS switches override each other, and the CPG also has a WAS on the TEDAC Left Hand Grip. Important: if the CPG uses the TEDAC Left Hand Grip WAS, only the CPG's TEDAC trigger is active; if the CPG uses the cyclic WAS, only the CPG's cyclic trigger is active. The Weapons Trigger Switch has two detents (the second fires, default Spacebar) and a trigger guard that must be flipped up first - the guide recommends binding 'Weapons Trigger Guard - OPEN/CLOSE' to something easy like LSHIFT+SPACEBAR. The 'Weapons Trigger Guard Enable' special option turns the guard requirement off."
+    },
+    {
+      "topic": "Weapon delivery techniques (hover, running, diving fire)",
+      "notes": "Hover Fire: flown below effective translational lift (roughly 16-24 knots), either moving or stationary. Running Fire: flown above ETL - forward airspeed adds stability and improves accuracy of unguided weapons, especially rockets. Diving Fire: an attack in a dive, typically -10 to -30 degrees of pitch; a steeper dive gives a smaller 'beaten zone' and better accuracy but needs more altitude to recover, and it can be flown from low altitude with a climb or 'bump' from behind cover, or from level flight at high altitude. Airspeed and altitude depend on the expected threat and the effect you want."
+    },
+    {
+      "topic": "M230 gun - ranging, turret limits and limit messages",
+      "notes": "The gun turret can be slaved to the TADS line of sight, the IHADSS (helmet) line of sight, or fixed forward. Turret travel is +11 to -60 degrees in elevation and +/-86 degrees in azimuth. Limit messages: BAL LIMIT (sight aimed beyond the gun's maximum ballistic range), COINCIDENCE (the sight and the barrel aren't converged yet - usually while the turret is still slewing), EL LIMIT (aimed too high or too low) and AZ LIMIT (aimed beyond the azimuth limits). Ranging is either manual (a fixed range set with the MAN RNG VAB and the KU - the guide uses 800 m) or automatic (enter 'A'; the radar altimeter must be on). With the HMD as the sight and the gun WASed, the range source automatically reverts to manual so a stale range (e.g. a NAV range) can't skew the solution - you can still switch to another source afterward. Maximum supported software ballistic range is 4200 m; the guide's author likes 500-1800 m. The gun is an area-suppression weapon for soft targets, not a precision one."
+    },
+    {
+      "topic": "Rocket aiming - Rocket Steering Cursor, ADL and pylon articulation",
+      "notes": "The M261 launchers hang on articulated hardpoints that move between +4 and -15 degrees in elevation (never in azimuth) so the salvo lands on your aimpoint; a PYLON LIMIT message means you've exceeded that range. The Armament Datum Line (ADL) is drawn straight out from the nose at -4.9 degrees and shown by the Head Tracker symbol - in a stable, windless hover it's level with the horizon, roughly midway in the pylons' travel. The Rocket Steering Cursor tells you which way to turn (cyclic or pedals) and what pitch you need to keep the ballistic solution inside the pylon range: it's offset right/left when the aimpoint is right/left of the ADL, lined up with the aimpoint when you're on solution, and dashed when the aimpoint is out of pylon range. The aimpoint is the helmet line-of-sight reticle when the HMD is the sight (or the TADS line of sight when it's the acquisition source). Four engagement methods: Hover Fire with HMD, Running/Diving Fire with HMD, Direct Fire with COOP Mode and TADS (clear line of sight), and Indirect Fire with COOP Mode and TADS (no line of sight needed - slave the TADS to a waypoint or target point). COOP = both crew select rockets; the CPG designates and the pilot steers and fires."
+    },
+    {
+      "topic": "Hellfire - missile constraints box",
+      "notes": "When you WAS the Hellfire, the Missile Constraints Box on the HDU monocle and TDU shows where the missile seeker is looking relative to the missile datum line (4 degrees above the horizon) - it does not map to a spot out the window. A small box (LOAL) means the seeker isn't detecting laser energy matching its assigned code (lock-on after launch); a big box (LOBL) means it's tracking a matching laser (lock-on before launch). Dashed = outside constraints or not ready; solid = inside constraints and ready to fire. The LOAL box allows a maximum launch offset of 7.5 degrees from the datum line; the LOBL box allows 20 degrees, and reverts to the LOAL box if the seeker loses the laser. With SAL missiles selected, every pylon carrying them is commanded to +4 degrees above the horizon regardless of attitude; if a pylon can't get within 10 degrees of that, a PYLON LIMIT message appears - roughly aircraft pitch of -10 to +29 degrees. You can still fire with the trigger, but a hit isn't guaranteed if the pylons can't articulate properly."
+    },
+    {
+      "topic": "Hellfire - missile settings, channels and laser codes",
+      "notes": "WPN page missile settings: Type SAL (semi-active laser, AGM-114K) or RF (radio frequency, AGM-114L). For SAL, SAL 1 fires Hellfire I missiles (PRF codes only), SAL 2 fires Hellfire II (PRF and PIM codes) and AUTO picks automatically (a PIM code forces Hellfire II). Mode: NORM (all missiles guided on the priority channel), RIPL (ripple - guidance alternates between the priority and alternate channel on each launch) or MAN (manual - one missile at a time on the priority channel; the Missile Advance button on the collective/TEDAC readies the next one and does nothing outside MAN). Trajectory: DIR (direct), LO (low loft) or HI (high loft). Each SAL Hellfire has four channels, each assigned a laser code preset (a letter preset such as A, B, C or D, each editable - e.g. preset A might hold code 1688); one channel is set as PRIORITY (PRI) and one as ALTERNATE (ALT, only after a priority is chosen). Having several channels lets you retask missiles quickly when multiple designators are working together. The LST (Laser Spot Tracker) code is for the TADS laser detector, letting it slave to a JTAC's or another aircraft's laser; the LRFD code is for your own designator. The LRFD FIRST/LAST setting picks which part of the return pulse sets range (lasing through foliage: FIRST = the foliage, LAST = what's behind it). Missile icons: LS standby with no code, AR/BR... ready and scanning for that code, AT/BT... tracking that code (for RF missiles S = standby/unaligned, R = ready, T = tracking)."
     }
   ],
 

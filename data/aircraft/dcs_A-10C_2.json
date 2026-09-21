@@ -6,7 +6,7 @@
     "version_or_date": "Last Updated: 31/08/2023 (as printed in the PDF header, page 1) - re-check chucksguides.com periodically for a newer edition",
     "url": "https://chucksguides.com/aircraft/dcs/a-10c/"
   },
-  "_extraction_note": "Checklist steps are Part 4 (Start-Up Procedure) copied directly from the guide's own numbered steps, not generated. The guide covers both the A-10C Legacy and A-10C II Tank Killer in one document, calling out the few steps where they differ (only step 10, radio setup) - the Tank Killer Expansion variant text was used throughout since that's the module this file is for; the Legacy-only radio steps were left out as not applicable. Two ground-crew interphone calls that precede numbered step 1 in the guide (retract ladder, remove chocks) are included as unnumbered steps '0a'/'0b'. IMPORTANT: this guide has no standalone engine-shutdown/post-flight checklist anywhere (verified against the full 18-part table of contents and a full-text search of the extracted PDF) - Part 6 'Landing' ends at touchdown and Part 7 moves straight into engine systems/fuel management, same gap already noted in the AH-64D file. The 'shutdown' list below is intentionally empty rather than guessed. Weapons are Part 10 (Offence: Weapons & Armament), copied/closely paraphrased from the guide's own lettered/numbered attack sequences (A/B/C.../1/2/3...), not generated. Where a weapon has two release-mode variants that share an identical DSMS profile-setup procedure (e.g. MK-82's manual-CCIP vs. CCIP-CR release), the shared setup is written once and the two attack procedures are both included rather than duplicating the setup steps twice - no steps were invented or altered, just de-duplicated. AGM-65L Laser Maverick, GBU-54 Laser JDAM, and APKWS are marked 'Tank Killer Only' in the guide itself and match this file's module. Ordnance jettison (Part 10 section 4) is included as its own list. 'taxi' (Part 5, Taxi section) and 'takeoff' (Part 5, Takeoff section) checklists, and the 'landing' checklist (Part 6, Normal 360-Degree Landing Approach), are copied directly from the guide's own short numbered steps, same as Part 4 - each restarts its own 1-N numbering rather than continuing Part 4's global count, matching how the guide itself numbers them. The AoA Indexer systems_notes entry is NOT from the guide - it's written independently (standard real-world AoA-indexer symbology, described in different terms/words than the guide's own ASCII arrow representation) since it's directly relevant to flying the landing approach above. Deliberately NOT converting the rest of the guide's ~18 parts wholesale (Parts 1-3, 7-8, 11-18 - cockpit/controls reference, engine/fuel, RWR/countermeasures, datalink, radio, autopilot/LASTE, navigation, air-to-air refueling) - that would mean reproducing the bulk of a commercial, copyrighted guide rather than a few short procedural excerpts. 'night_vision_goggles' (Part 3's short NVG keybind reference) and 'night_flying_ground_prep' (explicit request: the 5-item 'things to do on the ground' list from Part 5's own PRE-FLIGHT section, page 123) are both condensed/paraphrased from their respective short reference sections - not verbatim guide prose - and each of the 5 ground-prep items pulls its actual how-to steps from that item's own short dedicated subsection elsewhere in the guide (TAD Own ID setup p.124, DSMS reload p.126, CMS countermeasure programs p.400, ARC-210/UHF radio tuning p.431/435-436) rather than being invented. Part 9 (Sensors) is explicit request ('pull in the sensors section') and is fully covered by the 11 new checklists 'hud_target_designation' through 'hmcs_markpoint_creation' (each guide subsection - 1.3 HUD/TDC, 2.4-2.8 TGP start-up/lasing/steerpoint-slave/boresight/laser-spot-search/laser-pointer, 4.2/4.5 HMCS power-up/profiles/hook/SPI/TGP-slave/markpoint - condensed/paraphrased from its own short numbered procedure, not verbatim) plus 5 new systems_notes entries (SOI/SPI concept, TGP HOTAS reference, Maverick sensor overview, HMCS symbology categories, HMCS HOTAS reference) that are ALL written independently in different words/structure than the guide's own diagram-legend and prose explanations, not paraphrased from them. 1.4 TISL/Pave Penny (Legacy-only, and explicitly 'not functionally implemented in this simulation' per the guide itself) was excluded as not applicable, same as other Legacy-only content elsewhere in this file. New binding_key identifiers introduced for this addition: china_hat_aft, coolie_hat_down. Part 11 (Defence: RWR and Countermeasures) is explicit request ('countermeasures') - the chaff/flare CMS programs (A/B/C/D, MANUAL/AUTO) were already covered in night_flying_ground_prep, so this pass adds the 3 remaining pieces as systems_notes, all written independently rather than paraphrased: ECM jammer modes (AIR/SAM1/SAM2/AAA), how to read the RWR display (circle proximity/state meanings), and MWS states. The guide's own 'RWR Symbol List' (page 403, credited to a third party '.408-X~RAY') is a table/image the PDF extraction did not capture any readable text for - skipped rather than guessed at from general knowledge, since inventing specific symbol-to-threat-type mappings would risk being wrong. The guide's 'Art of Defeating a Missile' section is just a list of external links (YouTube videos, other websites) with no A-10-specific content of its own - skipped as not applicable to this file's data. Part 12 (Datalink/SADL) is explicit request ('data link') and is fully covered by 8 new checklists - 'sadl_network_setup' (Group/Own ID/callsign) plus the guide's own 7 lettered SADL Functions A-G ('sadl_hook_symbol' through 'sadl_receive_jtac_tasking'), each condensed/paraphrased from its own short numbered procedure, not verbatim - plus 2 new systems_notes (SADL overview, SADL symbology) written independently. 'sadl_broadcast_spi' step 5 (broadcast to the whole network) uses only the Tank Killer control (TMS LEFT LONG) - the guide's Legacy-variant control (DMS LEFT LONG) was left out, same exclusion pattern as elsewhere in this file. New binding_key identifier introduced: tms_left. Part 13 (Radio) is explicit request ('radio') and is covered by 5 new checklists, each condensed/paraphrased from its own short numbered tutorial in the guide: radio_arc210_manual_frequency and radio_arc210_preset_channel (ARC-210 Tutorials 1-2), radio_arc210_edit_preset (Tutorial 3, programming a preset channel with a briefed frequency), radio_arc186_vhf_fm (the JTAC radio), and radio_arc164_uhf (the flight/wingman radio, plus its own load-a-preset sub-procedure). The Legacy-only AN/ARC-186(V) VHF AM #1 tutorial was excluded - per the guide's own Tank Killer radio overview, that radio 'is not installed on the A-10C II Tank Killer variant' (ARC-210 replaces it), same exclusion pattern as elsewhere in this file. Also skipped: the 'Advanced radio tutorial' line, just a link to an external PDF with no content of its own, and the Caucasus-map airfield tower frequency table (explicit call: real, useful data, but specific to one theater/map - would be actively misleading presented as universal advice in a per-aircraft file with no theater awareness, so left out entirely rather than included with a caveat). 3 new systems_notes entries (radio system overview, Intercom Panel, which ARC-210 controls do nothing in DCS) are written independently, not paraphrased. New binding_key identifiers introduced: mic_switch_forward, mic_switch_aft, mic_switch_down. Part 17 (Air-to-Air Refueling) is explicit request ('A2A') and is covered by one 17-step checklist ('air_to_air_refueling'), condensed/paraphrased from the guide's own numbered 'How To' procedure, plus one new systems_notes entry (tanker compatibility - the A-10C's boom-only refueling door means only the KC-135 works in DCS, not the probe-and-drogue tankers). Real, confirmed gap in the source material, handled per explicit instruction rather than guessed at: step 4 of the guide's procedure (contact the tanker) specifies the Legacy A-10C's VHF AM #1 radio, which this file's own Radio system overview note already establishes is NOT installed on the Tank Killer variant - the guide never states what replaces it for tanker comms on Tank Killer, and this has not been verified in-game, so that step is written as an honest, explicit open gap rather than a guessed answer. Skipped the guide's own 'Why We All Hate It' intro (personal opinion/narrative, not reference data) and its two external links (a YouTube example, a Steam Community written tutorial) - neither is A-10-specific content to source from. Part 16 (Navigation & ILS Landing) is explicit request ('nav') and is the largest single addition so far - 16 new checklists condensed/paraphrased from the guide's own numbered procedures (waypoint designate/navigate/consult/add/edit/offset, markpoint navigate/consult/add, flight plan create/use, divert, ADF, TACAN, anchor point setup, ILS approach) plus 7 new systems_notes written independently (nav systems overview, NMSP, TAD moving map, TAD HOTAS reference, HSI reference, navigation point types, bullseye call format). The guide's own worked examples throughout this part use specific mission/map data (Groom Lake AFB coordinates, Kutaisi's TACAN channel, Khasab/Batumi airfields, specific frequencies like 255.000 MHz) purely to illustrate a real walkthrough - none of that was carried in as fact; every checklist here is written generically (e.g. 'the beacon's frequency, from your mission briefing' instead of a hardcoded number), same principle as the Caucasus airfield frequency table excluded from the Radio addition. ils_landing_approach deliberately stops at 'deploy gear/flaps/airbrakes' and points back at the existing 'landing' checklist for the touchdown sequence rather than re-describing it - the guide's own ILS section duplicates that content almost verbatim (itself an artifact of the guide's page numbering restarting mid-section). Excluded the Legacy-only TAD control mapping (6.1's 'CONTROLS (A-10C LEGACY)') in favor of the Tank Killer one, same pattern as elsewhere. New binding_key identifier introduced: dms_up_down (DMS UP/DOWN - cycling waypoints/markpoints/airfields - a third DMS axis distinct from the existing dms_fwd_aft and dms_left_right). Remaining flight_planning_notes and qa_snippets are still empty/not curated.",
+  "_extraction_note": "Checklist steps are Part 4 (Start-Up Procedure) copied directly from the guide's own numbered steps, not generated. The guide covers both the A-10C Legacy and A-10C II Tank Killer in one document, calling out the few steps where they differ (only step 10, radio setup) - the Tank Killer Expansion variant text was used throughout since that's the module this file is for; the Legacy-only radio steps were left out as not applicable. Two ground-crew interphone calls that precede numbered step 1 in the guide (retract ladder, remove chocks) are included as unnumbered steps '0a'/'0b'. IMPORTANT: this guide has no standalone engine-shutdown/post-flight checklist anywhere (verified against the full 18-part table of contents and a full-text search of the extracted PDF) - Part 6 'Landing' ends at touchdown and Part 7 moves straight into engine systems/fuel management, same gap already noted in the AH-64D file. The 'shutdown' list below is intentionally empty rather than guessed. Weapons are Part 10 (Offence: Weapons & Armament), copied/closely paraphrased from the guide's own lettered/numbered attack sequences (A/B/C.../1/2/3...), not generated. Where a weapon has two release-mode variants that share an identical DSMS profile-setup procedure (e.g. MK-82's manual-CCIP vs. CCIP-CR release), the shared setup is written once and the two attack procedures are both included rather than duplicating the setup steps twice - no steps were invented or altered, just de-duplicated. AGM-65L Laser Maverick, GBU-54 Laser JDAM, and APKWS are marked 'Tank Killer Only' in the guide itself and match this file's module. Ordnance jettison (Part 10 section 4) is included as its own list. 'taxi' (Part 5, Taxi section) and 'takeoff' (Part 5, Takeoff section) checklists, and the 'landing' checklist (Part 6, Normal 360-Degree Landing Approach), are copied directly from the guide's own short numbered steps, same as Part 4 - each restarts its own 1-N numbering rather than continuing Part 4's global count, matching how the guide itself numbers them. The AoA Indexer systems_notes entry is NOT from the guide - it's written independently (standard real-world AoA-indexer symbology, described in different terms/words than the guide's own ASCII arrow representation) since it's directly relevant to flying the landing approach above. Deliberately NOT converting the rest of the guide's ~18 parts wholesale (Parts 1-3, 7-8, 11-18 - cockpit/controls reference, engine/fuel, RWR/countermeasures, datalink, radio, autopilot/LASTE, navigation, air-to-air refueling) - that would mean reproducing the bulk of a commercial, copyrighted guide rather than a few short procedural excerpts. 'night_vision_goggles' (Part 3's short NVG keybind reference) and 'night_flying_ground_prep' (explicit request: the 5-item 'things to do on the ground' list from Part 5's own PRE-FLIGHT section, page 123) are both condensed/paraphrased from their respective short reference sections - not verbatim guide prose - and each of the 5 ground-prep items pulls its actual how-to steps from that item's own short dedicated subsection elsewhere in the guide (TAD Own ID setup p.124, DSMS reload p.126, CMS countermeasure programs p.400, ARC-210/UHF radio tuning p.431/435-436) rather than being invented. Part 9 (Sensors) is explicit request ('pull in the sensors section') and is fully covered by the 11 new checklists 'hud_target_designation' through 'hmcs_markpoint_creation' (each guide subsection - 1.3 HUD/TDC, 2.4-2.8 TGP start-up/lasing/steerpoint-slave/boresight/laser-spot-search/laser-pointer, 4.2/4.5 HMCS power-up/profiles/hook/SPI/TGP-slave/markpoint - condensed/paraphrased from its own short numbered procedure, not verbatim) plus 5 new systems_notes entries (SOI/SPI concept, TGP HOTAS reference, Maverick sensor overview, HMCS symbology categories, HMCS HOTAS reference) that are ALL written independently in different words/structure than the guide's own diagram-legend and prose explanations, not paraphrased from them. 1.4 TISL/Pave Penny (Legacy-only, and explicitly 'not functionally implemented in this simulation' per the guide itself) was excluded as not applicable, same as other Legacy-only content elsewhere in this file. New binding_key identifiers introduced for this addition: china_hat_aft, coolie_hat_down. Part 11 (Defence: RWR and Countermeasures) is explicit request ('countermeasures') - the chaff/flare CMS programs (A/B/C/D, MANUAL/AUTO) were already covered in night_flying_ground_prep, so this pass adds the 3 remaining pieces as systems_notes, all written independently rather than paraphrased: ECM jammer modes (AIR/SAM1/SAM2/AAA), how to read the RWR display (circle proximity/state meanings), and MWS states. The guide's own 'RWR Symbol List' (page 403, credited to a third party '.408-X~RAY') is a table/image the PDF extraction did not capture any readable text for - skipped rather than guessed at from general knowledge, since inventing specific symbol-to-threat-type mappings would risk being wrong. The guide's 'Art of Defeating a Missile' section is just a list of external links (YouTube videos, other websites) with no A-10-specific content of its own - skipped as not applicable to this file's data. Part 12 (Datalink/SADL) is explicit request ('data link') and is fully covered by 8 new checklists - 'sadl_network_setup' (Group/Own ID/callsign) plus the guide's own 7 lettered SADL Functions A-G ('sadl_hook_symbol' through 'sadl_receive_jtac_tasking'), each condensed/paraphrased from its own short numbered procedure, not verbatim - plus 2 new systems_notes (SADL overview, SADL symbology) written independently. 'sadl_broadcast_spi' step 5 (broadcast to the whole network) uses only the Tank Killer control (TMS LEFT LONG) - the guide's Legacy-variant control (DMS LEFT LONG) was left out, same exclusion pattern as elsewhere in this file. New binding_key identifier introduced: tms_left. Part 13 (Radio) is explicit request ('radio') and is covered by 5 new checklists, each condensed/paraphrased from its own short numbered tutorial in the guide: radio_arc210_manual_frequency and radio_arc210_preset_channel (ARC-210 Tutorials 1-2), radio_arc210_edit_preset (Tutorial 3, programming a preset channel with a briefed frequency), radio_arc186_vhf_fm (the JTAC radio), and radio_arc164_uhf (the flight/wingman radio, plus its own load-a-preset sub-procedure). The Legacy-only AN/ARC-186(V) VHF AM #1 tutorial was excluded - per the guide's own Tank Killer radio overview, that radio 'is not installed on the A-10C II Tank Killer variant' (ARC-210 replaces it), same exclusion pattern as elsewhere in this file. Also skipped: the 'Advanced radio tutorial' line, just a link to an external PDF with no content of its own, and the Caucasus-map airfield tower frequency table (explicit call: real, useful data, but specific to one theater/map - would be actively misleading presented as universal advice in a per-aircraft file with no theater awareness, so left out entirely rather than included with a caveat). 3 new systems_notes entries (radio system overview, Intercom Panel, which ARC-210 controls do nothing in DCS) are written independently, not paraphrased. New binding_key identifiers introduced: mic_switch_forward, mic_switch_aft, mic_switch_down. Part 17 (Air-to-Air Refueling) is explicit request ('A2A') and is covered by one 17-step checklist ('air_to_air_refueling'), condensed/paraphrased from the guide's own numbered 'How To' procedure, plus one new systems_notes entry (tanker compatibility - the A-10C's boom-only refueling door means only the KC-135 works in DCS, not the probe-and-drogue tankers). Real, confirmed gap in the source material, handled per explicit instruction rather than guessed at: step 4 of the guide's procedure (contact the tanker) specifies the Legacy A-10C's VHF AM #1 radio, which this file's own Radio system overview note already establishes is NOT installed on the Tank Killer variant - the guide never states what replaces it for tanker comms on Tank Killer, and this has not been verified in-game, so that step is written as an honest, explicit open gap rather than a guessed answer. Skipped the guide's own 'Why We All Hate It' intro (personal opinion/narrative, not reference data) and its two external links (a YouTube example, a Steam Community written tutorial) - neither is A-10-specific content to source from. Part 16 (Navigation & ILS Landing) is explicit request ('nav') and is the largest single addition so far - 16 new checklists condensed/paraphrased from the guide's own numbered procedures (waypoint designate/navigate/consult/add/edit/offset, markpoint navigate/consult/add, flight plan create/use, divert, ADF, TACAN, anchor point setup, ILS approach) plus 7 new systems_notes written independently (nav systems overview, NMSP, TAD moving map, TAD HOTAS reference, HSI reference, navigation point types, bullseye call format). The guide's own worked examples throughout this part use specific mission/map data (Groom Lake AFB coordinates, Kutaisi's TACAN channel, Khasab/Batumi airfields, specific frequencies like 255.000 MHz) purely to illustrate a real walkthrough - none of that was carried in as fact; every checklist here is written generically (e.g. 'the beacon's frequency, from your mission briefing' instead of a hardcoded number), same principle as the Caucasus airfield frequency table excluded from the Radio addition. ils_landing_approach deliberately stops at 'deploy gear/flaps/airbrakes' and points back at the existing 'landing' checklist for the touchdown sequence rather than re-describing it - the guide's own ILS section duplicates that content almost verbatim (itself an artifact of the guide's page numbering restarting mid-section). Excluded the Legacy-only TAD control mapping (6.1's 'CONTROLS (A-10C LEGACY)') in favor of the Tank Killer one, same pattern as elsewhere. New binding_key identifier introduced: dms_up_down (DMS UP/DOWN - cycling waypoints/markpoints/airfields - a third DMS axis distinct from the existing dms_fwd_aft and dms_left_right). Remaining flight_planning_notes and qa_snippets are still empty/not curated. Weapons audit (explicit request: 'missing weapons instructions', CBU-87 named as the example). Root cause of the gap: pages 235-238 of the guide - Rob10's seven 'Weapons Usage' quick-reference charts (Guns, Rockets, Unguided Bombs x2, Guided Bombs, Maverick, Air-to-Air) - are image-only, so they came out blank in the text extraction (draft_dcs_a10c2.txt) and were never read; they were rendered and read directly from the PDF instead. The charts explicitly name weapons that have no numbered 2.x section of their own: MK-84, CBU-87 and CBU-97 (Unguided Ordnance Usage) and GBU-10, GBU-31 and CBU-103 (Guided Ordnance Usage). Added six weapon entries for those (all condensed/paraphrased from the chart procedures; CBU-87/CBU-97/CBU-103 parameters from section 2.7), CCRP rocket delivery steps on the Hydra entry, gun range guidance on the GAU-8 (air-to-ground) entry, Targeting-Pod A-A and extra seeker-control steps on the AIM-9 entry, and Part 10's general chapters that had not been carried over: 6 systems_notes (DSMS overview, DSMS station color coding, HUD master modes, CCIP vs CCRP, consent-to-release modes, the basic fire-a-weapon sequence) and the 'dsms_reload_after_rearm' checklist (guide section 1.4). Known limits, stated rather than papered over: (1) the guide's click-by-click on the INV STAT page shows HoF only - the RPM setting for the CBU-87/CBU-103 is described but never walked through, so those steps assume it sits beside HOF (flagged in the CBU-87 employment_notes; verify in-game); (2) the GBU-10 and GBU-31 have no walkthrough of their own - their setup is written as 'same as the GBU-12 / GBU-38' plus the chart's release steps, said so in each entry's employment_notes; (3) the charts are an older revision (Rev 1.0.6) than the numbered procedures, flagged on the AIM-9 additions where a control differs. Skipped: the chart's Maverick page (already covered by the section 2.9/2.10 entries, including the flaps-up warning) and the guide's HOTAS control tables for section 1.2 (OCR-garbled beyond reliable use; the per-weapon steps already carry the button names).",
   "checklists": {
     "pre_start": [
       {
@@ -341,6 +341,40 @@
       }
     ],
     "shutdown": [],
+    "dsms_reload_after_rearm": [
+      {
+        "step": 1,
+        "action": "Select any page on the right MFCD."
+      },
+      {
+        "step": 2,
+        "action": "Press and hold the MSG OSB until the DISPLAY PROGRAM page appears."
+      },
+      {
+        "step": 3,
+        "action": "Press the LOAD OSB on the right-hand menu."
+      },
+      {
+        "step": 4,
+        "action": "Press the lower MSG OSB - it replaces the MSG page with the LOAD page."
+      },
+      {
+        "step": 5,
+        "action": "Press the new lower LOAD OSB to select the DTS (Data Transfer System) UPLOAD page."
+      },
+      {
+        "step": 6,
+        "action": "Press LOAD ALL on the right to reload every DSMS station."
+      },
+      {
+        "step": 7,
+        "action": "While the DTC is loading, the asterisks beside the menus being reloaded disappear - wait for it to finish."
+      },
+      {
+        "step": 8,
+        "action": "When loading completes, asterisks appear next to every menu again and the DSMS pages show the correct ordnance. (Do this after every re-arm: the ground crew installs a fresh Data Transfer Cartridge (DTC) with the new ordnance, but the DSMS has to reload it before its station data is updated.)"
+      }
+    ],
     "night_vision_goggles": [
       {
         "step": 1,
@@ -1882,8 +1916,54 @@
       ]
     },
     {
+      "name": "MK-84 Low-Drag Unguided Bomb",
+      "employment_notes": "2,000 lb-class unguided general-purpose bomb. The guide has no separate MK-84 walkthrough - its Unguided Ordnance Usage quick-reference chart (end of the weapons chapter) covers the MK-82, MK-82AIR, MK-84, CBU-87 and CBU-97 together, so the MK-84 uses the same three release modes as the MK-82 (manual CCIP, CCIP-CR, CCRP) with the same DSMS profile options. For the full MK-82 profile detail (ripple, offsets, escape maneuvers, time of fall) see the MK-82 entry. Reference: Part 10, section 2.1 and the Unguided Ordnance Usage chart.",
+      "switchology": [
+        "On the DSMS page select the MK-84 Bomb (turns green), open PROF, choose the delivery mode you plan to use (CCIP or CCRP) and the Release Type (SGL, PRS, RIP SGL or RIP PRS), plus the Bomb Fuze Setting (Nose, Tail, or Nose & Tail) and any optional settings (ripple quantity/interval, Minimum Release Altitude cue, etc. - same options as the MK-82), then press SAVE, select the profile and press ACT PRO.",
+        {
+          "text": "Set Master Arm Switch - ON (UP).",
+          "binding_key": "master_arm_arm"
+        },
+        {
+          "text": "Press Coolie Hat UP (short) to set the HUD as SOI, then use DMS LEFT/RIGHT to cycle to the bomb and profile you want.",
+          "binding_key": [
+            "coolie_hat_up",
+            "dms_left_right"
+          ]
+        },
+        "Choose the consent-to-release behavior in the IFFCC TEST menu (IFFCC switch to TEST, SEL to CCIP CONSENT, cycle with DATA): OFF = manual release (MAN REL - the weapon leaves the moment you press), 3/9 = the Solution Cue must pass through the reticle, 5 MIL = the Solution Cue must pass over the reticle pipper. Use OFF for manual CCIP and 3/9 or 5 MIL for CCIP-CR. Entering the TEST menu resets the HUD master mode to GUNS, so set the IFFCC back to ON afterward and then pick your master mode.",
+        {
+          "text": "CCIP (manual release): press Master Mode until CCIP is selected (MAN REL shows in the HUD). Optionally make the target the SPI first (TGP, HUD TDC, etc.) - the bottom-left of the HUD shows which sensor it came from.",
+          "binding_key": "master_mode_button"
+        },
+        "CCIP works best when started from above 10,000 ft: pitch nose-down 30-40 degrees and line the Projected Bomb Impact Line (PBIL) up with the target - dashed while the reticle is below the HUD field of view, solid once you can see the reticle.",
+        "Don't chase the reticle - let it walk up the PBIL onto the target. An X in the reticle means the profile's release maneuver isn't valid (check the DSMS profile); if you set a Desired Time of Fall, keep the reticle over the Desired Release Cue.",
+        {
+          "text": "Press the Weapon Release Button (RALT+SPACE) when the reticle is over the target - keep the reticle below the Min Range Staple on the line.",
+          "binding_key": "weapon_release_button"
+        },
+        {
+          "text": "CCIP-CR (automatic release): set 3/9 or 5 MIL consent as above, then press Master Mode until CCIP is selected (3/9 or 5 MIL shows in the HUD). The reticle clamps to the bottom of the HUD field of view when it would fall below it, and in these modes it won't walk up the PBIL.",
+          "binding_key": "master_mode_button"
+        },
+        {
+          "text": "Place the reticle over the target and press and HOLD the Weapon Release Button to select the target - keep holding until the weapon releases by itself. An X over the Solution Cue means the steering error is too large and it won't release; the triangle caret marks minimum altitude (a dashed X on the reticle means you're below it). Let go before the Solution Cue reaches the release point to cancel the drop.",
+          "binding_key": "weapon_release_button"
+        },
+        {
+          "text": "CCRP (level delivery): make the target the SPI (TGP, HUD TDC, etc.), then press Master Mode until CCRP is selected - 5 MIL is the only consent mode offered for unguided CCRP.",
+          "binding_key": "master_mode_button"
+        },
+        "Line the reticle pipper up with the Projected Bomb Impact Line. The triangle caret on the reticle marks the Desired Release Cue range, and the Solution Cue drops from the top with a number beside it counting the time to release.",
+        {
+          "text": "When the range line inside the reticle starts to move, press and hold the Weapon Release Button until the weapon goes. An X inside the Solution Cue means too much steering error (it won't drop); a dashed X inside the reticle means you're below the minimum release altitude. Let go before the cue reaches the release point to cancel the drop.",
+          "binding_key": "weapon_release_button"
+        }
+      ]
+    },
+    {
       "name": "M-151 Hydra 70 Rockets",
-      "employment_notes": "2.75in unguided rockets, CCIP dive-fire. Reference: Part 10, section 2.3.",
+      "employment_notes": "2.75in unguided rockets, CCIP dive-fire. Reference: Part 10, section 2.3. The guide's Rockets Usage quick-reference chart adds a second delivery mode - CCRP rocket delivery (steps at the end of this list) - and notes that the bombing reticle/lines won't show in the HUD until you're past 3 degrees of depression angle.",
       "switchology": [
         {
           "text": "Set Master Arm Switch - ON (UP). Select DSMS page, select M-151 Hydra 70 Rockets (green when selected), select PROF menu.",
@@ -1904,12 +1984,30 @@
         {
           "text": "At a slant range of around 1 nm, hold down the Weapon Release Button (RALT+SPACE) to launch rockets.",
           "binding_key": "weapon_release_button"
+        },
+        {
+          "text": "CCRP rocket delivery (chart): less accurate than CCIP, but it can be fired from level flight or pitched up and from longer range - useful for suppressing a heavily defended target. Set up the rocket profile on the DSMS Profile page (CCRP), Master Arm ON, HUD as SOI.",
+          "binding_key": [
+            "master_arm_arm",
+            "coolie_hat_up"
+          ]
+        },
+        {
+          "text": "Designate the target as the SPI with the TAD, HUD TDC, TGP, Maverick or the gun pipper, then press Master Mode until CCRP is selected and use DMS LEFT/RIGHT to pick the rocket profile.",
+          "binding_key": [
+            "master_mode_button",
+            "dms_left_right"
+          ]
+        },
+        {
+          "text": "An Azimuth Steering Line (ASL) appears in the HUD with a Solution Cue circle near the top, and the rocket pipper shows with no range indicators. Fly the rocket pipper inside the Solution Cue, then press the Weapon Release Button.",
+          "binding_key": "weapon_release_button"
         }
       ]
     },
     {
       "name": "GAU-8/A 30mm Gun (Air-to-Ground)",
-      "employment_notes": "7-barrel Gatling cannon, the A-10's signature weapon. Carries Combat Mix (5x PGU-14 API/depleted-uranium : 1x PGU-13 HEI, effective vs. tanks to 21,600 ft), pure HEI, or inert Target Practice rounds - set in the Mission Editor; ammo type is confirmed/changed via the IFFCC test menu. Four gunsight reticle modes are cyclable with DMS while HUD is SOI: CCIP Reticle (most accurate), CCIP Cross (simplified, nearly as accurate), 4/8/12 Reticle, and 4000ft Wind-Corrected Cross (both useful as fallbacks when a CCIP solution can't be computed, i.e. a CCIP INVALID HUD message because the target is higher than the aircraft). Reference: Part 10, section 2.4.",
+      "employment_notes": "7-barrel Gatling cannon, the A-10's signature weapon. Carries Combat Mix (5x PGU-14 API/depleted-uranium : 1x PGU-13 HEI, effective vs. tanks to 21,600 ft), pure HEI, or inert Target Practice rounds - set in the Mission Editor; ammo type is confirmed/changed via the IFFCC test menu. Four gunsight reticle modes are cyclable with DMS while HUD is SOI: CCIP Reticle (most accurate), CCIP Cross (simplified, nearly as accurate), 4/8/12 Reticle, and 4000ft Wind-Corrected Cross (both useful as fallbacks when a CCIP solution can't be computed, i.e. a CCIP INVALID HUD message because the target is higher than the aircraft). Reference: Part 10, section 2.4. Range guidance from the guide's Guns quick-reference chart: the gun is best used from 0.5 to 2 miles slant range - stay at 0.5-0.8 miles (ideally from behind) against tanks, about 1.2 miles for lightly armored targets, and about 1.5 miles for unarmored ones. A steeper attack angle means less dispersion (best against armor); a shallow angle spreads the rounds more (good against infantry).",
       "switchology": [
         "To confirm/change ammo type: set IFFCC to TEST (middle), SEL to WEAPONS then ENT, select the 30MM menu then ENT, use the DATA rocker in the AMMO TYPE field to toggle CM (Combat Mix) / HEI / TP, SEL to STORE then ENT, SEL to EXIT then ENT, set IFFCC back to ON (UP). The DSMS page and HUD will display the selected ammo type.",
         "To set the gunsight's Minimum Altitude cue: set IFFCC to TEST, SEL to WEAPONS then ENT, select 30MM then ENT, SEL to MIN ALT, use DATA to set the value, SEL to STORE then ENT, SEL to EXIT then ENT, set IFFCC back to ON. The CCIP Reticle will then display a Minimum Range Cue.",
@@ -2036,6 +2134,157 @@
       ]
     },
     {
+      "name": "GBU-31 JDAM GPS-Guided Bomb",
+      "employment_notes": "2,000 lb-class GPS-guided JDAM - a fire-and-forget Inertially Aided Munition, employed exactly like the GBU-38 (the guide's Guided Ordnance Usage chart lists both). Like every IAM it has to be loaded on a 1760 (smart-weapon) station. The guide has no separate GBU-31 walkthrough: for getting the target point into the jet see the GBU-38 (JTAC Coordinates) and GBU-38 (Targeting Pod) entries; this entry gives the profile and release steps. Reference: Part 10, sections 2.5-2.6 and the Guided Ordnance Usage chart.",
+      "switchology": [
+        "Get the target point into the jet and make it the SPI - either from JTAC coordinates (see GBU-38 JDAM (JTAC Coordinates)) or from the Targeting Pod with laser ranging (see GBU-38 JDAM (Targeting Pod)). In CCRP you never need to put the reticle over the target.",
+        {
+          "text": "Set Master Arm Switch - ON (UP). On the DSMS page select the GBU-31 Bomb, open PROF (CCRP), set the Release Type, optionally enter a Minimum Release Altitude cue, then SAVE and activate the profile (ACT PRO).",
+          "binding_key": "master_arm_arm"
+        },
+        {
+          "text": "Press Coolie Hat UP (short) to set the HUD as SOI and use DMS LEFT/RIGHT to select the GBU-31 profile.",
+          "binding_key": [
+            "coolie_hat_up",
+            "dms_left_right"
+          ]
+        },
+        "Plan to release above 5,000 ft so the bomb has time to correct (10,000-15,000 ft is ideal).",
+        {
+          "text": "Press Master Mode until CCRP is selected. The bombing reticle only appears at more than 3 degrees of depression angle.",
+          "binding_key": "master_mode_button"
+        },
+        "There is no Solution Cue for IAM weapons - the reticle stays attached below the velocity vector. Fly to align it over the Azimuth Steering Line (ASL); the carets inside the reticle show the maximum and minimum release range.",
+        {
+          "text": "When the HUD shows MAN REL (between the min/max carets), press and HOLD the Weapon Release Button until the JDAM releases - letting go too early leaves it hung on the rack.",
+          "binding_key": "weapon_release_button"
+        }
+      ]
+    },
+    {
+      "name": "CBU-87 Combined Effects Munition (Unguided)",
+      "employment_notes": "950 lb all-purpose cluster bomb (Combined Effects Munition): an SW-65 dispenser holding 202 BLU-97/B combined-effects bomblets, effective against armored and unarmored (soft) targets. It is a plain free-fall weapon - not wind-corrected or guided - so it's employed like the MK-82 (manual CCIP, CCIP-CR or CCRP, per the guide's Unguided Ordnance Usage chart, which names the CBU-87) with two extra dispenser settings: Height of Function (HoF) and RPM. Recommended HoF/RPM: 1800 ft / 1000. The CBU-103 is this same bomb with a WCMD tail kit; the guide's opening list of weapon types loosely groups the CBU-87 with the wind-corrected family, but its own CBU section (and this entry) treats the CBU-87 as the standard, unguided version. Sourcing note: the guide's click-by-click for the INV STAT page shows the HoF setting only (walked through on the CBU-105); it lists RPM as the second CBU-87/CBU-103 parameter without its own click sequence - the RPM step below assumes it sits beside HOF on the same page, so confirm in-game. Reference: Part 10, section 2.7 (CBU parameters) and the Unguided Ordnance Usage chart.",
+      "switchology": [
+        "Set the dispenser parameters per station before flight: DSMS page - INV (Inventory) - select the CBU-87 station - INV STAT - press the OSB next to HOF repeatedly until 1800 ft is set (Height of Function: the height at which the dispenser opens - it drives area spread and accuracy). Then set RPM (the bomblet spread, which controls how concentrated the fire is on the target) to 1000 - the guide calls that value experimental - and press the OSB next to LOAD (or LOAD SYM for a symmetrical loadout, e.g. stations 5 and 7).",
+        "On the DSMS page select the CBU-87 Bomb (turns green), open PROF, choose the delivery mode you plan to use (CCIP or CCRP) and the Release Type (SGL, PRS, RIP SGL or RIP PRS) and any optional settings (ripple quantity/interval, Minimum Release Altitude cue), then press SAVE, select the profile and press ACT PRO.",
+        {
+          "text": "Set Master Arm Switch - ON (UP).",
+          "binding_key": "master_arm_arm"
+        },
+        {
+          "text": "Press Coolie Hat UP (short) to set the HUD as SOI, then use DMS LEFT/RIGHT to cycle to the bomb and profile you want.",
+          "binding_key": [
+            "coolie_hat_up",
+            "dms_left_right"
+          ]
+        },
+        "Choose the consent-to-release behavior in the IFFCC TEST menu (IFFCC switch to TEST, SEL to CCIP CONSENT, cycle with DATA): OFF = manual release (MAN REL - the weapon leaves the moment you press), 3/9 = the Solution Cue must pass through the reticle, 5 MIL = the Solution Cue must pass over the reticle pipper. Use OFF for manual CCIP and 3/9 or 5 MIL for CCIP-CR. Entering the TEST menu resets the HUD master mode to GUNS, so set the IFFCC back to ON afterward and then pick your master mode.",
+        {
+          "text": "CCIP (manual release): press Master Mode until CCIP is selected (MAN REL shows in the HUD). Optionally make the target the SPI first (TGP, HUD TDC, etc.) - the bottom-left of the HUD shows which sensor it came from.",
+          "binding_key": "master_mode_button"
+        },
+        "CCIP works best when started from above 10,000 ft: pitch nose-down 30-40 degrees and line the Projected Bomb Impact Line (PBIL) up with the target - dashed while the reticle is below the HUD field of view, solid once you can see the reticle.",
+        "Don't chase the reticle - let it walk up the PBIL onto the target. An X in the reticle means the profile's release maneuver isn't valid (check the DSMS profile); if you set a Desired Time of Fall, keep the reticle over the Desired Release Cue.",
+        {
+          "text": "Press the Weapon Release Button (RALT+SPACE) when the reticle is over the target - keep the reticle below the Min Range Staple on the line.",
+          "binding_key": "weapon_release_button"
+        },
+        {
+          "text": "CCIP-CR (automatic release): set 3/9 or 5 MIL consent as above, then press Master Mode until CCIP is selected (3/9 or 5 MIL shows in the HUD). The reticle clamps to the bottom of the HUD field of view when it would fall below it, and in these modes it won't walk up the PBIL.",
+          "binding_key": "master_mode_button"
+        },
+        {
+          "text": "Place the reticle over the target and press and HOLD the Weapon Release Button to select the target - keep holding until the weapon releases by itself. An X over the Solution Cue means the steering error is too large and it won't release; the triangle caret marks minimum altitude (a dashed X on the reticle means you're below it). Let go before the Solution Cue reaches the release point to cancel the drop.",
+          "binding_key": "weapon_release_button"
+        },
+        {
+          "text": "CCRP (level delivery): make the target the SPI (TGP, HUD TDC, etc.), then press Master Mode until CCRP is selected - 5 MIL is the only consent mode offered for unguided CCRP.",
+          "binding_key": "master_mode_button"
+        },
+        "Line the reticle pipper up with the Projected Bomb Impact Line. The triangle caret on the reticle marks the Desired Release Cue range, and the Solution Cue drops from the top with a number beside it counting the time to release.",
+        {
+          "text": "When the range line inside the reticle starts to move, press and hold the Weapon Release Button until the weapon goes. An X inside the Solution Cue means too much steering error (it won't drop); a dashed X inside the reticle means you're below the minimum release altitude. Let go before the cue reaches the release point to cancel the drop.",
+          "binding_key": "weapon_release_button"
+        }
+      ]
+    },
+    {
+      "name": "CBU-97 Sensor Fuzed Weapon (Unguided)",
+      "employment_notes": "1,000 lb-class cluster weapon carrying sensor-fused submunitions designed specifically to attack armor. Unguided free-fall like the CBU-87 (the CBU-105 is this same weapon with a WCMD tail kit), so it uses the guide's Unguided Ordnance Usage chart procedures. Only one dispenser parameter applies: Height of Function, recommended 2200 ft - there is no RPM setting on the CBU-97/CBU-105 family. Reference: Part 10, section 2.7 (CBU parameters) and the Unguided Ordnance Usage chart.",
+      "switchology": [
+        "Set the Height of Function per station before flight: DSMS page - INV (Inventory) - select the CBU-97 station - INV STAT - press the OSB next to HOF repeatedly until 2200 ft is set - press the OSB next to LOAD (or LOAD SYM for a symmetrical loadout, e.g. stations 5 and 7).",
+        "On the DSMS page select the CBU-97 Bomb (turns green), open PROF, choose the delivery mode you plan to use (CCIP or CCRP) and the Release Type (SGL, PRS, RIP SGL or RIP PRS) and any optional settings (ripple quantity/interval, Minimum Release Altitude cue), then press SAVE, select the profile and press ACT PRO.",
+        {
+          "text": "Set Master Arm Switch - ON (UP).",
+          "binding_key": "master_arm_arm"
+        },
+        {
+          "text": "Press Coolie Hat UP (short) to set the HUD as SOI, then use DMS LEFT/RIGHT to cycle to the bomb and profile you want.",
+          "binding_key": [
+            "coolie_hat_up",
+            "dms_left_right"
+          ]
+        },
+        "Choose the consent-to-release behavior in the IFFCC TEST menu (IFFCC switch to TEST, SEL to CCIP CONSENT, cycle with DATA): OFF = manual release (MAN REL - the weapon leaves the moment you press), 3/9 = the Solution Cue must pass through the reticle, 5 MIL = the Solution Cue must pass over the reticle pipper. Use OFF for manual CCIP and 3/9 or 5 MIL for CCIP-CR. Entering the TEST menu resets the HUD master mode to GUNS, so set the IFFCC back to ON afterward and then pick your master mode.",
+        {
+          "text": "CCIP (manual release): press Master Mode until CCIP is selected (MAN REL shows in the HUD). Optionally make the target the SPI first (TGP, HUD TDC, etc.) - the bottom-left of the HUD shows which sensor it came from.",
+          "binding_key": "master_mode_button"
+        },
+        "CCIP works best when started from above 10,000 ft: pitch nose-down 30-40 degrees and line the Projected Bomb Impact Line (PBIL) up with the target - dashed while the reticle is below the HUD field of view, solid once you can see the reticle.",
+        "Don't chase the reticle - let it walk up the PBIL onto the target. An X in the reticle means the profile's release maneuver isn't valid (check the DSMS profile); if you set a Desired Time of Fall, keep the reticle over the Desired Release Cue.",
+        {
+          "text": "Press the Weapon Release Button (RALT+SPACE) when the reticle is over the target - keep the reticle below the Min Range Staple on the line.",
+          "binding_key": "weapon_release_button"
+        },
+        {
+          "text": "CCIP-CR (automatic release): set 3/9 or 5 MIL consent as above, then press Master Mode until CCIP is selected (3/9 or 5 MIL shows in the HUD). The reticle clamps to the bottom of the HUD field of view when it would fall below it, and in these modes it won't walk up the PBIL.",
+          "binding_key": "master_mode_button"
+        },
+        {
+          "text": "Place the reticle over the target and press and HOLD the Weapon Release Button to select the target - keep holding until the weapon releases by itself. An X over the Solution Cue means the steering error is too large and it won't release; the triangle caret marks minimum altitude (a dashed X on the reticle means you're below it). Let go before the Solution Cue reaches the release point to cancel the drop.",
+          "binding_key": "weapon_release_button"
+        },
+        {
+          "text": "CCRP (level delivery): make the target the SPI (TGP, HUD TDC, etc.), then press Master Mode until CCRP is selected - 5 MIL is the only consent mode offered for unguided CCRP.",
+          "binding_key": "master_mode_button"
+        },
+        "Line the reticle pipper up with the Projected Bomb Impact Line. The triangle caret on the reticle marks the Desired Release Cue range, and the Solution Cue drops from the top with a number beside it counting the time to release.",
+        {
+          "text": "When the range line inside the reticle starts to move, press and hold the Weapon Release Button until the weapon goes. An X inside the Solution Cue means too much steering error (it won't drop); a dashed X inside the reticle means you're below the minimum release altitude. Let go before the cue reaches the release point to cancel the drop.",
+          "binding_key": "weapon_release_button"
+        }
+      ]
+    },
+    {
+      "name": "CBU-103 Wind Corrected Munitions Dispenser",
+      "employment_notes": "The CBU-87 cluster bomb fitted with a Wind Corrected Munition Dispenser (WCMD, 'Wick Mid') tail kit. Unlike the JDAMs it isn't GPS-guided - the tail kit uses the aircraft's inertial navigation data to know where it is and where the SPI is, then steers to it. That makes it a fire-and-forget Inertially Aided Munition (IAM) that can be dropped from far higher than a plain CBU-87. Same dispenser parameters as the CBU-87 (recommended HoF/RPM 1800 ft / 1000). Employment follows the guide's Guided Ordnance Usage chart (IAM section); the CBU-105 entry has the full Targeting Pod designation walkthrough, and everything there applies here apart from the HoF value and the extra RPM setting. Reference: Part 10, section 2.7 and the Guided Ordnance Usage chart.",
+      "switchology": [
+        "Set the dispenser parameters per station before flight: DSMS page - INV (Inventory) - select the CBU-103 station - INV STAT - press the OSB next to HOF repeatedly until 1800 ft is set (Height of Function: the height at which the dispenser opens - it drives area spread and accuracy). Then set RPM (the bomblet spread, which controls how concentrated the fire is on the target) to 1000 - the guide calls that value experimental - and press the OSB next to LOAD (or LOAD SYM for a symmetrical loadout, e.g. stations 5 and 7).",
+        {
+          "text": "Set Master Arm Switch - ON (UP). On the DSMS page select the CBU-103 Bomb, open PROF (CCRP is the release mode for the guided bombs), set the Release Type, optionally enter a Minimum Release Altitude cue, then SAVE and activate the profile (ACT PRO).",
+          "binding_key": "master_arm_arm"
+        },
+        {
+          "text": "Press Coolie Hat UP (short) to set the HUD as SOI and use DMS LEFT/RIGHT to select the CBU-103 profile.",
+          "binding_key": [
+            "coolie_hat_up",
+            "dms_left_right"
+          ]
+        },
+        "Plan to release above 5,000 ft so the tail kit has time to correct (10,000-15,000 ft is ideal).",
+        "Make the target the SPI - the Targeting Pod is the usual way (see the CBU-105 entry for the pod steps), but the HUD TDC or a Maverick seeker also work. In CCRP you never need to put the reticle over the target. The bottom-left of the HUD shows which sensor the SPI came from.",
+        {
+          "text": "Press Master Mode until CCRP is selected. The bombing reticle only appears at more than 3 degrees of depression angle.",
+          "binding_key": "master_mode_button"
+        },
+        "IAM weapons have no Solution Cue. The reticle stays attached below the velocity vector - fly to align it over the Azimuth Steering Line (ASL); the carets inside the reticle show the maximum and minimum release range.",
+        {
+          "text": "When the HUD shows MAN REL (you're between the min/max carets), press and HOLD the Weapon Release Button - letting go too early leaves the weapon hung on the rack.",
+          "binding_key": "weapon_release_button"
+        }
+      ]
+    },
+    {
       "name": "CBU-105 Wind Corrected Munitions Dispenser",
       "employment_notes": "Cluster munition against soft/armored targets, guided to the SPI via INS (not GPS) using a WCMD tail kit. Two tunable parameters are set per-station in the DSMS Inventory page: Height of Function (HoF - release height, affects area spread/accuracy; recommended 2200 ft for the CBU-97/105 family) and RPM (bomblet spread; CBU-87/103 only, not applicable to the -105). CBU family for reference: CBU-87 (950 lb Combined Effects Munition, 202x BLU-97 bomblets, unguided), CBU-103 (CBU-87 + WCMD INS tail kit), CBU-97 (1000 lb sensor-fused anti-armor bomblets, unguided), CBU-105 (CBU-97 + WCMD INS tail kit - this weapon). Reference: Part 10, section 2.7.",
       "switchology": [
@@ -2070,6 +2319,43 @@
         {
           "text": "Press and hold the Weapon Release Button (RALT+SPACE) until the CBU releases - at the programmed HoF the dispenser opens and bomblets descend and explode in clusters over the target.",
           "binding_key": "weapon_release_button"
+        }
+      ]
+    },
+    {
+      "name": "GBU-10 Paveway II Laser-Guided Bomb",
+      "employment_notes": "2,000 lb-class laser-guided bomb. Like the GBU-12 it needs continuous laser designation through impact (your own Targeting Pod, or a JTAC). The guide has no separate GBU-10 walkthrough - its Guided Ordnance Usage chart covers the GBU-10 and GBU-12 together - so laser-code programming, the Targeting Pod and Auto-Lase setup are the same as the GBU-12 entry, and the release follows the chart's laser-guided steps below. Reference: Part 10, section 2.8 and the Guided Ordnance Usage chart.",
+      "switchology": [
+        "Program the laser code the bomb will track, the same way as the GBU-12: DSMS - INV page - select the GBU-10 station - INV STAT - enter the code on the UFC scratchpad - OSB next to LSR CODE - OSB next to LOAD (or LOAD SYM for a symmetrical loadout).",
+        {
+          "text": "Set Master Arm Switch - ON (UP). On the DSMS page select the GBU-10 Bomb, open PROF (CCRP), set the Release Type, Fuze Setting and Auto Laser / LS TIME as for the GBU-12, then SAVE and activate the profile (ACT PRO).",
+          "binding_key": "master_arm_arm"
+        },
+        {
+          "text": "Press Coolie Hat UP (short) to set the HUD as SOI and use DMS LEFT/RIGHT to select the GBU-10 profile.",
+          "binding_key": [
+            "coolie_hat_up",
+            "dms_left_right"
+          ]
+        },
+        "Plan to release above 5,000 ft so the bomb has time to correct (10,000-15,000 ft is ideal).",
+        "Make the target the SPI (TGP, HUD TDC or a Maverick seeker). In CCRP you never need to put the reticle over the target. The bottom-left of the HUD shows which sensor the SPI came from.",
+        {
+          "text": "Press Master Mode until CCRP is selected. The guide's chart notes that laser-guided bombs in CCRP can only use the 3/9 consent-to-release mode (set in the IFFCC TEST menu). The bombing reticle only appears at more than 3 degrees of depression angle.",
+          "binding_key": "master_mode_button"
+        },
+        {
+          "text": "Unless Auto-Lase is set in the profile or someone else is lasing, fire the laser yourself: with TGP LATCH OFF press and hold the Nosewheel Steering Button; with LATCH ON press it once. A flashing L in the HUD confirms the laser is active (in every mode).",
+          "binding_key": "nosewheel_steering_button"
+        },
+        "The upside-down bracket on the line is the minimum-range staple (set by your Minimum Altitude, Height of Function and fuze settings) - keep the CCRP reticle below it for a valid release.",
+        {
+          "text": "Press and hold the Weapon Release Button while the Solution Cue passes through the reticle. An X over the cue means the steering error is too large or you're pitched down too much - the weapon won't release. In a ripple drop, the Desired Release Cue puts the middle bomb on the target (with an even number of bombs it brackets the target point).",
+          "binding_key": "weapon_release_button"
+        },
+        {
+          "text": "Keep lasing until the bomb follows the laser to impact, then stop the laser.",
+          "binding_key": "nosewheel_steering_button"
         }
       ]
     },
@@ -2334,7 +2620,7 @@
     },
     {
       "name": "AIM-9 Sidewinder",
-      "employment_notes": "Infrared-guided air-to-air missile. Reference: Part 10, section 3.2.",
+      "employment_notes": "Infrared-guided air-to-air missile. Reference: Part 10, section 3.2. The guide's own note and its Air-to-Air quick-reference chart add the Targeting Pod's A-A mode and a few extra seeker controls (last three steps). The chart is an older revision (Rev 1.0.6) than the numbered procedure above, so treat any control that differs on your build as the newer one.",
       "switchology": [
         {
           "text": "Set Master Arm Switch - ON (UP), select DSMS page, select the AIM-9 Missile (green when selected).",
@@ -2360,6 +2646,29 @@
         {
           "text": "Press the Weapon Release Button (RALT+SPACE) to fire.",
           "binding_key": "weapon_release_button"
+        },
+        {
+          "text": "Optional spotter: the TGP also works in Air-to-Air mode. It starts in A-A boresight; slew it with the Slew Control Switch (the view is space-stabilized). A small cross marks a trackable air target inside the narrow field of view, and the large crosshair opens while searching and closes once it detects a target. TMS FWD SHORT point-tracks it (POINT shows and a box is drawn around the target); TMS AFT breaks the track.",
+          "binding_key": [
+            "hotas_slew",
+            "tms_forward",
+            "tms_aft"
+          ]
+        },
+        {
+          "text": "Extra seeker controls (chart): a second TMS FWD press while uncaged puts the seeker into a circular scan that starts tracking automatically once it sees enough IR signal; TMS AFT commands the missile back to boresight (break lock); China Hat FWD commands an uncaged-track if the missile is caged.",
+          "binding_key": [
+            "tms_forward",
+            "tms_aft",
+            "china_hat_forward"
+          ]
+        },
+        {
+          "text": "Missile reject / slave (chart): China Hat AFT once cages and boresights the missile; a second press rejects it and takes it out of service (if every missile in the profile is rejected they all return to active service). China Hat FWD LONG slaves the AIM-9 to the TGP line of sight.",
+          "binding_key": [
+            "china_hat_aft",
+            "china_hat_forward"
+          ]
         }
       ]
     }
@@ -2481,6 +2790,34 @@
     {
       "topic": "Bullseye call format",
       "notes": "A bullseye call communicates your position without telling the enemy where you actually are, since only friendly forces know where the bullseye is: bearing from the bullseye, then range from the bullseye, then altitude - e.g. \"Bullseye 180 for 15, angels 20.\""
+    },
+    {
+      "topic": "DSMS (Digital Stores Management System) overview",
+      "notes": "The DSMS replaces the old A-10A armament control panel: every weapon setting, release parameter and armament control now lives on DSMS pages on an MFCD. It shows overall weapons status, the inventory on each station, which stations are selected, the arm state, the gun's status and which profile is active for each weapon. Open it with the lower OSB labeled DSMS. Its sub-pages are Status, Profile (main, control and settings), Inventory (main, select, class, store type and store select), Selective Jettison and Missile Control (mode, power and boresight for the Maverick and AIM-9). A profile is one weapon plus its delivery settings; pick profiles on the DSMS page or with DMS LEFT/RIGHT while the HUD is SOI."
+    },
+    {
+      "topic": "DSMS station color coding",
+      "notes": "Every station and the gun are color-coded so you can read weapon status at a glance. White = Master Arm SAFE (systems behave as if armed, but no weapons or flares are released; a Maverick shows no video). Blue = Master Arm TRAIN (simulated 'virtual' weapons - TRAIN profiles never show mismatch errors). Green = Master Arm ARM. A selected weapon takes the arm-state color. Red = the profile and the inventory disagree about what's on that station, or the profile has invalid settings - after re-arming, run the 'dsms reload after rearm' checklist to clear a mismatch."
+    },
+    {
+      "topic": "Rearm / re-arming - reload the DSMS from the DTC",
+      "notes": "After the ground crew rearms the jet, the DSMS does not know what's on the pylons until you reload it: the crew installs a fresh Data Transfer Cartridge (DTC) with the new ordnance, and the DSMS has to load it before its station data updates. Until you do, stations can show red (profile/inventory mismatch). The step-by-step is the 'dsms reload after rearm' checklist in the Checklists tab (MSG page - LOAD - DTS UPLOAD - LOAD ALL)."
+    },
+    {
+      "topic": "HUD master modes",
+      "notes": "Five HUD master modes, cycled with the Master Mode Control Button on the stick. NAV: navigation data only, no weapon symbology. GUNS: selectable gunsight options. CCIP: bombing symbology for Continuously Computed Impact Point delivery, including the consent-to-release modes (Maverick delivery also uses CCIP). CCRP: Continuously Computed Release Point symbology for illumination flares, unguided bombs, laser-guided bombs and Inertially Aided Munitions. AIR-TO-AIR: gun and AIM-9 symbology - the only mode you can't reach by tapping; hold the button for about 3 seconds."
+    },
+    {
+      "topic": "Bomb delivery - CCIP vs CCRP",
+      "notes": "There are two ways to deliver bombs. CCIP is traditional dive bombing: you dive at the target and the reticle shows where the bomb will impact - precise, but the lower you go, the more exposed you are to anything defending the target. CCRP lets you fly straight and level: the HUD tells you when to release on the target you designated (usually with the TGP) - safer, but somewhat less precise. Which to use is up to the situation and your preference; the delivery mode is set per weapon in the DSMS profile, ideally during preflight."
+    },
+    {
+      "topic": "Consent-to-release modes (IFFCC test menu)",
+      "notes": "Set with the CCIP CONSENT option in the IFFCC TEST menu. OFF = manual release (MAN REL): the weapon leaves the moment you press the Weapon Release Button. 3/9 = the Solution Cue must pass through the reticle before the weapon releases. 5 MIL = the Solution Cue must pass over the reticle pipper. Entering the IFFCC TEST menu resets the HUD master mode to GUNS, so set the IFFCC back to ON and pick your master mode afterward."
+    },
+    {
+      "topic": "How to fire a weapon - the basic sequence",
+      "notes": "The same six steps apply to every weapon. 1) Select the weapon on the DSMS page. 2) Select its profile: make the HUD SOI (Coolie Hat UP), then press DMS LEFT/RIGHT to cycle profiles. 3) Arm the weapon and its sensors. 4) Choose the delivery mode if the weapon has one (CCIP or CCRP). 5) Use a sensor (make it SOI) to find the target, put the SPI on it, slave the other sensors to the SPI and lock. 6) Fire once you have a firing solution."
     }
   ],
   "qa_snippets": []
